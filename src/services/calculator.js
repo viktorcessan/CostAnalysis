@@ -105,17 +105,26 @@ export class CalculatorService {
     } = values;
 
     const baseline = this.calculateBaseline(model, values);
-    const efficiencyGain = 1 - processEfficiency;
-    const teamReductionFactor = 1 - teamReduction;
+    const efficiencyGain = 1 - (processEfficiency / 100);
+    const teamReductionFactor = 1 - (teamReduction / 100);
     
     const monthlyTotal = baseline.monthly * efficiencyGain * teamReductionFactor + platformMaintenance;
+    const monthlySavings = baseline.monthly - monthlyTotal;
+    
+    // Calculate break-even months, handle case where it exceeds 24
+    const breakEvenMonths = monthlySavings > 0 ? Math.ceil(platformCost / monthlySavings) : Infinity;
+    const isViable = breakEvenMonths <= 24;
 
     return {
       initial: platformCost,
       monthly: monthlyTotal,
+      monthlySavings: monthlySavings,
+      breakEvenMonths: breakEvenMonths,
+      isViable: isViable,
       breakdown: {
         platform: platformMaintenance,
-        labor: baseline.monthly * teamReductionFactor * efficiencyGain
+        labor: baseline.monthly * teamReductionFactor * efficiencyGain,
+        savings: monthlySavings
       }
     };
   }
@@ -136,21 +145,32 @@ export class CalculatorService {
     const baselineHours = baseline.monthly / values.hourlyRate;
     const vendorMonthly = baselineHours * vendorRate;
     
-    // Add overhead factors
-    const overheadFactor = 1 + managementOverhead;
-    const qualityFactor = 1 + qualityImpact;
-    const knowledgeFactor = 1 + knowledgeLoss;
+    // Add overhead factors with proper percentage conversion
+    const overheadFactor = 1 + (managementOverhead / 100);
+    const qualityFactor = qualityImpact >= 0 ? 
+      (1 - qualityImpact / 100) : // Improved quality reduces cost
+      (1 + Math.abs(qualityImpact) / 100); // Degraded quality increases cost
+    const knowledgeFactor = 1 + (knowledgeLoss / 100) * Math.log10(transitionTime + 1);
     
     const monthlyTotal = vendorMonthly * overheadFactor * qualityFactor * knowledgeFactor;
+    const monthlySavings = baseline.monthly - monthlyTotal;
+    
+    // Calculate break-even months, handle case where it exceeds 24
+    const breakEvenMonths = monthlySavings > 0 ? Math.ceil(transitionCost / monthlySavings) : Infinity;
+    const isViable = breakEvenMonths <= 24;
 
     return {
       initial: transitionCost,
       monthly: monthlyTotal,
+      monthlySavings: monthlySavings,
+      breakEvenMonths: breakEvenMonths,
+      isViable: isViable,
       breakdown: {
         vendor: vendorMonthly,
-        overhead: vendorMonthly * managementOverhead,
-        quality: vendorMonthly * qualityImpact,
-        knowledge: vendorMonthly * knowledgeLoss
+        overhead: vendorMonthly * (overheadFactor - 1),
+        quality: vendorMonthly * (qualityFactor - 1),
+        knowledge: vendorMonthly * (knowledgeFactor - 1),
+        savings: monthlySavings
       }
     };
   }
@@ -162,30 +182,60 @@ export class CalculatorService {
       processEfficiency,
       vendorRate,
       managementOverhead,
-      workSplit
+      qualityImpact,
+      knowledgeLoss,
+      transitionTime,
+      platformPortion,
+      vendorPortion,
+      transitionCost = 0
     } = values;
+
+    if (platformPortion + vendorPortion > 100) {
+      throw new Error('Platform and vendor portions cannot exceed 100%');
+    }
 
     const baseline = this.calculateBaseline(model, values);
     
     // Platform portion
-    const platformPortion = workSplit;
-    const platformEfficiency = 1 - processEfficiency;
-    const platformMonthly = baseline.monthly * platformPortion * platformEfficiency + platformMaintenance;
+    const platformPercentage = platformPortion / 100;
+    const platformEfficiency = 1 - (processEfficiency / 100);
+    const platformMonthly = baseline.monthly * platformPercentage * platformEfficiency + platformMaintenance;
     
-    // Vendor portion - removed quality impact factor
-    const vendorPortion = 1 - workSplit;
-    const baselineHours = (baseline.monthly * vendorPortion) / values.hourlyRate;
-    const vendorMonthly = baselineHours * vendorRate * (1 + managementOverhead);
+    // Vendor portion with all factors
+    const vendorPercentage = vendorPortion / 100;
+    const baselineHours = (baseline.monthly * vendorPercentage) / values.hourlyRate;
+    const vendorBase = baselineHours * vendorRate;
+    const overheadFactor = 1 + (managementOverhead / 100);
+    const qualityFactor = qualityImpact >= 0 ? 
+      (1 - qualityImpact / 100) : 
+      (1 + Math.abs(qualityImpact) / 100);
+    const knowledgeFactor = 1 + (knowledgeLoss / 100) * Math.log10(transitionTime + 1);
+    const vendorMonthly = vendorBase * overheadFactor * qualityFactor * knowledgeFactor;
     
-    const monthlyTotal = platformMonthly + vendorMonthly;
+    // Internal portion
+    const internalPercentage = 1 - (platformPercentage + vendorPercentage);
+    const internalMonthly = baseline.monthly * internalPercentage;
+    
+    const monthlyTotal = platformMonthly + vendorMonthly + internalMonthly;
+    const monthlySavings = baseline.monthly - monthlyTotal;
+    
+    // Calculate break-even months, handle case where it exceeds 24
+    const totalInitialCost = platformCost + (transitionCost * vendorPercentage);
+    const breakEvenMonths = monthlySavings > 0 ? Math.ceil(totalInitialCost / monthlySavings) : Infinity;
+    const isViable = breakEvenMonths <= 24;
 
     return {
-      initial: platformCost,
+      initial: totalInitialCost,
       monthly: monthlyTotal,
+      monthlySavings: monthlySavings,
+      breakEvenMonths: breakEvenMonths,
+      isViable: isViable,
       breakdown: {
         platform: platformMaintenance,
-        platformLabor: baseline.monthly * platformPortion * platformEfficiency,
-        vendor: vendorMonthly
+        platformLabor: baseline.monthly * platformPercentage * platformEfficiency,
+        vendor: vendorMonthly,
+        internal: internalMonthly,
+        savings: monthlySavings
       }
     };
   }

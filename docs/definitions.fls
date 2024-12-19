@@ -1,6 +1,6 @@
-PWD c:\Users\acifu\Desktop\Projects\upwork\Viktor\docs
+PWD c:\Users\acifu\Desktop\CostAnalysis\docs
 INPUT C:\Users\acifu\AppData\Local\MiKTeX\miktex\data\le\pdftex\pdflatex.fmt
-INPUT c:\Users\acifu\Desktop\Projects\upwork\Viktor\docs\definitions.tex
+INPUT c:\Users\acifu\Desktop\CostAnalysis\docs\definitions.tex
 OUTPUT definitions.log
 INPUT C:\Users\acifu\AppData\Local\Programs\MiKTeX\tex\latex\base\article.cls
 INPUT C:\Users\acifu\AppData\Local\Programs\MiKTeX\tex\latex\base\article.cls

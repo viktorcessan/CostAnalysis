@@ -375,29 +375,32 @@ The outsourcing cost structure must account for both direct vendor costs and var
 \begin{definition}{Outsourcing Cost}
 Monthly cost calculation:
 \begin{equation}
-    C_o = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot (1 + \beta_q) \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
+    C_o = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot \begin{cases}
+        (1 - \beta_q) & \text{if } \beta_q \geq 0 \text{ (improved quality)} \\
+        (1 + |\beta_q|) & \text{if } \beta_q < 0 \text{ (degraded quality)}
+    \end{cases} \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
 \end{equation}
 \textbf{Cost Components:}
 \begin{itemize}
     \item Base: $v \cdot w \cdot n$
     \item Management: $(1 + \beta_m)$
-    \item Quality: $(1 + \beta_q)$
+    \item Quality: Case-based quality factor
     \item Knowledge: $1 + \beta_k \cdot \log_{10}(T_t + 1)$
 \end{itemize}
 \end{definition}
 
 \begin{observation}
-\textbf{Time Impact:}
+\textbf{Quality Impact:}
 \begin{itemize}
-    \item Initial knowledge transfer challenges
-    \item Gradual process stabilization
-    \item Long-term expertise erosion
-\end{itemize}
-\textbf{Quality Factors:}
-\begin{itemize}
-    \item Service level maintenance
-    \item Process standardization
-    \item Knowledge documentation
+    \item Positive $\beta_q$: Quality improvements reduce costs
+    \item Negative $\beta_q$: Quality degradation increases costs
+    \item Impact factors include:
+        \begin{itemize}
+            \item Ticket volume changes
+            \item SLA compliance
+            \item Management overhead
+            \item Rework requirements
+        \end{itemize}
 \end{itemize}
 \end{observation}
 
@@ -471,27 +474,41 @@ This approach is particularly suitable for:
 \subsection{Ticket Cost Structure}
 
 \begin{definition}{Base Ticket Cost}
-The monthly base ticket cost $C_t$ is:
+The monthly ticket cost $C_t$ includes both fixed and variable components:
 \begin{equation}
-    C_t = m \cdot t_h \cdot p \cdot h
+    C_t = B + m \cdot t_h \cdot p \cdot h
+\end{equation}
+Where:
+\begin{itemize}
+    \item $B$: Base monthly cost (independent of volume)
+    \item $m$: Monthly ticket volume
+    \item $t_h$: Hours per ticket
+    \item $p$: People per ticket
+    \item $h$: Hourly rate
+\end{itemize}
+
+The effective cost per ticket $c_t$ is:
+\begin{equation}
+    c_t = \frac{B}{m} + t_h \cdot p \cdot h
 \end{equation}
 \end{definition}
 
 \begin{explanation}
-The base ticket cost incorporates:
+The ticket cost structure incorporates:
 \begin{itemize}
-    \item Volume of service requests
-    \item Time investment per request
-    \item Required staff involvement
-    \item Labor cost rates
-\end{itemize}
-
-This formula enables:
-\begin{itemize}
-    \item Per-ticket cost analysis
-    \item Volume-based planning
-    \item Resource allocation optimization
-    \item Service level management
+    \item Fixed operational costs ($B$)
+        \begin{itemize}
+            \item Infrastructure
+            \item Core team
+            \item Management overhead
+            \item Tool licenses
+        \end{itemize}
+    \item Variable costs per ticket
+        \begin{itemize}
+            \item Direct labor
+            \item Resource allocation
+            \item Time investment
+        \end{itemize}
 \end{itemize}
 \end{explanation}
 
@@ -904,13 +921,12 @@ Required parameters:
     \item \textbf{Transition Time ($T_t$):} Handover period [1-12 months]
     \item \textbf{Transition Cost ($O_t$):} One-time cost [\$0-\$1M]
     \item \textbf{Management Overhead ($\beta_m$):} Additional oversight [0-100\%]
-    \item \textbf{Quality Impact ($\beta_q$):} Service degradation [0-100\%]
     \item \textbf{Knowledge Loss ($\beta_k$):} Expertise reduction [0-100\%]
 \end{itemize}
 
 Cost calculation:
 \begin{equation}
-    C_{outsource} = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot (1 + \beta_q) \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
+    C_{outsource} = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
 \end{equation}
 
 Key metrics:
@@ -1046,5 +1062,125 @@ Implementation considerations:
     \item Sensitivity analysis applies ±20\% variation to key parameters
 \end{itemize}
 \end{observation}
+
+\begin{definition}{Cost Calculation Formulas}
+For all models, let:
+\begin{itemize}
+    \item $C_b$: Base monthly cost
+    \item $h$: Hourly rate
+    \item $w$: Working hours per month
+    \item $n$: Number of team members
+\end{itemize}
+
+\textbf{Base Cost:}
+\begin{equation}
+    C_b = h \cdot w \cdot n
+\end{equation}
+
+\textbf{Platform Solution:}
+\begin{equation}
+    C_p = C_b \cdot (1 - \alpha_t) \cdot (1 - \alpha_p) + P_m
+\end{equation}
+Where:
+\begin{itemize}
+    \item $\alpha_t$: Team reduction percentage
+    \item $\alpha_p$: Process efficiency gain
+    \item $P_m$: Monthly maintenance cost
+\end{itemize}
+
+\textbf{Outsourcing Solution:}
+\begin{equation}
+    C_o = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot Q(\beta_q) \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
+\end{equation}
+Where:
+\begin{itemize}
+    \item $v$: Vendor hourly rate
+    \item $\beta_m$: Management overhead percentage
+    \item $\beta_k$: Knowledge loss percentage
+    \item $T_t$: Transition time in months
+    \item $Q(\beta_q)$: Quality impact function:
+    \begin{equation}
+        Q(\beta_q) = \begin{cases}
+            1 - \beta_q & \text{if } \beta_q \geq 0 \text{ (quality improvement)} \\
+            1 + |\beta_q| & \text{if } \beta_q < 0 \text{ (quality degradation)}
+        \end{cases}
+    \end{equation}
+\end{itemize}
+
+\textbf{Hybrid Solution:}
+\begin{equation}
+    C_h = \gamma_p \cdot C_p + \gamma_o \cdot C_o + (1 - \gamma_p - \gamma_o) \cdot C_b
+\end{equation}
+Where:
+\begin{itemize}
+    \item $\gamma_p$: Platform portion [0,1]
+    \item $\gamma_o$: Outsourced portion [0,1]
+    \item $1 - \gamma_p - \gamma_o$: Internal portion
+\end{itemize}
+\end{definition}
+
+\begin{definition}{Break-Even Analysis}
+For any solution $s$, the break-even period $T_{be}$ is calculated as:
+\begin{equation}
+    T_{be} = \begin{cases}
+        \lceil\frac{I_s}{C_b - C_s}\rceil & \text{if } C_b > C_s \\
+        \infty & \text{otherwise}
+    \end{cases}
+\end{equation}
+Where:
+\begin{itemize}
+    \item $I_s$: Initial investment for solution $s$
+    \item $C_s$: Monthly cost for solution $s$
+    \item Solution is considered viable if $T_{be} \leq 24$ months
+\end{itemize}
+\end{definition}
+
+\begin{observation}
+\textbf{Key Cost Considerations:}
+\begin{itemize}
+    \item \textbf{Platform Solution:}
+        \begin{itemize}
+            \item Initial investment vs. ongoing maintenance
+            \item Process efficiency gains compound with team reduction
+            \item Break-even affected by maintenance costs
+        \end{itemize}
+    \item \textbf{Outsourcing Solution:}
+        \begin{itemize}
+            \item Quality impact directly affects cost
+            \item Knowledge loss increases over transition time
+            \item Management overhead remains constant
+        \end{itemize}
+    \item \textbf{Hybrid Solution:}
+        \begin{itemize}
+            \item Balances initial investment with operational flexibility
+            \item Allows gradual transition and risk mitigation
+            \item Combines benefits of automation and outsourcing
+        \end{itemize}
+\end{itemize}
+\end{observation}
+
+\begin{explanation}
+The cost models account for:
+\begin{itemize}
+    \item \textbf{Direct Costs:}
+        \begin{itemize}
+            \item Labor (internal and vendor)
+            \item Platform development and maintenance
+            \item Transition and implementation
+        \end{itemize}
+    \item \textbf{Indirect Costs:}
+        \begin{itemize}
+            \item Quality impact on service delivery
+            \item Knowledge retention and transfer
+            \item Management and coordination
+        \end{itemize}
+    \item \textbf{Time-Based Factors:}
+        \begin{itemize}
+            \item Break-even analysis
+            \item Transition period effects
+            \item Long-term viability assessment
+        \end{itemize}
+\end{itemize}
+\end{explanation}
 
 \end{document}

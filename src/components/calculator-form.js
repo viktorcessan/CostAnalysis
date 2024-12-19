@@ -37,7 +37,11 @@ const SOLUTION_FIELDS = {
     { name: 'vendorRate', label: 'Vendor Hourly Rate ($)', type: 'number', min: 1, max: 500, step: 1 },
     { name: 'managementOverhead', label: 'Management Overhead', type: 'number', min: 0, max: 1, step: 0.01 },
     { name: 'qualityImpact', label: 'Quality Impact Factor', type: 'number', min: -0.5, max: 0.5, step: 0.01 },
-    { name: 'workSplit', label: 'Platform/Vendor Split', type: 'number', min: 0, max: 1, step: 0.1 }
+    { name: 'knowledgeLoss', label: 'Knowledge Loss Factor', type: 'number', min: 0, max: 1, step: 0.01 },
+    { name: 'transitionTime', label: 'Transition Time (months)', type: 'number', min: 1, max: 24, step: 1 },
+    { name: 'transitionCost', label: 'Transition Cost ($)', type: 'number', min: 0, max: 1000000, step: 1000 },
+    { name: 'platformPortion', label: 'Platform Portion (%)', type: 'number', min: 0, max: 100, step: 5 },
+    { name: 'vendorPortion', label: 'Vendor Portion (%)', type: 'number', min: 0, max: 100, step: 5 }
   ]
 };
 
@@ -165,7 +169,11 @@ export class CalculatorForm extends LitElement {
         vendorRate: 55,
         managementOverhead: 0.1,
         qualityImpact: -0.1,
-        workSplit: 0.5
+        knowledgeLoss: 0.2,
+        transitionTime: 3,
+        transitionCost: 30000,
+        platformPortion: 40,
+        vendorPortion: 30
       }
     };
 
@@ -218,12 +226,60 @@ export class CalculatorForm extends LitElement {
         </div>
 
         <!-- Solution Configuration -->
-        <div>
-          <h3 class="text-sm font-semibold text-gray-900 mb-2">${solutionInfo.title} Configuration</h3>
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-            ${solutionFields.map(field => this.renderField(field))}
+        ${this.solution === 'hybrid' ? html`
+          <!-- Hybrid Solution Configuration -->
+          <div class="space-y-4">
+            <!-- Platform Configuration -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                <svg class="w-4 h-4 mr-1 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Platform Configuration
+              </h3>
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                ${solutionFields.filter(f => ['platformCost', 'platformMaintenance', 'processEfficiency'].includes(f.name))
+                  .map(field => this.renderField(field))}
+              </div>
+            </div>
+
+            <!-- Outsourcing Configuration -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                <svg class="w-4 h-4 mr-1 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Outsourcing Configuration
+              </h3>
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                ${solutionFields.filter(f => ['vendorRate', 'managementOverhead', 'qualityImpact', 'knowledgeLoss', 'transitionTime', 'transitionCost'].includes(f.name))
+                  .map(field => this.renderField(field))}
+              </div>
+            </div>
+
+            <!-- Work Distribution -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                <svg class="w-4 h-4 mr-1 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+                Work Distribution
+              </h3>
+              <div class="grid grid-cols-2 gap-2">
+                ${solutionFields.filter(f => ['platformPortion', 'vendorPortion'].includes(f.name))
+                  .map(field => this.renderField(field))}
+              </div>
+            </div>
           </div>
-        </div>
+        ` : html`
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">${solutionInfo.title} Configuration</h3>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+              ${solutionFields.map(field => this.renderField(field))}
+            </div>
+          </div>
+        `}
       </div>
     `;
   }
@@ -314,10 +370,29 @@ export class CalculatorForm extends LitElement {
   handleInput(e) {
     const { name, value } = e.target;
     const numValue = Number(value) || 0;
-    this.values = {
-      ...this.values,
-      [name]: numValue
-    };
+
+    // Special handling for platform/vendor portions to ensure they sum to 100%
+    if (name === 'platformPortion' || name === 'vendorPortion') {
+      const newValue = Math.min(100, Math.max(0, numValue));
+      if (name === 'platformPortion') {
+        this.values = {
+          ...this.values,
+          platformPortion: newValue,
+          vendorPortion: 100 - newValue
+        };
+      } else {
+        this.values = {
+          ...this.values,
+          vendorPortion: newValue,
+          platformPortion: 100 - newValue
+        };
+      }
+    } else {
+      this.values = {
+        ...this.values,
+        [name]: numValue
+      };
+    }
 
     // Update the corresponding range/number input in the same field container
     const container = e.target.closest('.bg-white');
@@ -325,9 +400,18 @@ export class CalculatorForm extends LitElement {
       const inputs = container.querySelectorAll(`input[name="${name}"]`);
       inputs.forEach(input => {
         if (input !== e.target) {
-          input.value = numValue;
+          input.value = this.values[name];
         }
       });
+
+      // Update the linked field if it's platform/vendor portion
+      if (name === 'platformPortion' || name === 'vendorPortion') {
+        const linkedName = name === 'platformPortion' ? 'vendorPortion' : 'platformPortion';
+        const linkedInputs = document.querySelectorAll(`input[name="${linkedName}"]`);
+        linkedInputs.forEach(input => {
+          input.value = this.values[linkedName];
+        });
+      }
     }
 
     this.dispatchCalculation();

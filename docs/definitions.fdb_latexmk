@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1734439894.40036 "c:/Users/acifu/Desktop/Projects/upwork/Viktor/docs/definitions.tex" "definitions.pdf" "definitions" 1734439897.90885 0
+["pdflatex"] 1734639140.44693 "c:/Users/acifu/Desktop/CostAnalysis/docs/definitions.tex" "definitions.pdf" "definitions" 1734639141.526 0
   "C:/Users/acifu/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1734275807 82686 2381c3433487640bf26aa76a10db7eb2 ""
   "C:/Users/acifu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1200.pk" 1730306962 14064 098e9485ef99789a2da0bd2110e6a2bc ""
   "C:/Users/acifu/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1713460678 24236006 f3182bc322f12ab2e919a84e04f86baf ""
@@ -185,11 +185,11 @@
   "C:/Users/acifu/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1700127522 55487 80a65caedd3722f4c20a14a69e785d8f ""
   "C:/Users/acifu/AppData/Local/Programs/MiKTeX/tex/latex/zref/zref-abspage.sty" 1695383086 2269 4fe6fb3396214c91f164d45faf9bec45 ""
   "C:/Users/acifu/AppData/Local/Programs/MiKTeX/tex/latex/zref/zref-base.sty" 1695383086 20785 f7d1133a287929598a897c93f8f4c44b ""
-  "c:/Users/acifu/Desktop/Projects/upwork/Viktor/docs/definitions.tex" 1734439893 37240 f60a349d23791193a4811fe7bd28a487 ""
-  "definitions.aux" 1734439897 3671 30c9c8c4bce738202e1b17b82bbe1226 "pdflatex"
-  "definitions.out" 1734439897 4457 528f90b90f925c5a30c308eeb3b247a9 "pdflatex"
-  "definitions.tex" 1734439893 37240 f60a349d23791193a4811fe7bd28a487 ""
-  "definitions.toc" 1734439897 2264 f09a5801bf948f0445f8d7cdd79f3874 "pdflatex"
+  "c:/Users/acifu/Desktop/CostAnalysis/docs/definitions.tex" 1734639138 41721 f596a97710d181cc8160382784e01889 ""
+  "definitions.aux" 1734639141 3671 438a3c2154dd444517dcfe498093af47 "pdflatex"
+  "definitions.out" 1734639141 4457 528f90b90f925c5a30c308eeb3b247a9 "pdflatex"
+  "definitions.tex" 1734639138 41721 f596a97710d181cc8160382784e01889 ""
+  "definitions.toc" 1734639141 2264 ab24bb3f4bdd9958031333fedadc758e "pdflatex"
   (generated)
   "definitions.aux"
   "definitions.log"

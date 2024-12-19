@@ -5,27 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Service Platform Investment Calculator</title>
     
-    <!-- Dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
-    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
-    
-    <!-- Export Dependencies -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Lit -->
-    <script type="module">
-      import { LitElement, html, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
-      window.LitElement = LitElement;
-      window.html = html;
-      window.css = css;
-    </script>
-
     <!-- Custom Styles -->
     <style type="text/tailwindcss">
         @layer components {
@@ -102,7 +84,7 @@
     </style>
 
     <!-- Components -->
-    <script type="module" src="./src/components/calculator-app.js"></script>
+    <script type="module" src="/src/components/calculator-app.js"></script>
   </head>
   <body class="bg-gray-50 min-h-screen">
     <calculator-app></calculator-app>

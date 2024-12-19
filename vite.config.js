@@ -1,12 +1,16 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/platform-cost-analysis/', // Updated repository name
+  base: '/CostAnalysis/',
   build: {
     outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
       input: {
         main: 'index.html'
+      },
+      output: {
+        manualChunks: undefined
       }
     }
   },

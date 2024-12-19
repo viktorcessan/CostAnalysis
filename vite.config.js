@@ -8,10 +8,12 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html'
-      },
-      output: {
-        manualChunks: undefined
       }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': '/src'
     }
   },
   server: {

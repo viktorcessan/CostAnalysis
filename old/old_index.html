@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Calculator: Service Delivery Team vs Service as Platform</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
+    
+    <style>
+        body {
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .intro-box {
+            background: #EEF2FF;
+            border: 1px solid #C7D2FE;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #1E40AF;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .slider {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4F46E5;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .number-input {
+            width: 100px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            height: 250px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .model-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .model-button {
+            padding: 8px 16px;
+            border: 1px solid #4F46E5;
+            background: white;
+            color: #4F46E5;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .model-button.active {
+            background: #4F46E5;
+            color: white;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .analysis-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .toggle-button {
+            padding: 4px 12px;
+            border: 1px solid #4F46E5;
+            background: white;
+            color: #4F46E5;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .toggle-button.active {
+            background: #4F46E5;
+            color: white;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: #eee;
+            margin: 20px 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .tooltip {
+    display: inline-block;
+    margin-left: 8px;
+    width: 16px;
+    height: 16px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    cursor: help;
+    color: #4a5568;
+}
+
+.advanced-section {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.breakeven-card {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.metric-box {
+    flex: 1;
+    padding: 16px;
+    border-radius: 8px;
+    color: white;
+}
+
+.metric-box.green { background: #22c55e; }
+.metric-box.orange { background: #f97316; }
+.metric-box.red { background: #ef4444; }
+
+.metric-box h3 {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.metric-box .value {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 8px 0;
+}
+
+.advanced-toggle {
+    background: #4F46E5;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 16px;
+    width: 100%;
+}
+
+.checkbox-group {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+}
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <footer>© 2024 viktorcessan.com - All rights reserved</footer>
+
+    <script type="text/babel">
+        function App() {
+            const MONTHLY_WORKING_HOURS = 160; // Add this at the start of your App component
+
+    const [activeModel, setActiveModel] = React.useState('team'); // 'team' or 'ticket'
+    
+    const [inputs, setInputs] = React.useState({
+        teamSize: 10,
+        hourlyRate: 100,
+        serviceDeliveryPercent: 30,
+        platformCost: 200000,
+        platformMaintenanceCost: 5000,
+        platformMaintenanceFTE: 1,
+        featureEnhancementCost: 10000,
+        featureEnhancementFTE: 2,
+        expectedReduction: 50,
+        buildTime: 6,
+        months: 24
+    });
+    const [showAdvanced, setShowAdvanced] = React.useState(false);
+const [advancedInputs, setAdvancedInputs] = React.useState({
+    numberOfUsers: 100,
+    userCostPerHour: 50,
+    skipUserCost: false,
+    productivityIncrease: 0,
+    manualLaborReduction: 0
+});
+
+    const [ticketInputs, setTicketInputs] = React.useState({
+        ticketsPerMonth: 20,
+        hoursPerTicket: 4,
+        peoplePerTicket: 1,
+        hourlyRate: 100,
+        platformCost: 200000,
+        platformMaintenanceCost: 5000,
+        platformMaintenanceFTE: 1,
+        featureEnhancementCost: 10000,
+        featureEnhancementFTE: 2,
+        expectedReduction: 50,
+        buildTime: 6,
+        months: 24
+    });
+
+    const [costType, setCostType] = React.useState({
+        maintenance: 'USD',
+        enhancement: 'USD'
+    });
+
+    const [parallelDevelopment, setParallelDevelopment] = React.useState(false);
+
+    const chartRefs = React.useRef([]);
+    React.useEffect(() => {
+    if (window.tippy) {
+        window.tippy('[data-tippy-content]', {
+            placement: 'right',
+            arrow: true
+        });
+    }
+}, [showAdvanced]);
+
+            const handleInputChange = (e) => {
+                const { name, value, type } = e.target;
+                if (type === 'number') {
+                    e.target.select();
+                }
+                setInputs(prev => ({
+                    ...prev,
+                    [name]: Number(value)
+                }));
+            };
+const handleTicketInputChange = (e) => {
+    const { name, value, type } = e.target;
+    if (type === 'number') {
+        e.target.select();
+    }
+    setTicketInputs(prev => ({
+        ...prev,
+        [name]: Number(value)
+    }));
+};
+const getMonthlyServiceCost = () => {
+    if (activeModel === 'team') {
+        return inputs.teamSize * inputs.hourlyRate * 
+        MONTHLY_WORKING_HOURS * (inputs.serviceDeliveryPercent / 100);
+    } else {
+        return ticketInputs.ticketsPerMonth * ticketInputs.hoursPerTicket * 
+            ticketInputs.peoplePerTicket * ticketInputs.hourlyRate;
+    }
+};
+
+const getActiveInputs = () => {
+    return activeModel === 'team' ? inputs : ticketInputs;
+};
+
+            const calculateFTECost = (ftes) => {
+    const currentInputs = getActiveInputs();
+    return ftes * currentInputs.hourlyRate * MONTHLY_WORKING_HOURS;
+};
+
+const getMaintenanceCost = () => {
+    const currentInputs = getActiveInputs();
+    return costType.maintenance === 'USD' 
+        ? currentInputs.platformMaintenanceCost 
+        : calculateFTECost(currentInputs.platformMaintenanceFTE);
+};
+
+const getEnhancementCost = () => {
+    const currentInputs = getActiveInputs();
+    return costType.enhancement === 'USD'
+        ? currentInputs.featureEnhancementCost
+        : calculateFTECost(currentInputs.featureEnhancementFTE);
+};
+const getAdvancedSavings = () => {
+    if (!showAdvanced) return 0;
+    
+    let savings = 0;
+    if (!advancedInputs.skipUserCost) {
+        const userTimeSavings = advancedInputs.numberOfUsers * 
+            advancedInputs.userCostPerHour * 
+            (advancedInputs.productivityIncrease + advancedInputs.manualLaborReduction) / 100;
+        savings += userTimeSavings;
+    }
+    return savings;
+};
+const calculateBreakEven = () => {
+    const monthlyServiceCost = getMonthlyServiceCost();
+    const platformCosts = getActiveInputs().platformCost;
+    const monthlyPlatformCost = getMaintenanceCost() + getEnhancementCost();
+    const monthlySavings = monthlyServiceCost * (getActiveInputs().expectedReduction / 100);
+    
+    return Math.ceil(platformCosts / (monthlySavings - monthlyPlatformCost));
+};
+
+const calculateAnnualSavings = () => {
+    const monthlyServiceCost = getMonthlyServiceCost();
+    const monthlyPlatformCost = getMaintenanceCost() + getEnhancementCost();
+    const monthlySavings = monthlyServiceCost * (getActiveInputs().expectedReduction / 100);
+    
+    return Math.round((monthlySavings - monthlyPlatformCost) * 12);
+};
+
+const getBreakEvenColor = (months) => {
+    if (months <= 12) return 'green';
+    if (months <= 24) return 'orange';
+    return 'red';
+};
+const BreakEvenMetrics = () => (
+    <div className="breakeven-card">
+        <div className={`metric-box ${getBreakEvenColor(calculateBreakEven())}`}>
+            <h3>Break Even</h3>
+            <div className="value">{calculateBreakEven()} months</div>
+        </div>
+        <div className="metric-box green">
+            <h3>Annual Savings</h3>
+            <div className="value">${calculateAnnualSavings().toLocaleString()}</div>
+        </div>
+    </div>
+);
+
+const AdvancedSection = () => (
+    <div className="advanced-section">
+        <InputWithSlider
+            name="numberOfUsers"
+            min={1}
+            max={1000}
+            step={10}
+            label={<>
+                Number of users utilizing the team's services
+                <span className="tooltip" data-tippy-content="Lorem ipsum dolor sit amet">?</span>
+            </>}
+            value={advancedInputs.numberOfUsers}
+            onChange={(e) => setAdvancedInputs(prev => ({...prev, [e.target.name]: Number(e.target.value)}))}
+        />
+        
+        <div className="input-group">
+            <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px' }}>
+                    User cost per hour ($)
+                    <span className="tooltip" data-tippy-content="Lorem ipsum dolor sit amet">?</span>
+                </label>
+                {!advancedInputs.skipUserCost && (
+                    <input
+                        type="range"
+                        name="userCostPerHour"
+                        min={10}
+                        max={200}
+                        step={5}
+                        value={advancedInputs.userCostPerHour}
+                        onChange={(e) => setAdvancedInputs(prev => ({...prev, userCostPerHour: Number(e.target.value)}))}
+                        className="slider"
+                    />
+                )}
+            </div>
+            {!advancedInputs.skipUserCost && (
+                <input
+                    type="number"
+                    name="userCostPerHour"
+                    value={advancedInputs.userCostPerHour}
+                    onChange={(e) => setAdvancedInputs(prev => ({...prev, userCostPerHour: Number(e.target.value)}))}
+                    className="number-input"
+                />
+            )}
+            <label className="checkbox-wrapper" style={{ marginBottom: 0, background: 'transparent' }}>
+                <input
+                    type="checkbox"
+                    checked={advancedInputs.skipUserCost}
+                    onChange={(e) => setAdvancedInputs(prev => ({...prev, skipUserCost: e.target.checked}))}
+                />
+                N/A
+            </label>
+        </div>
+        
+        <InputWithSlider
+            name="productivityIncrease"
+            min={0}
+            max={100}
+            step={5}
+            label={<>
+                Productivity increase (%)
+                <span className="tooltip" data-tippy-content="Lorem ipsum dolor sit amet">?</span>
+            </>}
+            value={advancedInputs.productivityIncrease}
+            onChange={(e) => setAdvancedInputs(prev => ({...prev, [e.target.name]: Number(e.target.value)}))}
+        />
+        
+        <InputWithSlider
+            name="manualLaborReduction"
+            min={0}
+            max={100}
+            step={5}
+            label={<>
+                Manual labor reduction (%)
+                <span className="tooltip" data-tippy-content="Lorem ipsum dolor sit amet">?</span>
+            </>}
+            value={advancedInputs.manualLaborReduction}
+            onChange={(e) => setAdvancedInputs(prev => ({...prev, [e.target.name]: Number(e.target.value)}))}
+        />
+    </div>
+);
+const InputWithSlider = ({ name, min, max, step, label, value, onChange }) => {
+    const currentValue = value !== undefined ? value : 
+        (activeModel === 'team' ? inputs[name] : ticketInputs[name]);
+    const handleChange = onChange || 
+        (activeModel === 'team' ? handleInputChange : handleTicketInputChange);
+
+    return (
+        <div className="input-group">
+            <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px' }}>{label}</label>
+                <input
+                    type="range"
+                    name={name}
+                    min={min}
+                    max={max}
+                    step={step}
+                    value={Math.min(currentValue || 0, max)}
+                    onChange={handleChange}
+                    className="slider"
+                />
+            </div>
+            <input
+                type="number"
+                name={name}
+                value={currentValue || 0}
+                onChange={handleChange}
+                onFocus={(e) => e.target.select()}
+                className="number-input"
+            />
+        </div>
+    );
+};
+            const CostToggleInput = ({ name, fteField, label, type, min, max, step }) => (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span>{label}</span>
+                        <div className="toggle-group">
+                            <button 
+                                className={`toggle-button ${costType[type] === 'USD' ? 'active' : ''}`}
+                                onClick={() => setCostType(prev => ({ ...prev, [type]: 'USD' }))}
+                            >
+                                USD
+                            </button>
+                            <button 
+                                className={`toggle-button ${costType[type] === 'FTE' ? 'active' : ''}`}
+                                onClick={() => setCostType(prev => ({ ...prev, [type]: 'FTE' }))}
+                            >
+                                FTE
+                            </button>
+                        </div>
+                    </div>
+                    <InputWithSlider
+                        name={costType[type] === 'USD' ? name : fteField}
+                        min={costType[type] === 'USD' ? min : 0.5}
+                        max={costType[type] === 'USD' ? max : 5}
+                        step={costType[type] === 'USD' ? step : 0.5}
+                        label=""
+                    />
+                </div>
+            );
+
+           React.useEffect(() => {
+    chartRefs.current.forEach(chart => chart?.destroy());
+    chartRefs.current = [];
+
+    const months = Array.from({ length: getActiveInputs().months + 1 }, (_, i) => i);
+    const monthlyServiceCost = getMonthlyServiceCost();
+    const maintenanceCost = getMaintenanceCost();
+    const enhancementCost = getEnhancementCost();
+    const monthlyPlatformBuildCost = getActiveInputs().platformCost / getActiveInputs().buildTime;
+
+    const calculateServiceCostForMonth = (month) => {
+        const baseCost = monthlyServiceCost;
+        if (month < getActiveInputs().buildTime) {
+            return parallelDevelopment ? baseCost * 1.2 : baseCost;
+        }
+        return baseCost * (1 - (getActiveInputs().expectedReduction / 100));
+    };
+
+    const calculatePlatformCostForMonth = (month) => {
+        if (month < getActiveInputs().buildTime) {
+            return monthlyPlatformBuildCost;
+        }
+        return maintenanceCost + enhancementCost;
+    };
+
+    const createChart = (ctx, data, title) => {
+        return new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: title
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.dataset.label}: $${context.raw.toLocaleString()}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => '$' + value.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+    };
+
+                // Monthly Costs Chart
+                const monthlyCtx = document.getElementById('monthlyCosts');
+                if (monthlyCtx) {
+                    const monthlyData = {
+                        labels: months,
+                        datasets: [{
+                            label: 'Monthly Service Team Cost',
+                            data: months.map(month => calculateServiceCostForMonth(month)),
+                            borderColor: '#8884d8'
+                        }, {
+                            label: 'Monthly Platform Cost',
+                            data: months.map(month => calculatePlatformCostForMonth(month)),
+                            borderColor: '#82ca9e'
+                        }]
+                    };
+                    chartRefs.current.push(createChart(monthlyCtx, monthlyData, 'Monthly Running Costs'));
+                }
+
+                // Accumulated Costs Chart
+                const accumulatedCtx = document.getElementById('accumulatedCosts');
+if (accumulatedCtx) {
+    const serviceTeamData = months.map(month => {
+        return Array.from({ length: month + 1 }, (_, i) => calculateServiceCostForMonth(i))
+            .reduce((a, b) => a + b, 0);
+    });
+    
+    const platformData = months.map(month => {
+        return Array.from({ length: month + 1 }, (_, i) => calculatePlatformCostForMonth(i))
+            .reduce((a, b) => a + b, 0);
+    });
+
+    const deltaData = serviceTeamData.map((val, idx) => val - platformData[idx]);
+
+    const accumulatedData = {
+        labels: months,
+        datasets: [{
+            label: 'Accumulated Service Team Cost',
+            data: serviceTeamData,
+            borderColor: '#8884d8',
+            fill: false
+        }, {
+            label: 'Accumulated Platform Cost',
+            data: platformData,
+            borderColor: '#82ca9e',
+            fill: false
+        }, {
+            label: 'Cost Savings',
+            data: deltaData,
+            borderColor: '#000',
+            fill: true,
+            backgroundColor: context => {
+                const value = deltaData[context.dataIndex];
+                return value > 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            }
+        }]
+    };
+    chartRefs.current.push(createChart(accumulatedCtx, accumulatedData, 'Costs & Savings Over Time'));
+}
+
+                // Break Even Chart
+const breakEvenCtx = document.getElementById('breakEvenChart');
+if (breakEvenCtx) {
+    const totalCosts = months.map(month => {
+        // Calculate what service would have cost without platform (baseline)
+        const baselineServiceCost = monthlyServiceCost * (month + 1);
+        
+        // Calculate actual costs with platform
+     const actualServiceCosts = Array.from({ length: month + 1 }, (_, i) => {
+    if (i < getActiveInputs().buildTime) {  // Change this line
+        // During build phase
+        return parallelDevelopment ? monthlyServiceCost * 1.2 : monthlyServiceCost;
+    } else {
+        // After platform implementation
+        return monthlyServiceCost * (1 - getActiveInputs().expectedReduction / 100);  // And this line
+    }
+}).reduce((a, b) => a + b, 0);
+
+        const platformCosts = Array.from({ length: month + 1 }, (_, i) => calculatePlatformCostForMonth(i))
+            .reduce((a, b) => a + b, 0);
+
+        // Positive values mean we're saving money compared to baseline
+        return baselineServiceCost - (actualServiceCosts + platformCosts);
+    });
+
+    const breakEvenData = {
+        labels: months,
+        datasets: [{
+            label: 'Cumulative Savings vs Baseline',
+            data: totalCosts,
+            borderColor: '#9333ea',
+            fill: true,
+            backgroundColor: context => {
+                const value = context.raw;
+                return value >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            }
+        }]
+    };
+    chartRefs.current.push(createChart(breakEvenCtx, breakEvenData, 'Break Even Analysis'));
+}
+if (showAdvanced && document.getElementById('advancedMetrics')) {
+    const advancedData = {
+        labels: ['User Impact'],
+        datasets: [
+            {
+                label: 'Productivity Increase',
+                data: [advancedInputs.productivityIncrease],
+                backgroundColor: '#8884d8',
+                barThickness: 50
+            },
+            {
+                label: 'Manual Labor Reduction',
+                data: [advancedInputs.manualLaborReduction],
+                backgroundColor: '#82ca9e',
+                barThickness: 50
+            },
+            {
+                label: 'Cost Impact (Monthly)',
+                data: [getAdvancedSavings()],
+                backgroundColor: '#9333ea',
+                barThickness: 50
+            }
+        ]
+    };
+
+    const advancedChart = new Chart(document.getElementById('advancedMetrics'), {
+        type: 'bar',
+        data: advancedData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Advanced Metrics Impact'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: context => {
+                            const value = context.raw;
+                            if (context.datasetIndex === 2) {
+                                return `${context.dataset.label}: $${value.toLocaleString()}`;
+                            }
+                            return `${context.dataset.label}: ${value}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => {
+                            if (value > 1000) {
+                                return '$' + value.toLocaleString();
+                            }
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    chartRefs.current.push(advancedChart);
+}
+}, [inputs, ticketInputs, costType, parallelDevelopment, activeModel, showAdvanced, advancedInputs]);
+            return (
+                <div className="container">
+    <div className="intro-box">
+        <h2 style={{ margin: '0 0 10px 0' }}>Service Platform Investment Calculator</h2>
+        <p style={{ margin: '0' }}>
+            This calculator helps you evaluate the financial implications of transforming a manual service delivery team into a platform-based service.
+            Compare costs, analyze break-even points, and make data-driven decisions about your service delivery strategy.
+        </p>
+    </div>
+
+    <div className="card">
+        <h1 className="title">Investment Calculator: Service Delivery Team vs Service as Platform</h1>
+        
+        <div className="model-toggle">
+            <button 
+                className={`model-button ${activeModel === 'team' ? 'active' : ''}`}
+                onClick={() => setActiveModel('team')}
+            >
+                Team Size Based Cost Model
+            </button>
+            <button 
+                className={`model-button ${activeModel === 'ticket' ? 'active' : ''}`}
+                onClick={() => setActiveModel('ticket')}
+            >
+                Ticket Based Cost Model
+            </button>
+        </div>
+
+        <div className="grid">
+            <div>
+                {activeModel === 'team' ? (
+                    <>
+                        <InputWithSlider
+                            name="teamSize"
+                            min={1}
+                            max={50}
+                            step={1}
+                            label="Team size (FTEs)"
+                        />
+                        <InputWithSlider
+                            name="hourlyRate"
+                            min={50}
+                            max={200}
+                            step={10}
+                            label="Cost per hour ($)"
+                        />
+                        <InputWithSlider
+                            name="serviceDeliveryPercent"
+                            min={0}
+                            max={100}
+                            step={5}
+                            label="Time spent on service delivery (%)"
+                        />
+                    </>
+                ) : (
+                    <>
+                        <InputWithSlider
+                            name="ticketsPerMonth"
+                            min={1}
+                            max={100}
+                            step={1}
+                            label="Tickets per month"
+                            value={ticketInputs.ticketsPerMonth}
+                            onChange={handleTicketInputChange}
+                        />
+                        <InputWithSlider
+                            name="hoursPerTicket"
+                            min={1}
+                            max={40}
+                            step={1}
+                            label="Hours per ticket"
+                            value={ticketInputs.hoursPerTicket}
+                            onChange={handleTicketInputChange}
+                        />
+                        <InputWithSlider
+                            name="peoplePerTicket"
+                            min={1}
+                            max={5}
+                            step={1}
+                            label="People per ticket"
+                            value={ticketInputs.peoplePerTicket}
+                            onChange={handleTicketInputChange}
+                        />
+                        <InputWithSlider
+                            name="hourlyRate"
+                            min={50}
+                            max={200}
+                            step={10}
+                            label="Cost per hour ($)"
+                            value={ticketInputs.hourlyRate}
+                            onChange={handleTicketInputChange}
+                        />
+                    </>
+                )}
+                <button 
+    className="advanced-toggle"
+    onClick={() => setShowAdvanced(!showAdvanced)}
+>
+    {showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}
+</button>
+
+{showAdvanced && <AdvancedSection />}
+
+<div className="section-divider" />
+                <InputWithSlider
+                    name="platformCost"
+                    min={50000}
+                    max={500000}
+                    step={10000}
+                    label="Platform initial cost ($)"
+                    value={activeModel === 'team' ? inputs.platformCost : ticketInputs.platformCost}
+                    onChange={activeModel === 'team' ? handleInputChange : handleTicketInputChange}
+                />
+                
+                <InputWithSlider
+                    name="buildTime"
+                    min={1}
+                    max={24}
+                    step={1}
+                    label="Estimated months to build platform"
+                    value={activeModel === 'team' ? inputs.buildTime : ticketInputs.buildTime}
+                    onChange={activeModel === 'team' ? handleInputChange : handleTicketInputChange}
+                />
+
+                <div className="checkbox-wrapper">
+                    <input
+                        type="checkbox"
+                        id="parallelDevelopment"
+                        checked={parallelDevelopment}
+                        onChange={(e) => setParallelDevelopment(e.target.checked)}
+                    />
+                    <label htmlFor="parallelDevelopment">
+                        Platform will be developed alongside the manual service 
+                        (increases early costs by 20%)
+                    </label>
+                </div>
+
+                <div className="section-divider" />
+
+                <CostToggleInput
+                    name="platformMaintenanceCost"
+                    fteField="platformMaintenanceFTE"
+                    label="Platform Monthly Maintenance"
+                    type="maintenance"
+                    min={1000}
+                    max={20000}
+                    step={1000}
+                />
+                
+                <CostToggleInput
+                    name="featureEnhancementCost"
+                    fteField="featureEnhancementFTE"
+                    label="Monthly Feature Enhancements"
+                    type="enhancement"
+                    min={5000}
+                    max={50000}
+                    step={5000}
+                />
+
+                <InputWithSlider
+                    name="expectedReduction"
+                    min={0}
+                    max={100}
+                    step={5}
+                    label="Expected reduction in service work after platform implementation (%)"
+                    value={activeModel === 'team' ? inputs.expectedReduction : ticketInputs.expectedReduction}
+                    onChange={activeModel === 'team' ? handleInputChange : handleTicketInputChange}
+                />
+            </div>
+            
+            <div>
+                <div className="analysis-box">
+                    <h3 style={{ margin: '0 0 10px 0' }}>Analysis</h3>
+                    <BreakEvenMetrics />
+                    {activeModel === 'team' ? (
+                        <>
+                            <p>Current monthly service cost: ${(inputs.teamSize * inputs.hourlyRate * 
+                                MONTHLY_WORKING_HOURS * (inputs.serviceDeliveryPercent / 100)).toLocaleString()}</p>
+                            <p>Platform build cost per month: ${(inputs.platformCost / inputs.buildTime).toLocaleString()}</p>
+                            <p>Monthly maintenance cost: ${getMaintenanceCost().toLocaleString()}</p>
+                            <p>Monthly enhancement cost: ${getEnhancementCost().toLocaleString()}</p>
+                            <p>Service delivery FTE hours/month: {Math.round(inputs.teamSize * MONTHLY_WORKING_HOURS * 
+                                (inputs.serviceDeliveryPercent / 100))}</p>
+                            <p>Expected monthly service cost after platform: ${(inputs.teamSize * inputs.hourlyRate * 
+                                MONTHLY_WORKING_HOURS* (inputs.serviceDeliveryPercent / 100) * 
+                                (1 - inputs.expectedReduction / 100)).toLocaleString()}</p>
+                        </>
+                    ) : (
+                        <>
+                            <p>Current monthly service cost: ${(ticketInputs.ticketsPerMonth * ticketInputs.hoursPerTicket * 
+                                ticketInputs.peoplePerTicket * ticketInputs.hourlyRate).toLocaleString()}</p>
+                            <p>Platform build cost per month: ${(ticketInputs.platformCost / ticketInputs.buildTime).toLocaleString()}</p>
+                            <p>Monthly maintenance cost: ${getMaintenanceCost().toLocaleString()}</p>
+                            <p>Monthly enhancement cost: ${getEnhancementCost().toLocaleString()}</p>
+                            <p>Total hours/month: {ticketInputs.ticketsPerMonth * ticketInputs.hoursPerTicket * ticketInputs.peoplePerTicket}</p>
+                            <p>Expected monthly service cost after platform: ${(ticketInputs.ticketsPerMonth * ticketInputs.hoursPerTicket * 
+                                ticketInputs.peoplePerTicket * ticketInputs.hourlyRate * 
+                                (1 - ticketInputs.expectedReduction / 100)).toLocaleString()}</p>
+                        </>
+                    )}
+                </div>
+                
+                <div className="chart-container">
+                    <canvas id="monthlyCosts"></canvas>
+                </div>
+                
+                <div className="chart-container">
+                    <canvas id="accumulatedCosts"></canvas>
+                </div>
+
+                <div className="chart-container">
+                    <canvas id="breakEvenChart"></canvas>
+                </div>
+                {showAdvanced && (
+                    <div className="chart-container">
+                        <canvas id="advancedMetrics"></canvas>
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+</div>
+);
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

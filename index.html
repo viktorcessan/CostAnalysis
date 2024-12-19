@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Platform Investment Calculator</title>
+    
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
+    
+    <!-- Export Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lit -->
+    <script type="module">
+      import { LitElement, html, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
+      window.LitElement = LitElement;
+      window.html = html;
+      window.css = css;
+    </script>
+
+    <!-- Custom Styles -->
+    <style type="text/tailwindcss">
+        @layer components {
+            .slider {
+                @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
+            }
+            
+            .slider::-webkit-slider-thumb {
+                @apply appearance-none w-4 h-4 bg-indigo-600 rounded-full cursor-pointer;
+            }
+            
+            .input-number {
+                @apply w-24 px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600;
+            }
+            
+            .chart-container {
+                @apply bg-white p-4 rounded-xl shadow-lg mb-6 h-[250px];
+            }
+            
+            .card {
+                @apply bg-white rounded-xl shadow-lg p-6;
+            }
+            
+            .btn {
+                @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+            }
+            
+            .btn-primary {
+                @apply bg-indigo-600 text-white hover:bg-indigo-700;
+            }
+            
+            .btn-secondary {
+                @apply bg-white text-gray-700 hover:bg-gray-50 border border-gray-200;
+            }
+
+            .input-group {
+                @apply space-y-2;
+            }
+
+            .input-label {
+                @apply text-sm font-medium text-gray-700 flex items-center;
+            }
+
+            .tooltip {
+                @apply ml-2 text-gray-400 hover:text-gray-600 cursor-help;
+            }
+
+            .export-btn {
+                @apply px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200
+                       flex items-center gap-2 border border-gray-200;
+            }
+            
+            .export-btn-primary {
+                @apply bg-indigo-600 text-white hover:bg-indigo-700 border-transparent;
+            }
+            
+            .export-btn-secondary {
+                @apply bg-white text-gray-700 hover:bg-gray-50;
+            }
+
+            .chart-tabs {
+                @apply flex gap-2 mb-4;
+            }
+
+            .chart-tab {
+                @apply px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200
+                       border border-gray-200 cursor-pointer;
+            }
+
+            .chart-tab.active {
+                @apply bg-indigo-600 text-white border-transparent;
+            }
+        }
+    </style>
+
+    <!-- Components -->
+    <script type="module" src="./src/components/calculator-app.js"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <calculator-app></calculator-app>
+    <footer class="text-center py-4 text-gray-600">
+        © 2024 viktorcessan.com - All rights reserved
+    </footer>
+  </body>
+</html> 

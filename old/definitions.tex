@@ -1,0 +1,634 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{longtable}
+\usepackage{placeins}
+\usepackage{cleveref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Style configurations
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{blue!70!black}}{\thesection}{1em}{}[\vspace{-0.5\baselineskip}]
+\titleformat{\subsection}
+{\normalfont\large\bfseries\color{blue!60!black}}{\thesubsection}{1em}{}[\vspace{-0.5\baselineskip}]
+
+% Custom environments with better spacing and page breaks
+\mdfdefinestyle{definitionstyle}{
+    linecolor=blue!40,
+    backgroundcolor=blue!5,
+    linewidth=1pt,
+    roundcorner=5pt,
+    innertopmargin=8pt,
+    innerbottommargin=8pt,
+    innerleftmargin=8pt,
+    innerrightmargin=8pt,
+    skipabove=\baselineskip,
+    skipbelow=\baselineskip,
+    needspace=4\baselineskip
+}
+
+\mdfdefinestyle{explanationstyle}{
+    linecolor=green!40,
+    backgroundcolor=green!5,
+    linewidth=1pt,
+    roundcorner=5pt,
+    innertopmargin=8pt,
+    innerbottommargin=8pt,
+    innerleftmargin=8pt,
+    innerrightmargin=8pt,
+    skipabove=\baselineskip,
+    skipbelow=\baselineskip,
+    needspace=4\baselineskip
+}
+
+\mdfdefinestyle{observationstyle}{
+    linecolor=orange!40,
+    backgroundcolor=orange!5,
+    linewidth=1pt,
+    roundcorner=5pt,
+    innertopmargin=8pt,
+    innerbottommargin=8pt,
+    innerleftmargin=8pt,
+    innerrightmargin=8pt,
+    skipabove=\baselineskip,
+    skipbelow=\baselineskip,
+    needspace=4\baselineskip
+}
+
+\newenvironment{definition}[1]
+{\begin{mdframed}[style=definitionstyle]
+\textbf{Definition (#1):}\par}
+{\end{mdframed}}
+
+\newenvironment{explanation}
+{\begin{mdframed}[style=explanationstyle]
+\textbf{Explanation:}\par}
+{\end{mdframed}}
+
+\newenvironment{observation}
+{\begin{mdframed}[style=observationstyle]
+\textbf{Observation:}\par}
+{\end{mdframed}}
+
+% Hyperref configuration
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue
+}
+
+\title{\textbf{Service Delivery Models:\\Formal Definitions and Analysis Framework}}
+\author{Service Platform Investment Calculator}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\tableofcontents
+\clearpage
+
+\section{Introduction}
+This document provides a comprehensive framework for analyzing service delivery models and their associated costs. We present formal definitions, mathematical models, and evaluation metrics for different service delivery approaches. The analysis focuses on two primary models - Team-Based and Ticket-Based - each with three potential transformation strategies: Platform Automation, Outsourcing, and Hybrid solutions.
+
+\subsection{Purpose and Scope}
+The framework serves several key purposes:
+\begin{itemize}
+    \item Standardize the evaluation of service delivery options
+    \item Provide quantitative methods for cost-benefit analysis
+    \item Enable data-driven decision making in service transformation
+    \item Account for both direct and indirect costs
+    \item Consider quality and efficiency impacts
+\end{itemize}
+
+\subsection{Model Overview}
+\begin{explanation}
+The analysis framework is built around two fundamental models, each representing a different approach to measuring and managing service delivery:
+
+\textbf{Team-Based Model:} Focuses on the costs and efficiency of dedicated service teams, measuring productivity in terms of time and resource utilization.
+
+\textbf{Ticket-Based Model:} Centers on individual service requests, measuring efficiency in terms of resolution times and throughput.
+
+Each model can be transformed through three strategic approaches:
+\begin{itemize}
+    \item \textbf{Platform Automation:} Investment in technology to automate processes
+    \item \textbf{Outsourcing:} Transfer of operations to external providers
+    \item \textbf{Hybrid:} Combination of automation and outsourcing
+\end{itemize}
+\end{explanation}
+
+\section{Common Variables and Constants}
+\subsection{Time Variables}
+\begin{definition}{Time Parameters}
+Standard time units and periods used across all calculations:
+\begin{align*}
+    T_{month} &= \text{Hours per month} = 160 \text{ hours} \\
+    T_{year} &= \text{Hours per year} = 1920 \text{ hours} \\
+    t &= \text{Time period (in months)} \\
+    \Delta t &= \text{Time horizon for analysis (typically 36 months)}
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+Time variables form the foundation of our cost calculations. The standard month is based on:
+\begin{itemize}
+    \item 40-hour work weeks
+    \item 4 weeks per month
+    \item Excluding holidays and standard leave
+\end{itemize}
+The analysis horizon ($\Delta t$) is set to 36 months to capture:
+\begin{itemize}
+    \item Initial implementation period
+    \item Stabilization phase
+    \item Long-term benefits realization
+\end{itemize}
+\end{explanation}
+
+\subsection{Financial Variables}
+\begin{definition}{Financial Parameters}
+Core financial metrics and rates:
+\begin{align*}
+    r &= \text{Discount rate (annual)} \\
+    i &= \text{Inflation rate (annual)} \\
+    NPV &= \text{Net Present Value} \\
+    ROI &= \text{Return on Investment} \\
+    IRR &= \text{Internal Rate of Return}
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+Financial variables are essential for:
+\begin{itemize}
+    \item Time value of money calculations
+    \item Investment return analysis
+    \item Cost comparison across different time periods
+    \item Risk-adjusted decision making
+\end{itemize}
+The discount rate ($r$) should reflect:
+\begin{itemize}
+    \item Organization's cost of capital
+    \item Risk premium for technology investments
+    \item Market conditions
+\end{itemize}
+\end{explanation}
+
+\section{Team-Based Model}
+\subsection{Base Case Analysis}
+\begin{definition}{Team Model Variables}
+Let $\mathcal{T}$ represent the team-based model with:
+\begin{align*}
+    n &= \text{Team size (FTEs)} \\
+    h &= \text{Hourly rate per FTE} \\
+    \eta_s &= \text{Service delivery efficiency} \in [0,1] \\
+    \eta_o &= \text{Operational overhead} \in [0,1] \\
+    w &= \text{Working hours per month}
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+The team-based model focuses on resource utilization and efficiency:
+\begin{itemize}
+    \item FTE count represents fully dedicated team members
+    \item Efficiency factors capture productive vs. non-productive time
+    \item Overhead includes administrative and management costs
+    \item Working hours account for actual service delivery time
+\end{itemize}
+\end{explanation}
+
+\subsection{Base Cost Structure}
+\begin{definition}{Base Team Cost}
+The monthly base cost $C_b$ is defined as:
+\begin{equation}
+    C_b = n \cdot h \cdot w \cdot \eta_s \cdot (1 + \eta_o)
+\end{equation}
+\end{definition}
+
+\begin{explanation}
+The base cost formula incorporates:
+\begin{itemize}
+    \item Direct labor costs ($n \cdot h \cdot w$)
+    \item Service delivery efficiency ($\eta_s$)
+    \item Operational overhead impact ($1 + \eta_o$)
+\end{itemize}
+This provides a baseline for comparing transformation options.
+\end{explanation}
+
+\subsection{Platform Solution}
+\begin{definition}{Platform Variables}
+For the platform solution $\mathcal{P}$:
+\begin{align*}
+    P_i &= \text{Initial platform investment} \\
+    P_m &= \text{Monthly maintenance cost} \\
+    \alpha_t &= \text{Team reduction factor} \in [0,1] \\
+    \alpha_p &= \text{Process efficiency improvement} \in [0,1] \\
+    T_i &= \text{Implementation time (months)}
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+The platform solution represents automation through technology:
+\begin{itemize}
+    \item Initial investment covers development and implementation
+    \item Maintenance ensures platform sustainability
+    \item Team reduction captures automated task replacement
+    \item Process efficiency measures streamlined operations
+    \item Implementation time affects benefit realization
+\end{itemize}
+\end{explanation}
+
+\subsubsection{Platform Cost Structure}
+\begin{definition}{Platform Cost}
+Monthly platform cost $C_p$ after implementation:
+\begin{equation}
+    C_p = C_b \cdot (1 - \alpha_t) \cdot (1 - \alpha_p) + P_m
+\end{equation}
+\end{definition}
+
+\begin{explanation}
+The platform cost formula reflects:
+\begin{itemize}
+    \item Reduced team size through automation
+    \item Improved process efficiency
+    \item Ongoing maintenance requirements
+\end{itemize}
+Cost savings are realized through:
+\begin{itemize}
+    \item Reduced labor requirements
+    \item Increased process efficiency
+    \item Standardized operations
+\end{itemize}
+\end{explanation}
+
+\subsection{Outsourcing Solution Variables}
+\begin{definition}{Outsourcing Variables}
+For the outsourcing solution $\mathcal{O}$:
+\begin{align*}
+    v &= \text{Vendor hourly rate} \\
+    \beta_m &= \text{Management overhead factor} \in [0,1] \\
+    \beta_q &= \text{Quality impact factor} \in [0,1] \\
+    \beta_k &= \text{Knowledge loss factor} \in [0,1] \\
+    O_t &= \text{Transition cost} \\
+    T_t &= \text{Transition time (months)}
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+Outsourcing introduces several impact factors:
+\begin{itemize}
+    \item Management overhead for vendor coordination
+    \item Quality changes from service transfer
+    \item Knowledge loss over time
+    \item Transition costs and duration
+\end{itemize}
+
+The impact factors reflect:
+\begin{itemize}
+    \item Communication and coordination needs
+    \item Service quality maintenance
+    \item Knowledge transfer and retention
+    \item Organizational learning curve
+\end{itemize}
+\end{explanation}
+
+\subsubsection{Outsourcing Cost Structure}
+\begin{definition}{Outsourcing Cost}
+The monthly outsourcing cost $C_o$ is:
+\begin{equation}
+    C_o = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot (1 + \beta_q) \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
+\end{equation}
+\end{definition}
+
+\begin{explanation}
+The outsourcing cost formula accounts for:
+\begin{itemize}
+    \item Base vendor costs ($v \cdot w \cdot n$)
+    \item Management overhead multiplier $(1 + \beta_m)$
+    \item Quality impact adjustment $(1 + \beta_q)$
+    \item Time-dependent knowledge loss $\log_{10}(T_t + 1)$
+\end{itemize}
+
+The logarithmic knowledge loss factor reflects:
+\begin{itemize}
+    \item Initial rapid knowledge transfer challenges
+    \item Gradual stabilization over time
+    \item Long-term institutional knowledge erosion
+\end{itemize}
+\end{explanation}
+
+\subsection{Hybrid Solution Variables}
+\begin{definition}{Hybrid Variables}
+For the hybrid solution $\mathcal{H}$:
+\begin{align*}
+    \gamma_p &= \text{Platform portion} \in [0,1] \\
+    \gamma_o &= \text{Outsourced portion} \in [0,1] \\
+    P_h &= \text{Reduced platform investment} \\
+    v_h &= \text{Negotiated vendor rate}
+\end{align*}
+where $\gamma_p + \gamma_o \leq 1$
+\end{definition}
+
+\begin{explanation}
+The hybrid approach combines platform and outsourcing benefits:
+\begin{itemize}
+    \item Balanced workload distribution
+    \item Reduced platform investment needs
+    \item Potentially lower vendor rates
+    \item Flexibility in service delivery
+\end{itemize}
+
+Key considerations include:
+\begin{itemize}
+    \item Optimal work distribution
+    \item Integration requirements
+    \item Coordination overhead
+    \item Risk diversification
+\end{itemize}
+\end{explanation}
+
+\section{Ticket-Based Model}
+\subsection{Base Case Analysis}
+\begin{definition}{Ticket Model Variables}
+Let $\mathcal{B}$ represent the ticket-based model with:
+\begin{align*}
+    m &= \text{Monthly tickets} \\
+    t_h &= \text{Hours per ticket} \\
+    p &= \text{People per ticket} \\
+    h &= \text{Hourly rate} \\
+    \sigma &= \text{SLA compliance rate} \in [0,1]
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+The ticket-based model focuses on individual service requests:
+\begin{itemize}
+    \item Volume-based measurement
+    \item Resource requirements per ticket
+    \item Service level compliance
+    \item Direct cost attribution
+\end{itemize}
+
+This approach is particularly suitable for:
+\begin{itemize}
+    \item Help desk operations
+    \item Service request handling
+    \item Incident management
+    \item Standard service delivery
+\end{itemize}
+\end{explanation}
+
+\subsection{Ticket Cost Structure}
+\begin{definition}{Base Ticket Cost}
+The monthly base ticket cost $C_t$ is:
+\begin{equation}
+    C_t = m \cdot t_h \cdot p \cdot h
+\end{equation}
+\end{definition}
+
+\begin{explanation}
+The base ticket cost incorporates:
+\begin{itemize}
+    \item Volume of service requests
+    \item Time investment per request
+    \item Required staff involvement
+    \item Labor cost rates
+\end{itemize}
+
+This formula enables:
+\begin{itemize}
+    \item Per-ticket cost analysis
+    \item Volume-based planning
+    \item Resource allocation optimization
+    \item Service level management
+\end{itemize}
+\end{explanation}
+
+\subsection{Outsourcing Impact on Ticket-Based Model}
+\begin{definition}{Ticket Outsourcing Variables}
+For the ticket-based outsourcing model $\mathcal{TO}$:
+\begin{align*}
+    v_t &= \text{Vendor cost per ticket} \\
+    \mu &= \text{Ticket multiplication factor} \geq 1 \\
+    \tau &= \text{Resolution time factor} \geq 1 \\
+    \omega &= \text{Rework probability} \in [0,1] \\
+    \theta &= \text{Quality threshold} \in [0,1]
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+The ticket-based outsourcing model introduces quality impact through:
+\begin{itemize}
+    \item Ticket multiplication ($\mu$): Additional tickets generated due to incomplete or incorrect resolutions
+    \item Extended resolution times ($\tau$): Increased handling time due to communication overhead
+    \item Rework probability ($\omega$): Likelihood of ticket reopening
+    \item Quality threshold ($\theta$): Minimum acceptable resolution quality
+\end{itemize}
+\end{explanation}
+
+\begin{definition}{Outsourced Ticket Cost}
+The effective monthly outsourced ticket cost $C_{to}$ is:
+\begin{equation}
+    C_{to} = m \cdot v_t \cdot \mu \cdot (1 + \omega) \cdot \tau
+\end{equation}
+
+The effective number of tickets handled becomes:
+\begin{equation}
+    m_{eff} = m \cdot \mu \cdot (1 + \omega)
+\end{equation}
+\end{definition}
+
+\begin{observation}
+Quality degradation in ticket-based outsourcing manifests through:
+\begin{itemize}
+    \item Increased ticket volume due to incomplete resolutions
+    \item Extended resolution times affecting SLA compliance
+    \item Higher rework rates impacting cost efficiency
+    \item Customer satisfaction correlation with quality metrics
+\end{itemize}
+\end{observation}
+
+\subsection{Hybrid Ticket-Based Model}
+\begin{definition}{Hybrid Ticket Variables}
+For the hybrid ticket-based model $\mathcal{TH}$:
+\begin{align*}
+    \gamma_a &= \text{Automated ticket portion} \in [0,1] \\
+    \gamma_v &= \text{Vendor ticket portion} \in [0,1] \\
+    \gamma_i &= \text{Internal ticket portion} \in [0,1] \\
+    c_a &= \text{Cost per automated ticket} \\
+    \eta_a &= \text{Automation success rate} \in [0,1]
+\end{align*}
+where $\gamma_a + \gamma_v + \gamma_i = 1$
+\end{definition}
+
+\begin{definition}{Hybrid Ticket Cost}
+The monthly hybrid ticket cost $C_{th}$ is:
+\begin{equation}
+    C_{th} = m \cdot (\gamma_a \cdot c_a + \gamma_v \cdot v_t \cdot \mu \cdot \tau + \gamma_i \cdot t_h \cdot p \cdot h)
+\end{equation}
+
+The effective success rate $\eta_{eff}$ is:
+\begin{equation}
+    \eta_{eff} = \gamma_a \cdot \eta_a + \gamma_v \cdot \frac{1}{\mu \cdot \tau} + \gamma_i
+\end{equation}
+\end{definition}
+
+\begin{explanation}
+The hybrid ticket model optimizes service delivery through:
+\begin{itemize}
+    \item Automated handling of standard tickets
+    \item Vendor management of medium-complexity tickets
+    \item Internal handling of complex or critical tickets
+    \item Dynamic workload distribution based on ticket characteristics
+\end{itemize}
+\end{explanation}
+
+\section{Performance Metrics}
+\subsection{Financial Analysis}
+\begin{definition}{NPV Calculation}
+For any solution $s$:
+\begin{equation}
+    NPV_s = -I_0 + \sum_{t=1}^{\Delta t} \frac{(C_b - C_s)_t}{(1 + r)^t}
+\end{equation}
+where:
+\begin{itemize}
+    \item $I_0$ is initial investment
+    \item $(C_b - C_s)_t$ is monthly savings
+    \item $r$ is the discount rate
+    \item $\Delta t$ is the analysis period
+\end{itemize}
+\end{definition}
+
+\begin{explanation}
+The NPV calculation:
+\begin{itemize}
+    \item Accounts for time value of money
+    \item Includes all cash flows
+    \item Considers opportunity cost
+    \item Enables investment comparison
+\end{itemize}
+\end{explanation}
+
+\subsection{Operational Metrics}
+\begin{definition}{Key Performance Indicators}
+For team-based model:
+\begin{align*}
+    \eta_u &= \frac{\text{Productive Hours}}{\text{Total Hours}} \\
+    \eta_e &= \frac{\text{Service Time}}{\text{Total Time}} \\
+    C_{fte} &= \frac{\text{Total Cost}}{n}
+\end{align*}
+
+For ticket-based model:
+\begin{align*}
+    \rho_r &= \frac{\text{Resolved Tickets}}{\text{Total Tickets}} \\
+    \bar{t}_r &= \frac{\sum \text{Resolution Times}}{\text{Total Tickets}} \\
+    C_{pt} &= \frac{\text{Total Cost}}{\text{Total Tickets}} \\
+    \sigma &= \frac{\text{Compliant Tickets}}{\text{Total Tickets}}
+\end{align*}
+\end{definition}
+
+\begin{explanation}
+These metrics provide:
+\begin{itemize}
+    \item Performance measurement
+    \item Quality monitoring
+    \item Efficiency tracking
+    \item Cost control
+\end{itemize}
+
+They should be monitored:
+\begin{itemize}
+    \item Regularly (daily/weekly/monthly)
+    \item Against established baselines
+    \item With trend analysis
+    \item For continuous improvement
+\end{itemize}
+\end{explanation}
+
+\section{Risk Analysis}
+\subsection{Quality Management}
+\begin{definition}{Quality Functions}
+Quality degradation for outsourcing:
+\begin{equation}
+    Q(t) = 1 - \beta_q \cdot (1 - e^{-\lambda t})
+\end{equation}
+where $\lambda$ is the quality decay rate.
+\end{definition}
+
+\begin{explanation}
+The quality function models:
+\begin{itemize}
+    \item Initial quality impact
+    \item Stabilization period
+    \item Long-term quality levels
+    \item Improvement potential
+\end{itemize}
+\end{explanation}
+
+\subsection{Knowledge Management}
+\begin{definition}{Knowledge Functions}
+Knowledge retention for outsourcing:
+\begin{equation}
+    K(t) = 1 - \beta_k \cdot \log_{10}(t + 1)
+\end{equation}
+\end{definition}
+
+\begin{explanation}
+The knowledge retention function captures:
+\begin{itemize}
+    \item Initial knowledge transfer
+    \item Ongoing knowledge loss
+    \item Documentation effectiveness
+    \item Training impact
+\end{itemize}
+\end{explanation}
+
+\section{Comparative Analysis}
+\subsection{Model Selection Framework}
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}p{3cm}ccc@{}}
+\toprule
+\textbf{Criterion} & \textbf{Team-Based} & \textbf{Ticket-Based} & \textbf{Hybrid} \\
+\midrule
+Cost Predictability & High & Medium & Medium-High \\
+Quality Control & High & Variable & High \\
+Scalability & Low & High & Very High \\
+Knowledge Retention & High & Medium & High \\
+Implementation Complexity & Low & Medium & High \\
+Process Standardization & Medium & High & Very High \\
+Resource Flexibility & Low & High & Very High \\
+Technology Leverage & Medium & High & Very High \\
+\bottomrule
+\end{tabular}
+\caption{Comprehensive Model Comparison Matrix}
+\label{tab:model-comparison}
+\end{table}
+
+\begin{explanation}
+Model selection criteria prioritize:
+\begin{itemize}
+    \item \textbf{Cost Predictability:} Ability to forecast and control costs
+    \item \textbf{Quality Control:} Maintaining service standards
+    \item \textbf{Scalability:} Capacity to handle volume changes
+    \item \textbf{Knowledge Retention:} Preservation of institutional knowledge
+    \item \textbf{Implementation Complexity:} Effort required for deployment
+    \item \textbf{Process Standardization:} Consistency in service delivery
+    \item \textbf{Resource Flexibility:} Ability to adjust capacity
+    \item \textbf{Technology Leverage:} Utilization of automation
+\end{itemize}
+\end{explanation}
+
+\end{document}

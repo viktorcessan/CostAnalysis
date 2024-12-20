@@ -299,19 +299,24 @@ export class CalculatorForm extends LitElement {
     
     const value = this.values[field.name] || field.min;
     
+    // Determine input width based on field type
+    const inputWidthClass = field.name.toLowerCase().includes('cost') || field.max > 1000 
+      ? 'w-24 min-w-[6rem]' 
+      : 'w-16 min-w-[4rem]';
+    
     return html`
       <div class="bg-white p-2 rounded-lg border border-gray-100 hover:border-indigo-200 transition-colors duration-200 overflow-hidden">
-        <div class="flex justify-between items-center mb-1">
-          <label class="text-xs font-medium text-gray-700 flex items-center gap-1 min-w-0">
+        <div class="flex justify-between items-center mb-1 gap-2">
+          <label class="text-xs font-medium text-gray-700 flex items-center gap-1 min-w-0 flex-1">
             <span class="truncate">${field.label}</span>
-            <span class="tooltip" data-tippy-content="${tooltip}">
+            <button class="tooltip flex-none" data-tippy-content="${tooltip}">
               <svg class="w-5 h-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </span>
+            </button>
           </label>
-          <div class="relative">
+          <div class="relative flex-none">
             <input
               type="number"
               name=${field.name}
@@ -320,7 +325,7 @@ export class CalculatorForm extends LitElement {
               min=${field.min}
               max=${field.max}
               step=${field.step}
-              class="w-16 px-1 py-0.5 text-right text-gray-700 bg-gray-50 border border-gray-200 
+              class="${inputWidthClass} px-1 py-0.5 text-right text-gray-700 bg-gray-50 border border-gray-200 
                      rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent
                      transition-all duration-200 text-xs"
             />

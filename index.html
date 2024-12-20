@@ -93,7 +93,28 @@
 
             /* Fix for mobile input fields */
             input[type="number"] {
-                @apply w-16 min-w-[4rem] max-w-[4rem];
+                @apply font-mono;
+                font-variant-numeric: tabular-nums;
+                -moz-font-feature-settings: "tnum";
+                -webkit-font-feature-settings: "tnum";
+                font-feature-settings: "tnum";
+            }
+
+            input[type="number"][max="500000"],
+            input[type="number"][max="100000"] {
+                @apply w-28 min-w-[7rem] px-5;
+            }
+
+            input[type="number"][max="10000"] {
+                @apply w-24 min-w-[6rem] px-4;
+            }
+
+            input[type="number"][max="1000"] {
+                @apply w-20 min-w-[5rem] px-3;
+            }
+
+            input[type="number"][max="100"] {
+                @apply w-16 min-w-[4rem] px-2;
             }
 
             .field-container {

@@ -109,17 +109,20 @@ export class CalculatorService {
       operationalOverhead
     } = values;
 
+    // Base monthly cost: team size × hourly rate × working hours
     const baseMonthly = teamSize * hourlyRate * this.WORKING_HOURS;
-    const inefficiencyFactor = 1 + (1 - serviceEfficiency) + operationalOverhead;
-    const monthlyTotal = baseMonthly * inefficiencyFactor;
+    
+    // Apply service efficiency and operational overhead
+    // C_b = n × h × w × η_s × (1 + η_o)
+    const monthlyTotal = baseMonthly * serviceEfficiency * (1 + operationalOverhead);
 
     return {
       initial: 0,
       monthly: monthlyTotal,
       breakdown: {
         labor: baseMonthly,
-        inefficiency: baseMonthly * (1 - serviceEfficiency),
-        overhead: baseMonthly * operationalOverhead
+        efficiency: baseMonthly * (1 - serviceEfficiency),
+        overhead: monthlyTotal - (baseMonthly * serviceEfficiency)
       }
     };
   }

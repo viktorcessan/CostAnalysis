@@ -29,10 +29,9 @@ export class CalculationResults extends LitElement {
   render() {
     if (!this.results) return null;
 
-    const sensitivityResults = this.calculateSensitivity();
-
     return html`
       <div class="mt-12 space-y-8">
+        <!-- Main Results Box -->
         <div class="bg-white rounded-xl shadow-lg p-6">
           <!-- Summary Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -80,36 +79,6 @@ export class CalculationResults extends LitElement {
             <canvas id="analysisChart"></canvas>
           </div>
 
-          <!-- Sensitivity Analysis -->
-          <div class="mb-8">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Sensitivity Analysis</h3>
-              <div class="text-sm text-gray-600">
-                Analysis based on ±20% variation in cost savings
-              </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              ${this.renderSensitivityCard(
-                'Pessimistic',
-                sensitivityResults.pessimistic,
-                'red',
-                'Assumes 20% lower cost savings than base case, representing potential risks and challenges.'
-              )}
-              ${this.renderSensitivityCard(
-                'Base Case',
-                sensitivityResults.base,
-                'indigo',
-                'Current projected savings based on provided inputs and standard assumptions.'
-              )}
-              ${this.renderSensitivityCard(
-                'Optimistic',
-                sensitivityResults.optimistic,
-                'green',
-                'Assumes 20% higher cost savings than base case, representing potential upside opportunities.'
-              )}
-            </div>
-          </div>
-
           <!-- Export Buttons -->
           <div class="flex justify-end gap-4 pt-4 border-t border-gray-200">
             <button
@@ -133,26 +102,57 @@ export class CalculationResults extends LitElement {
               Export PDF
             </button>
           </div>
+        </div>
 
-          <!-- Formula Accordion -->
-          <div class="mt-8 border-t border-gray-200 pt-4">
-            <button
-              @click=${() => this.toggleFormulas()}
-              class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            >
-              <span class="font-medium text-gray-700">View Mathematical Models</span>
-              <svg
-                class="w-5 h-5 text-gray-500 transform transition-transform duration-200 ${this.showFormulas ? 'rotate-180' : ''}"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            ${this.showFormulas ? this.renderModelFormulas() : ''}
+        <!-- Sensitivity Analysis Box -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Sensitivity Analysis</h3>
+            <div class="text-sm text-gray-600">
+              Analysis based on ±20% variation in cost savings
+            </div>
           </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${this.renderSensitivityCard(
+              'Pessimistic',
+              this.calculateSensitivity().pessimistic,
+              'red',
+              'Assumes 20% lower cost savings than base case, representing potential risks and challenges.'
+            )}
+            ${this.renderSensitivityCard(
+              'Base Case',
+              this.calculateSensitivity().base,
+              'indigo',
+              'Current projected savings based on provided inputs and standard assumptions.'
+            )}
+            ${this.renderSensitivityCard(
+              'Optimistic',
+              this.calculateSensitivity().optimistic,
+              'green',
+              'Assumes 20% higher cost savings than base case, representing potential upside opportunities.'
+            )}
+          </div>
+        </div>
+
+        <!-- Formula Accordion -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <button
+            @click=${() => this.toggleFormulas()}
+            class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+          >
+            <span class="font-medium text-gray-700">View Mathematical Models</span>
+            <svg
+              class="w-5 h-5 text-gray-500 transform transition-transform duration-200 ${this.showFormulas ? 'rotate-180' : ''}"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          ${this.showFormulas ? this.renderModelFormulas() : ''}
         </div>
       </div>
     `;
@@ -189,7 +189,24 @@ export class CalculationResults extends LitElement {
   }
 
   renderComparisonTable() {
-    const { baseline, solution } = this.results;
+    const { baseline, solution, data } = this.results;
+    
+    // For platform solutions, we need to account for build time
+    let solutionMonthly = solution.monthly;
+    let solutionTotal;
+    
+    if (solution.type === 'platform') {
+      const buildTime = solution.timeToBuild || 3;
+      // During build time: full baseline costs
+      const buildPeriodCost = baseline.monthly * buildTime;
+      // After build time: reduced costs for remaining months
+      const remainingMonths = 24 - buildTime;
+      solutionTotal = solution.initial + buildPeriodCost + (solution.monthly * remainingMonths);
+    } else {
+      solutionTotal = (solution.monthly * 24) + solution.initial;
+    }
+    
+    const baselineTotal = baseline.monthly * 24;
     
     return html`
       <div class="overflow-x-auto mb-8">
@@ -203,12 +220,9 @@ export class CalculationResults extends LitElement {
             </tr>
           </thead>
           <tbody>
-            ${this.renderComparisonRow('Monthly Total', baseline.monthly, solution.monthly)}
+            ${this.renderComparisonRow('Monthly Total', baseline.monthly, solutionMonthly)}
             ${this.renderComparisonRow('Initial Cost', baseline.initial, solution.initial)}
-            ${this.renderComparisonRow('2-Year Total', 
-              baseline.monthly * 24, 
-              (solution.monthly * 24) + solution.initial
-            )}
+            ${this.renderComparisonRow('2-Year Total', baselineTotal, solutionTotal)}
           </tbody>
         </table>
       </div>

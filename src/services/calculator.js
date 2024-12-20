@@ -6,48 +6,67 @@ export class CalculatorService {
     const baselineCosts = this.calculateBaseline(model, values);
     const solutionCosts = this.calculateSolution(model, solution, values);
     
-    const monthlySavings = baselineCosts.monthly - solutionCosts.monthly;
+    let monthlyData;
+    let breakevenMonth;
     
-    // Get build time for platform solution
-    const buildTime = solution === 'platform' ? (values.timeToBuild || 3) : 0;
+    if (solution === 'platform') {
+      const buildTime = values.timeToBuild || 3;
+      monthlyData = Array(this.MONTHS).fill(0).map((_, month) => {
+        const baseline = baselineCosts.monthly * (month + 1);
+        let solutionCost;
+        
+        if (month < buildTime) {
+          // During build time: platform cost + full baseline costs
+          solutionCost = solutionCosts.initial + (baselineCosts.monthly * (month + 1));
+        } else {
+          // After build: platform cost + build period costs + reduced monthly costs
+          const operationalMonths = month + 1 - buildTime;
+          solutionCost = solutionCosts.initial + 
+                        (baselineCosts.monthly * buildTime) + 
+                        (solutionCosts.monthly * operationalMonths);
+        }
+        
+        return {
+          month: month + 1,
+          baseline,
+          solution: solutionCost,
+          savings: baseline - solutionCost
+        };
+      });
+      
+      // Find break-even after build period
+      breakevenMonth = monthlyData.findIndex((data, index) => 
+        index >= buildTime && data.savings > 0
+      ) + 1;
+      
+    } else {
+      // For non-platform solutions
+      monthlyData = Array(this.MONTHS).fill(0).map((_, month) => {
+        const baseline = baselineCosts.monthly * (month + 1);
+        const solutionCost = solutionCosts.monthly * (month + 1) + solutionCosts.initial;
+        
+        return {
+          month: month + 1,
+          baseline,
+          solution: solutionCost,
+          savings: baseline - solutionCost
+        };
+      });
+      
+      breakevenMonth = monthlyData.findIndex(data => data.savings > 0) + 1;
+    }
     
-    const monthlyData = Array(this.MONTHS).fill(0).map((_, month) => {
-      const baseline = baselineCosts.monthly * (month + 1);
-      let solutionCost;
-      
-      if (solution === 'platform' && month < buildTime) {
-        // During build time, only incur initial cost
-        solutionCost = solutionCosts.initial;
-      } else if (solution === 'platform') {
-        // After build time, add monthly costs
-        const operationalMonths = month + 1 - buildTime;
-        solutionCost = solutionCosts.initial + (solutionCosts.monthly * operationalMonths);
-      } else {
-        solutionCost = solutionCosts.monthly * (month + 1) + solutionCosts.initial;
-      }
-      
-      return {
-        month: month + 1,
-        baseline,
-        solution: solutionCost,
-        savings: baseline - solutionCost
-      };
-    });
-
-    // Calculate break-even point
-    const breakevenMonth = monthlyData.findIndex((data, index) => {
-      if (solution === 'platform' && index < buildTime) {
-        return false;
-      }
-      return data.savings > 0;
-    }) + 1;
+    // If no break-even found, return null
+    const breakeven = breakevenMonth > 0 ? breakevenMonth : null;
     
     return {
       baseline: baselineCosts,
-      solution: solutionCosts,
-      monthly: monthlySavings,
-      breakeven: breakevenMonth > 0 ? breakevenMonth : null,
-      buildTime: buildTime,
+      solution: {
+        ...solutionCosts,
+        type: solution
+      },
+      monthly: baselineCosts.monthly - solutionCosts.monthly,
+      breakeven: breakeven,
       data: monthlyData
     };
   }
@@ -125,29 +144,39 @@ export class CalculatorService {
       platformMaintenance,
       teamReduction,
       processEfficiency,
-      timeToBuild = 3 // Default to 3 months if not specified
+      timeToBuild = 3
     } = values;
 
     const baseline = this.calculateBaseline(model, values);
-    const efficiencyGain = 1 - (processEfficiency / 100);
+    
+    // Calculate reduced monthly costs after platform is built
     const teamReductionFactor = 1 - (teamReduction / 100);
+    const efficiencyGain = 1 - (processEfficiency / 100);
+    const monthlyAfterBuild = baseline.monthly * teamReductionFactor * efficiencyGain + platformMaintenance;
     
-    const monthlyTotal = baseline.monthly * efficiencyGain * teamReductionFactor + platformMaintenance;
-    const monthlySavings = baseline.monthly - monthlyTotal;
+    // Calculate total investment needed to recover
+    // This includes: platform cost + (baseline costs during build - reduced costs during build)
+    const buildPeriodDelta = baseline.monthly * timeToBuild;
+    const totalInvestment = platformCost + buildPeriodDelta;
     
-    // Calculate break-even months including build time
-    const breakEvenMonths = monthlySavings > 0 ? 
-      timeToBuild + Math.ceil(platformCost / monthlySavings) : 
-      Infinity;
-    const isViable = breakEvenMonths <= 24;
+    // Monthly savings only start after build period
+    const monthlySavings = baseline.monthly - monthlyAfterBuild;
+    
+    // Calculate break-even point
+    let breakEvenMonths = null;
+    if (monthlySavings > 0) {
+      const recoveryMonths = Math.ceil(totalInvestment / monthlySavings);
+      breakEvenMonths = timeToBuild + recoveryMonths;
+    }
 
     return {
+      type: 'platform',
       initial: platformCost,
-      monthly: monthlyTotal,
-      monthlySavings: monthlySavings,
-      breakEvenMonths: breakEvenMonths,
-      timeToBuild: timeToBuild,
-      isViable: isViable,
+      monthly: monthlyAfterBuild,
+      monthlySavings,
+      timeToBuild,
+      buildPeriodCost: buildPeriodDelta,
+      breakEvenMonths,
       breakdown: {
         platform: platformMaintenance,
         labor: baseline.monthly * teamReductionFactor * efficiencyGain,

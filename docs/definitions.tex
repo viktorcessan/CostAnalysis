@@ -294,7 +294,7 @@ For solution $\mathcal{P}$:
 \begin{align*}
     P_i &= \text{Initial investment} & P_m &= \text{Monthly maintenance} \\
     \alpha_t &= \text{Team reduction} \in [0,1] & \alpha_p &= \text{Process efficiency} \in [0,1] \\
-    T_i &= \text{Implementation time} & &
+    T_b &= \text{Time to build} & &
 \end{align*}
 \end{definition}
 
@@ -305,7 +305,7 @@ For solution $\mathcal{P}$:
     \item Maintenance: Ongoing platform costs
     \item Team Reduction: Automated task replacement
     \item Process Efficiency: Streamlined operations
-    \item Timeline: Implementation and rollout
+    \item Build Time: Platform development period
 \end{itemize}
 \end{explanation}
 
@@ -317,11 +317,21 @@ Monthly cost after implementation:
 \begin{equation}
     C_p = C_b \cdot (1 - \alpha_t) \cdot (1 - \alpha_p) + P_m
 \end{equation}
+
+Break-even calculation considering build time:
+\begin{equation}
+    T_{be} = \begin{cases}
+        T_b + \lceil\frac{P_i}{C_b - C_p}\rceil & \text{if } C_b > C_p \\
+        \infty & \text{otherwise}
+    \end{cases}
+\end{equation}
+
 \textbf{Impact Factors:}
 \begin{itemize}
     \item Team size reduction through automation
     \item Process efficiency improvements
     \item Ongoing maintenance requirements
+    \item Build time delay on benefits realization
 \end{itemize}
 \end{definition}
 
@@ -895,7 +905,7 @@ Key metrics:
 Required parameters:
 \begin{itemize}
     \item \textbf{Initial Cost ($P_i$):} Platform investment [\$0-\$10M]
-    \item \textbf{Build Time ($T_i$):} Implementation period [1-24 months]
+    \item \textbf{Build Time ($T_b$):} Implementation period [1-24 months]
     \item \textbf{Maintenance ($P_m$):} Monthly upkeep [\$0-\$1M]
     \item \textbf{Team Reduction ($\alpha_t$):} Staff efficiency [0-100\%]
     \item \textbf{Process Efficiency ($\alpha_p$):} Automation impact [0-100\%]
@@ -988,7 +998,7 @@ Key metrics:
 Required parameters:
 \begin{itemize}
     \item \textbf{Initial Cost ($P_i$):} Platform investment [\$0-\$10M]
-    \item \textbf{Build Time ($T_i$):} Implementation period [1-24 months]
+    \item \textbf{Build Time ($T_b$):} Implementation period [1-24 months]
     \item \textbf{Automation Rate ($\alpha_a$):} Automated tickets [0-100\%]
     \item \textbf{Time Reduction ($\alpha_t$):} Processing speed [0-100\%]
     \item \textbf{Quality Improvement ($\alpha_q$):} Error reduction [0-100\%]

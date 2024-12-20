@@ -51,6 +51,19 @@ Parameters:
 - α_p: Process efficiency improvement [0,1]
 - P_m: Monthly platform maintenance cost
 - C_b: Base cost (from team or ticket model)
+- T_b: Time to build (months)
+
+Break-even calculation:
+```math
+T_{be} = \begin{cases}
+    T_b + \lceil\frac{P_i}{C_b - C_p}\rceil & \text{if } C_b > C_p \\
+    \infty & \text{otherwise}
+\end{cases}
+```
+
+The break-even period includes both:
+- Initial build time (T_b)
+- Time to recover investment through savings
 
 ### Outsourcing Solution
 
@@ -107,10 +120,13 @@ T_{be} = \begin{cases}
 \end{cases}
 ```
 
+For platform solutions, the build time T_b is added to this period.
+
 Parameters:
 - I_s: Initial investment for solution s
 - C_b: Current base cost
 - C_s: Monthly cost for solution s
+- T_b: Time to build (for platform solutions)
 
 A solution is considered viable if T_be ≤ 24 months.
 

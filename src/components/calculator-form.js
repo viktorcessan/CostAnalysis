@@ -19,6 +19,7 @@ const SOLUTION_FIELDS = {
   platform: [
     { name: 'platformCost', label: 'Platform Investment ($)', type: 'number', min: 0, max: 1000000, step: 1000 },
     { name: 'platformMaintenance', label: 'Monthly Maintenance ($)', type: 'number', min: 0, max: 100000, step: 100 },
+    { name: 'timeToBuild', label: 'Time to Build (months)', type: 'number', min: 1, max: 12, step: 1 },
     { name: 'teamReduction', label: 'Team Reduction Factor', type: 'number', min: 0, max: 1, step: 0.01 },
     { name: 'processEfficiency', label: 'Process Efficiency Gain', type: 'number', min: 0, max: 1, step: 0.01 }
   ],
@@ -75,6 +76,7 @@ const SOLUTION_DESCRIPTIONS = {
     tooltips: {
       platformCost: 'Initial platform investment (P_i)',
       platformMaintenance: 'Monthly platform maintenance cost (P_m)',
+      timeToBuild: 'Time required to build the platform (T_b)',
       teamReduction: 'Team size reduction through automation (α_t)',
       processEfficiency: 'Process efficiency improvement factor (α_p)'
     }
@@ -151,6 +153,7 @@ export class CalculatorForm extends LitElement {
       platform: {
         platformCost: 100000,
         platformMaintenance: 5000,
+        timeToBuild: 3,
         teamReduction: 0.3,
         processEfficiency: 0.2
       },

@@ -171,7 +171,12 @@ export class CalculationResults extends LitElement {
       if (value === null || value === undefined) {
         displayValue = 'Never';
       } else {
-        displayValue = `${value} months`;
+        const buildTime = this.results.solution.timeToBuild;
+        if (buildTime && this.results.solution.type === 'platform') {
+          displayValue = `${value} months (includes ${buildTime} months build time)`;
+        } else {
+          displayValue = `${value} months`;
+        }
       }
     }
 

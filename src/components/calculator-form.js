@@ -300,16 +300,16 @@ export class CalculatorForm extends LitElement {
     const value = this.values[field.name] || field.min;
     
     return html`
-      <div class="bg-white p-2 rounded-lg border border-gray-100 hover:border-indigo-200 transition-colors duration-200">
+      <div class="bg-white p-2 rounded-lg border border-gray-100 hover:border-indigo-200 transition-colors duration-200 overflow-hidden">
         <div class="flex justify-between items-center mb-1">
-          <label class="text-xs font-medium text-gray-700 flex items-center gap-1">
-            ${field.label}
-            <button class="tooltip" data-tippy-content="${tooltip}" data-tippy-placement="auto" data-tippy-touch="hold" data-tippy-delay="[100, 200]" data-tippy-maxWidth="300">
+          <label class="text-xs font-medium text-gray-700 flex items-center gap-1 min-w-0">
+            <span class="truncate">${field.label}</span>
+            <span class="tooltip" data-tippy-content="${tooltip}">
               <svg class="w-5 h-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </button>
+            </span>
           </label>
           <div class="relative">
             <input
@@ -320,7 +320,7 @@ export class CalculatorForm extends LitElement {
               min=${field.min}
               max=${field.max}
               step=${field.step}
-              class="w-20 px-1 py-0.5 text-right text-gray-700 bg-gray-50 border border-gray-200 
+              class="w-16 px-1 py-0.5 text-right text-gray-700 bg-gray-50 border border-gray-200 
                      rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent
                      transition-all duration-200 text-xs"
             />

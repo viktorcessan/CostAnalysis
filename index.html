@@ -54,11 +54,15 @@
             }
 
             .input-label {
-                @apply text-sm font-medium text-gray-700 flex items-center;
+                @apply text-sm font-medium text-gray-700 flex items-center min-w-0;
+            }
+
+            .input-label span {
+                @apply truncate;
             }
 
             .tooltip {
-                @apply ml-2 text-gray-400 hover:text-gray-600 cursor-help inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 transition-colors duration-200;
+                @apply ml-2 text-gray-400 hover:text-gray-600 cursor-help inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 transition-colors duration-200 flex-none;
             }
 
             .export-btn {
@@ -85,6 +89,27 @@
 
             .chart-tab.active {
                 @apply bg-indigo-600 text-white border-transparent;
+            }
+
+            /* Fix for mobile input fields */
+            input[type="number"] {
+                @apply w-16 min-w-[4rem] max-w-[4rem];
+            }
+
+            .field-container {
+                @apply overflow-hidden;
+            }
+
+            .field-row {
+                @apply flex justify-between items-center gap-2;
+            }
+
+            .field-label {
+                @apply flex-1 min-w-0;
+            }
+
+            .field-input {
+                @apply flex-none;
             }
         }
     </style>

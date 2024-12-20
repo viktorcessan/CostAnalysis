@@ -1,114 +1,153 @@
-# Platform Cost Analysis
+# Service Delivery Cost Analysis Tool
 
-A comprehensive tool for analyzing service delivery models and their associated costs. Compare different service delivery approaches and make data-driven decisions about service transformation initiatives.
+A web-based application for analyzing and comparing different service delivery models. This tool helps organizations make data-driven decisions about service transformation initiatives by providing detailed cost analysis, break-even calculations, and visualizations.
+
 
 ## Features
 
-- Team-Based and Ticket-Based cost models
-- Platform, Outsourcing, and Hybrid solution analysis
-- Interactive cost calculations and break-even analysis
-- Comprehensive charts and visualizations
-- PDF and Excel export capabilities
-- Detailed technical documentation with LaTeX formulas
+- Multiple cost models:
+  - Team-based (FTE-driven calculations)
+  - Ticket-based (volume-driven calculations)
+- Three transformation solutions:
+  - Platform automation
+  - Outsourcing
+  - Hybrid approach
+- Interactive visualizations:
+  - Cost comparison charts
+  - Break-even analysis
+  - Monthly savings projections
+- Responsive design for desktop and mobile
+- Built with modern web components
 
-## Models
 
-### Team-Based Model
+## Technical Stack
 
-Base cost calculation:
+- **Framework**: Vanilla JavaScript with Web Components (Lit)
+- **Bundler**: Vite
+- **Styling**: Tailwind CSS
+- **Charts**: Chart.js
+- **Math Rendering**: KaTeX
+- **Build Output**: Static HTML/JS/CSS
+
+## Cost Models
+
+### Team-Based Model (FTE-Driven)
+
+Calculates costs based on team size and efficiency:
 ```math
-C_b = n \cdot h \cdot w \cdot \eta_s \cdot (1 + \eta_o)
+C_b = n × h × w × η_s × (1 + η_o)
 ```
 Where:
-- n = team size (FTEs)
-- h = hourly rate
-- w = working hours
-- η_s = service efficiency
-- η_o = operational overhead
+- n: Team size (FTEs)
+- h: Hourly rate
+- w: Working hours per month
+- η_s: Service efficiency (0-1)
+- η_o: Operational overhead (0-1)
 
-### Ticket-Based Model
+### Ticket-Based Model (Volume-Driven)
 
-Base cost calculation:
+Calculates costs based on ticket volume:
 ```math
-C_t = m \cdot t_h \cdot p \cdot h
+C_t = m × t_h × p × h
 ```
 Where:
-- m = monthly tickets
-- t_h = hours per ticket
-- p = people per ticket
-- h = hourly rate
+- m: Monthly tickets
+- t_h: Hours per ticket
+- p: People per ticket
+- h: Hourly rate
 
-## Solutions
+## Local Development
 
-### Platform Solution
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/cost-analysis.git
+   cd cost-analysis
+   ```
 
-Cost calculation:
-```math
-C_p = C_b \cdot (1 - \alpha_t) \cdot (1 - \alpha_p) + P_m
-```
-Where:
-- α_t = team reduction
-- α_p = process efficiency
-- P_m = monthly maintenance
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### Outsourcing Solution
+3. Start development server:
+   ```bash
+   npm run dev
+   ```
 
-Cost calculation:
-```math
-C_o = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot Q(\beta_q) \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
-```
-Where:
-- v = vendor rate
-- β_m = management overhead
-- β_q = quality impact
-- β_k = knowledge loss
-- T_t = transition time
+4. Open http://localhost:5173 in your browser
 
-Quality impact function:
-```math
-Q(\beta_q) = \begin{cases}
-    1 - \beta_q & \text{if } \beta_q \geq 0 \text{ (quality improvement)} \\
-    1 + |\beta_q| & \text{if } \beta_q < 0 \text{ (quality degradation)}
-\end{cases}
-```
+## Deployment
 
-### Hybrid Solution
+### GitHub Pages
 
-Cost calculation:
-```math
-C_h = \gamma_p \cdot C_p + \gamma_o \cdot C_o + (1 - \gamma_p - \gamma_o) \cdot C_b
-```
-Where:
-- γ_p = platform portion [0,1]
-- γ_o = outsourced portion [0,1]
-- 1 - γ_p - γ_o = internal portion
+1. Update `vite.config.js`:
+   ```javascript
+   export default defineConfig({
+     base: '/cost-analysis/',  // Replace with your repo name
+     // ... other config
+   });
+   ```
 
-## Break-Even Analysis
+2. Build the project:
+   ```bash
+   npm run build
+   ```
 
-For any solution s, the break-even period T_be is calculated as:
-```math
-T_{be} = \begin{cases}
-    \lceil\frac{I_s}{C_b - C_s}\rceil & \text{if } C_b > C_s \\
-    \infty & \text{otherwise}
-\end{cases}
-```
-Where:
-- I_s = Initial investment for solution s
-- C_s = Monthly cost for solution s
-- Solution is viable if T_be ≤ 24 months
+3. Deploy using GitHub Actions:
+   ```yaml
+   name: Deploy to GitHub Pages
+   on:
+     push:
+       branches: [ main ]
+   jobs:
+     build-and-deploy:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v2
+         - name: Install
+           run: npm ci
+         - name: Build
+           run: npm run build
+         - name: Deploy
+           uses: JamesIves/github-pages-deploy-action@4.1.5
+           with:
+             branch: gh-pages
+             folder: dist
+   ```
 
-## Usage
+### Netlify
 
-1. Select your base model (Team-Based or Ticket-Based)
-2. Enter your current operational parameters
-3. Choose a transformation solution
-4. Configure solution parameters
-5. Review cost analysis and break-even calculations
-6. Export results in PDF or Excel format
+1. Connect your GitHub repository to Netlify
 
-## Documentation
+2. Configure build settings:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
 
-For detailed information about the models and calculations, see:
-- [Models Documentation](docs/models.md)
-- [Technical Definitions](docs/definitions.tex)
+3. Deploy:
+   ```bash
+   npm install netlify-cli -g
+   netlify deploy
+   ```
+
+### Azure Static Web Apps
+
+1. Create a Static Web App in Azure Portal
+
+2. Configure build settings:
+   ```yaml
+   app_location: "/"
+   api_location: "api"
+   output_location: "dist"
+   ```
+
+3. Deploy using Azure CLI:
+   ```bash
+   az staticwebapp create \
+     --name "cost-analysis" \
+     --resource-group "your-resource-group" \
+     --source "https://github.com/your-username/cost-analysis" \
+     --branch "main" \
+     --app-location "/" \
+     --output-location "dist"
+   ```
 

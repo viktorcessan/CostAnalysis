@@ -535,10 +535,11 @@ export class CalculationResults extends LitElement {
 
   async exportPDF() {
     try {
-      // Get both calculator form and results content
-      const calculatorForm = document.querySelector('calculator-form');
+      // Get results content and sensitivity analysis
       const resultsContent = this.querySelector('.bg-white.rounded-xl.shadow-lg');
-      if (!calculatorForm || !resultsContent) {
+      const sensitivityContent = this.querySelectorAll('.bg-white.rounded-xl.shadow-lg')[1];
+      
+      if (!resultsContent || !sensitivityContent) {
         throw new Error('Could not find content to export');
       }
 
@@ -567,36 +568,6 @@ export class CalculationResults extends LitElement {
       pdf.text(date, dateX, yOffset);
       yOffset += 40;
 
-      // Convert calculator form to canvas
-      const formCanvas = await html2canvas(calculatorForm, {
-        scale: 2,
-        logging: false,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true
-      });
-
-      // Calculate dimensions for form
-      const formWidth = pageWidth - (margin * 2);
-      const formHeight = (formCanvas.height * formWidth) / formCanvas.width;
-
-      // Add form image
-      pdf.addImage(
-        formCanvas.toDataURL('image/png'),
-        'PNG',
-        margin,
-        yOffset,
-        formWidth,
-        formHeight
-      );
-
-      // Update yOffset and check if we need a new page
-      yOffset += formHeight + 40;
-      if (yOffset + 100 > pageHeight) {
-        pdf.addPage();
-        yOffset = margin;
-      }
-
       // Convert results content to canvas
       const resultsCanvas = await html2canvas(resultsContent, {
         scale: 2,
@@ -618,6 +589,36 @@ export class CalculationResults extends LitElement {
         yOffset,
         resultsWidth,
         resultsHeight
+      );
+
+      // Update yOffset and check if we need a new page
+      yOffset += resultsHeight + 40;
+      if (yOffset + 100 > pageHeight) {
+        pdf.addPage();
+        yOffset = margin;
+      }
+
+      // Convert sensitivity analysis to canvas
+      const sensitivityCanvas = await html2canvas(sensitivityContent, {
+        scale: 2,
+        logging: false,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        allowTaint: true
+      });
+
+      // Calculate dimensions for sensitivity analysis
+      const sensitivityWidth = pageWidth - (margin * 2);
+      const sensitivityHeight = (sensitivityCanvas.height * sensitivityWidth) / sensitivityCanvas.width;
+
+      // Add sensitivity analysis image
+      pdf.addImage(
+        sensitivityCanvas.toDataURL('image/png'),
+        'PNG',
+        margin,
+        yOffset,
+        sensitivityWidth,
+        sensitivityHeight
       );
 
       // Save the PDF

@@ -159,12 +159,14 @@ export class CalculatorService {
     const baseline = this.calculateBaseline(model, values);
     
     // Calculate reduced monthly costs after platform is built
-    const teamReductionFactor = 1 - (teamReduction / 100);
-    const efficiencyGain = 1 - (processEfficiency / 100);
-    const monthlyAfterBuild = baseline.monthly * teamReductionFactor * efficiencyGain + platformMaintenance;
+    const teamReductionFactor = teamReduction;  // [0,1] - 0=no reduction, 1=full reduction
+    const processEfficiencyFactor = processEfficiency;  // [0,1] - 0=no improvement, 1=full improvement
+    
+    // Calculate each component
+    const laborCost = baseline.monthly * (1 - teamReductionFactor) * (1 - processEfficiencyFactor);
+    const monthlyAfterBuild = laborCost + platformMaintenance;
     
     // Calculate total investment needed to recover
-    // This includes: platform cost + (baseline costs during build - reduced costs during build)
     const buildPeriodDelta = baseline.monthly * timeToBuild;
     const totalInvestment = platformCost + buildPeriodDelta;
     
@@ -188,7 +190,7 @@ export class CalculatorService {
       breakEvenMonths,
       breakdown: {
         platform: platformMaintenance,
-        labor: baseline.monthly * teamReductionFactor * efficiencyGain,
+        labor: laborCost,
         savings: monthlySavings
       }
     };
@@ -198,43 +200,41 @@ export class CalculatorService {
     const {
       vendorRate,
       managementOverhead,
-      qualityImpact,
+      qualityImpact,  // [-0.5,0.5] - -0.5=50% worse, 0=same, 0.5=50% better
       knowledgeLoss,
       transitionTime,
-      transitionCost
+      transitionCost = 0
     } = values;
 
     const baseline = this.calculateBaseline(model, values);
     
-    // Convert baseline cost to equivalent vendor hours
+    // Calculate vendor costs with all factors
     const baselineHours = baseline.monthly / values.hourlyRate;
-    const vendorMonthly = baselineHours * vendorRate;
-    
-    // Add overhead factors with proper percentage conversion
-    const overheadFactor = 1 + (managementOverhead / 100);
+    const vendorBase = baselineHours * vendorRate;
+    const overheadFactor = 1 + managementOverhead;  // [0,1] overhead becomes [1,2] factor
     const qualityFactor = qualityImpact >= 0 ? 
-      (1 - qualityImpact / 100) : // Improved quality reduces cost
-      (1 + Math.abs(qualityImpact) / 100); // Degraded quality increases cost
-    const knowledgeFactor = 1 + (knowledgeLoss / 100) * Math.log10(transitionTime + 1);
+      (1 - qualityImpact) :  // [0,0.5] becomes [1,0.5] factor (improvement reduces cost)
+      (1 + Math.abs(qualityImpact));  // [-0.5,0] becomes [1.5,1] factor (degradation increases cost)
+    const knowledgeFactor = 1 + knowledgeLoss * Math.log10(transitionTime + 1);  // [0,1] knowledge loss
     
-    const monthlyTotal = vendorMonthly * overheadFactor * qualityFactor * knowledgeFactor;
-    const monthlySavings = baseline.monthly - monthlyTotal;
+    const monthlyAfterTransition = vendorBase * overheadFactor * qualityFactor * knowledgeFactor;
     
-    // Calculate break-even months, handle case where it exceeds 24
+    // Monthly savings only start after transition
+    const monthlySavings = baseline.monthly - monthlyAfterTransition;
+    
+    // Calculate break-even point
     const breakEvenMonths = monthlySavings > 0 ? Math.ceil(transitionCost / monthlySavings) : Infinity;
     const isViable = breakEvenMonths <= 24;
 
     return {
+      type: 'outsourcing',
       initial: transitionCost,
-      monthly: monthlyTotal,
-      monthlySavings: monthlySavings,
-      breakEvenMonths: breakEvenMonths,
-      isViable: isViable,
+      monthly: monthlyAfterTransition,
+      monthlySavings,
+      breakEvenMonths,
+      isViable,
       breakdown: {
-        vendor: vendorMonthly,
-        overhead: vendorMonthly * (overheadFactor - 1),
-        quality: vendorMonthly * (qualityFactor - 1),
-        knowledge: vendorMonthly * (knowledgeFactor - 1),
+        vendor: monthlyAfterTransition,
         savings: monthlySavings
       }
     };
@@ -244,14 +244,14 @@ export class CalculatorService {
     const {
       platformCost,
       platformMaintenance,
-      processEfficiency,
+      processEfficiency,  // [0,1] - 0=no improvement, 1=full improvement
       vendorRate,
-      managementOverhead,
-      qualityImpact,
-      knowledgeLoss,
+      managementOverhead,  // [0,1] - 0=no overhead, 1=100% overhead
+      qualityImpact,  // [-0.5,0.5] - -0.5=50% worse, 0=same, 0.5=50% better
+      knowledgeLoss,  // [0,1] - 0=no loss, 1=full loss
       transitionTime,
-      platformPortion,
-      vendorPortion,
+      platformPortion,  // [0-100] - percentage of work to platform
+      vendorPortion,  // [0-100] - percentage of work to vendor
       transitionCost = 0
     } = values;
 
@@ -261,24 +261,25 @@ export class CalculatorService {
 
     const baseline = this.calculateBaseline(model, values);
     
-    // Platform portion
-    const platformPercentage = platformPortion / 100;
-    const platformEfficiency = 1 - (processEfficiency / 100);
-    const platformMonthly = baseline.monthly * platformPercentage * platformEfficiency + platformMaintenance;
+    // Platform portion - using same factors as platform solution
+    const platformPercentage = platformPortion / 100;  // Convert to [0,1]
+    const processEfficiencyFactor = processEfficiency;  // [0,1]
+    const platformLaborCost = baseline.monthly * platformPercentage * (1 - processEfficiencyFactor);
+    const platformMonthly = platformLaborCost + platformMaintenance;
     
     // Vendor portion with all factors
-    const vendorPercentage = vendorPortion / 100;
-    const baselineHours = (baseline.monthly * vendorPercentage) / values.hourlyRate;
-    const vendorBase = baselineHours * vendorRate;
-    const overheadFactor = 1 + (managementOverhead / 100);
+    const vendorPercentage = vendorPortion / 100;  // Convert to [0,1]
+    const vendorHours = baseline.monthly * vendorPercentage / values.hourlyRate;
+    const vendorBase = vendorHours * vendorRate;
+    const overheadFactor = 1 + managementOverhead;  // [0,1] overhead becomes [1,2] factor
     const qualityFactor = qualityImpact >= 0 ? 
-      (1 - qualityImpact / 100) : 
-      (1 + Math.abs(qualityImpact) / 100);
-    const knowledgeFactor = 1 + (knowledgeLoss / 100) * Math.log10(transitionTime + 1);
+      (1 - qualityImpact) :  // [0,0.5] becomes [1,0.5] factor (improvement reduces cost)
+      (1 + Math.abs(qualityImpact));  // [-0.5,0] becomes [1.5,1] factor (degradation increases cost)
+    const knowledgeFactor = 1 + knowledgeLoss * Math.log10(transitionTime + 1);  // [0,1] knowledge loss
     const vendorMonthly = vendorBase * overheadFactor * qualityFactor * knowledgeFactor;
     
-    // Internal portion
-    const internalPercentage = 1 - (platformPercentage + vendorPercentage);
+    // Internal portion (remaining work)
+    const internalPercentage = (100 - platformPortion - vendorPortion) / 100;  // Convert to [0,1]
     const internalMonthly = baseline.monthly * internalPercentage;
     
     const monthlyTotal = platformMonthly + vendorMonthly + internalMonthly;
@@ -297,7 +298,7 @@ export class CalculatorService {
       isViable: isViable,
       breakdown: {
         platform: platformMaintenance,
-        platformLabor: baseline.monthly * platformPercentage * platformEfficiency,
+        platformLabor: platformLaborCost,
         vendor: vendorMonthly,
         internal: internalMonthly,
         savings: monthlySavings

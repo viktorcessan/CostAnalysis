@@ -2,45 +2,45 @@ import { LitElement, html } from 'lit';
 
 const BASE_FIELDS = {
   team: [
-    { name: 'teamSize', label: 'Team Size (FTEs)', type: 'number', min: 1, max: 100, step: 1 },
-    { name: 'hourlyRate', label: 'Hourly Rate ($)', type: 'number', min: 1, max: 500, step: 1 },
+    { name: 'teamSize', label: 'Team Size (FTEs)', type: 'number', min: 1, max: 15, step: 1 },
+    { name: 'hourlyRate', label: 'Hourly Rate ($)', type: 'number', min: 10, max: 150, step: 1 },
     { name: 'serviceEfficiency', label: 'Service Efficiency', type: 'number', min: 0, max: 1, step: 0.01 },
     { name: 'operationalOverhead', label: 'Operational Overhead', type: 'number', min: 0, max: 1, step: 0.01 }
   ],
   ticket: [
-    { name: 'monthlyTickets', label: 'Monthly Tickets', type: 'number', min: 1, max: 10000, step: 1 },
+    { name: 'monthlyTickets', label: 'Monthly Tickets', type: 'number', min: 1, max: 250, step: 1 },
     { name: 'hoursPerTicket', label: 'Hours per Ticket', type: 'number', min: 0.1, max: 100, step: 0.1 },
     { name: 'peoplePerTicket', label: 'People per Ticket', type: 'number', min: 1, max: 10, step: 1 },
-    { name: 'hourlyRate', label: 'Hourly Rate ($)', type: 'number', min: 1, max: 500, step: 1 }
+    { name: 'hourlyRate', label: 'Hourly Rate ($)', type: 'number', min: 10, max: 150, step: 1 }
   ]
 };
 
 const SOLUTION_FIELDS = {
   platform: [
-    { name: 'platformCost', label: 'Platform Investment ($)', type: 'number', min: 0, max: 1000000, step: 1000 },
-    { name: 'platformMaintenance', label: 'Monthly Maintenance ($)', type: 'number', min: 0, max: 100000, step: 100 },
+    { name: 'platformCost', label: 'Platform Investment ($)', type: 'number', min: 50000, max: 500000, step: 1000 },
+    { name: 'platformMaintenance', label: 'Monthly Maintenance ($)', type: 'number', min: 1000, max: 10000, step: 100 },
     { name: 'timeToBuild', label: 'Time to Build (months)', type: 'number', min: 1, max: 12, step: 1 },
     { name: 'teamReduction', label: 'Team Reduction Factor', type: 'number', min: 0, max: 1, step: 0.01 },
     { name: 'processEfficiency', label: 'Process Efficiency Gain', type: 'number', min: 0, max: 1, step: 0.01 }
   ],
   outsource: [
-    { name: 'vendorRate', label: 'Vendor Hourly Rate ($)', type: 'number', min: 1, max: 500, step: 1 },
+    { name: 'vendorRate', label: 'Vendor Hourly Rate ($)', type: 'number', min: 10, max: 150, step: 1 },
     { name: 'managementOverhead', label: 'Management Overhead', type: 'number', min: 0, max: 1, step: 0.01 },
     { name: 'qualityImpact', label: 'Quality Impact Factor', type: 'number', min: -0.5, max: 0.5, step: 0.01 },
     { name: 'knowledgeLoss', label: 'Knowledge Loss Factor', type: 'number', min: 0, max: 1, step: 0.01 },
-    { name: 'transitionTime', label: 'Transition Time (months)', type: 'number', min: 1, max: 24, step: 1 },
-    { name: 'transitionCost', label: 'Transition Cost ($)', type: 'number', min: 0, max: 1000000, step: 1000 }
+    { name: 'transitionTime', label: 'Transition Time (months)', type: 'number', min: 1, max: 12, step: 1 },
+    { name: 'transitionCost', label: 'Transition Cost ($)', type: 'number', min: 0, max: 100000, step: 1000 }
   ],
   hybrid: [
-    { name: 'platformCost', label: 'Platform Investment ($)', type: 'number', min: 0, max: 1000000, step: 1000 },
-    { name: 'platformMaintenance', label: 'Monthly Maintenance ($)', type: 'number', min: 0, max: 100000, step: 100 },
+    { name: 'platformCost', label: 'Platform Investment ($)', type: 'number', min: 50000, max: 500000, step: 1000 },
+    { name: 'platformMaintenance', label: 'Monthly Maintenance ($)', type: 'number', min: 1000, max: 10000, step: 100 },
     { name: 'processEfficiency', label: 'Process Efficiency Gain', type: 'number', min: 0, max: 1, step: 0.01 },
-    { name: 'vendorRate', label: 'Vendor Hourly Rate ($)', type: 'number', min: 1, max: 500, step: 1 },
+    { name: 'vendorRate', label: 'Vendor Hourly Rate ($)', type: 'number', min: 10, max: 150, step: 1 },
     { name: 'managementOverhead', label: 'Management Overhead', type: 'number', min: 0, max: 1, step: 0.01 },
     { name: 'qualityImpact', label: 'Quality Impact Factor', type: 'number', min: -0.5, max: 0.5, step: 0.01 },
     { name: 'knowledgeLoss', label: 'Knowledge Loss Factor', type: 'number', min: 0, max: 1, step: 0.01 },
-    { name: 'transitionTime', label: 'Transition Time (months)', type: 'number', min: 1, max: 24, step: 1 },
-    { name: 'transitionCost', label: 'Transition Cost ($)', type: 'number', min: 0, max: 1000000, step: 1000 },
+    { name: 'transitionTime', label: 'Transition Time (months)', type: 'number', min: 1, max: 12, step: 1 },
+    { name: 'transitionCost', label: 'Transition Cost ($)', type: 'number', min: 0, max: 100000, step: 1000 },
     { name: 'platformPortion', label: 'Platform Portion (%)', type: 'number', min: 0, max: 100, step: 5 },
     { name: 'vendorPortion', label: 'Vendor Portion (%)', type: 'number', min: 0, max: 100, step: 5 }
   ]
@@ -122,14 +122,19 @@ export class CalculatorForm extends LitElement {
   }
 
   firstUpdated() {
-    // Initialize tooltips
+    // Initialize tooltips with mobile-friendly configuration
     tippy('[data-tippy-content]', {
-      placement: 'right',
+      placement: 'auto',
       arrow: true,
-      theme: 'light'
+      theme: 'light-border',
+      delay: [100, 200],
+      touch: 'hold',
+      maxWidth: 300,
+      hideOnClick: false,
+      trigger: 'mouseenter focus click',
+      interactive: true
     });
 
-    // Trigger initial calculation
     this.dispatchCalculation();
   }
 
@@ -299,12 +304,12 @@ export class CalculatorForm extends LitElement {
         <div class="flex justify-between items-center mb-1">
           <label class="text-xs font-medium text-gray-700 flex items-center gap-1">
             ${field.label}
-            <span class="tooltip" data-tippy-content="${tooltip}">
-              <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="tooltip" data-tippy-content="${tooltip}" data-tippy-placement="auto" data-tippy-touch="hold" data-tippy-delay="[100, 200]" data-tippy-maxWidth="300">
+              <svg class="w-5 h-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </span>
+            </button>
           </label>
           <div class="relative">
             <input
@@ -362,11 +367,16 @@ export class CalculatorForm extends LitElement {
       this.dispatchCalculation();
     }
 
-    // Initialize tooltips after update
+    // Initialize tooltips with mobile-friendly configuration
     tippy('[data-tippy-content]', {
-      placement: 'right',
+      placement: 'auto',
       arrow: true,
-      theme: 'light'
+      theme: 'light-border',
+      delay: [100, 200],
+      touch: ['hold', 500],
+      maxWidth: 300,
+      interactive: true,
+      appendTo: () => document.body
     });
   }
 

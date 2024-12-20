@@ -16,10 +16,8 @@ export class CalculatorService {
         let solutionCost;
         
         if (month < buildTime) {
-          // During build time: platform cost + full baseline costs
           solutionCost = solutionCosts.initial + (baselineCosts.monthly * (month + 1));
         } else {
-          // After build: platform cost + build period costs + reduced monthly costs
           const operationalMonths = month + 1 - buildTime;
           solutionCost = solutionCosts.initial + 
                         (baselineCosts.monthly * buildTime) + 
@@ -34,13 +32,11 @@ export class CalculatorService {
         };
       });
       
-      // Find break-even after build period
       breakevenMonth = monthlyData.findIndex((data, index) => 
         index >= buildTime && data.savings > 0
       ) + 1;
       
     } else {
-      // For non-platform solutions
       monthlyData = Array(this.MONTHS).fill(0).map((_, month) => {
         const baseline = baselineCosts.monthly * (month + 1);
         const solutionCost = solutionCosts.monthly * (month + 1) + solutionCosts.initial;
@@ -56,8 +52,18 @@ export class CalculatorService {
       breakevenMonth = monthlyData.findIndex(data => data.savings > 0) + 1;
     }
     
-    // If no break-even found, return null
-    const breakeven = breakevenMonth > 0 ? breakevenMonth : null;
+    const monthlySavings = baselineCosts.monthly - solutionCosts.monthly;
+    let breakeven = null;
+
+    if (monthlySavings > 0) {
+      if (breakevenMonth > 0 && breakevenMonth <= this.MONTHS) {
+        breakeven = breakevenMonth;
+      } else {
+        const totalInvestment = solutionCosts.initial + 
+          (solution === 'platform' ? baselineCosts.monthly * (values.timeToBuild || 3) : 0);
+        breakeven = Math.ceil(totalInvestment / monthlySavings);
+      }
+    }
     
     return {
       baseline: baselineCosts,
@@ -65,7 +71,7 @@ export class CalculatorService {
         ...solutionCosts,
         type: solution
       },
-      monthly: baselineCosts.monthly - solutionCosts.monthly,
+      monthly: monthlySavings,
       breakeven: breakeven,
       data: monthlyData
     };

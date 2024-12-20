@@ -168,15 +168,12 @@ export class CalculationResults extends LitElement {
         maximumFractionDigits: 0
       }) : '$0';
     } else if (type === 'months') {
-      if (value === null || value === undefined) {
+      if (value === null || value === undefined || (value > 24 && this.results.monthly <= 0)) {
         displayValue = 'Never';
+      } else if (value > 24) {
+        displayValue = '> 24 months';
       } else {
-        const buildTime = this.results.solution.timeToBuild;
-        if (buildTime && this.results.solution.type === 'platform') {
-          displayValue = `${value} months (includes ${buildTime} months build time)`;
-        } else {
-          displayValue = `${value} months`;
-        }
+        displayValue = `${value} months`;
       }
     }
 

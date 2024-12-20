@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light-border.css" />
     
     <!-- Custom Styles -->
     <style type="text/tailwindcss">
@@ -57,7 +58,7 @@
             }
 
             .tooltip {
-                @apply ml-2 text-gray-400 hover:text-gray-600 cursor-help;
+                @apply ml-2 text-gray-400 hover:text-gray-600 cursor-help inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 transition-colors duration-200;
             }
 
             .export-btn {

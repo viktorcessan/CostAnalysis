@@ -2,11 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/CostAnalysis/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Service Platform Investment Calculator</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tippy.js -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light-border.css" />
     
     <!-- Custom Styles -->
     <style type="text/tailwindcss">
@@ -48,11 +55,15 @@
             }
 
             .input-label {
-                @apply text-sm font-medium text-gray-700 flex items-center;
+                @apply text-sm font-medium text-gray-700 flex items-center min-w-0;
+            }
+
+            .input-label span {
+                @apply truncate;
             }
 
             .tooltip {
-                @apply ml-2 text-gray-400 hover:text-gray-600 cursor-help;
+                @apply ml-2 text-gray-400 hover:text-gray-600 cursor-help inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 transition-colors duration-200 flex-none;
             }
 
             .export-btn {
@@ -80,11 +91,53 @@
             .chart-tab.active {
                 @apply bg-indigo-600 text-white border-transparent;
             }
+
+            /* Fix for mobile input fields */
+            input[type="number"] {
+                @apply font-mono;
+                font-variant-numeric: tabular-nums;
+                -moz-font-feature-settings: "tnum";
+                -webkit-font-feature-settings: "tnum";
+                font-feature-settings: "tnum";
+            }
+
+            input[type="number"][max="500000"],
+            input[type="number"][max="100000"] {
+                @apply w-28 min-w-[7rem] px-5;
+            }
+
+            input[type="number"][max="10000"] {
+                @apply w-24 min-w-[6rem] px-4;
+            }
+
+            input[type="number"][max="1000"] {
+                @apply w-20 min-w-[5rem] px-3;
+            }
+
+            input[type="number"][max="100"] {
+                @apply w-16 min-w-[4rem] px-2;
+            }
+
+            .field-container {
+                @apply overflow-hidden;
+            }
+
+            .field-row {
+                @apply flex justify-between items-center gap-2;
+            }
+
+            .field-label {
+                @apply flex-1 min-w-0;
+            }
+
+            .field-input {
+                @apply flex-none;
+            }
         }
     </style>
 
     <!-- Components -->
-    <script type="module" crossorigin src="/CostAnalysis/assets/main-DMkW8h1a.js"></script>
+    <script type="module" crossorigin src="/CostAnalysis/assets/main-BIL9N18x.js"></script>
   </head>
   <body class="bg-gray-50 min-h-screen">
     <calculator-app></calculator-app>

@@ -4,7 +4,7 @@ import { base } from '$app/paths';
 export const prerender = true;
 
 // Enable server-side rendering
-export const ssr = true;
+export const ssr = false;
 
 // Handle trailing slashes
 export const trailingSlash = 'always';

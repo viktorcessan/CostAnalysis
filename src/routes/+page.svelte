@@ -146,20 +146,25 @@
   </div>
 
   <!-- Footer -->
-  <footer class="bg-gray-900 text-white py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex items-center gap-6">
-          <a href="mailto:contact@viktorcessan.com" class="text-gray-400">
-            contact@viktorcessan.com
+  <footer class="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col items-center gap-4">
+        <div class="flex items-center gap-4">
+          <a href="https://www.linkedin.com/in/viktorcessan" class="text-gray-400 hover:text-white transition-colors">
+            <img src="https://img.icons8.com/ios-filled/24/cccccc/linkedin.png" alt="LinkedIn" class="w-6 h-6"/>
           </a>
-          <a href="https://linkedin.com/in/viktorcessan" target="_blank" rel="noopener noreferrer" class="text-gray-400">
-            LinkedIn
+          <a href="https://www.viktorcessan.com/" class="text-gray-400 hover:text-white transition-colors">
+            <img src="https://img.icons8.com/ios-filled/24/cccccc/globe.png" alt="Website" class="w-6 h-6"/>
+          </a>
+          <a href="mailto:viktor@cessan.se" class="text-gray-400 hover:text-white transition-colors">
+            <img src="https://img.icons8.com/ios-filled/24/cccccc/mail.png" alt="Email" class="w-6 h-6"/>
           </a>
         </div>
-        <div class="text-sm text-gray-400">
-          <a href="https://viktorcessan.com" target="_blank" rel="noopener noreferrer">
-            viktorcessan.com
+        <div class="text-sm text-gray-400 flex items-center gap-1">
+          Icons by
+          <a href="https://icons8.com" class="hover:text-white transition-colors flex items-center gap-1">
+            <img src="https://img.icons8.com/color/24/000000/icons8-new-logo.png" alt="Icons8" class="w-5 h-5"/>
+            Icons8
           </a>
         </div>
       </div>

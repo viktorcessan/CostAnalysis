@@ -1392,50 +1392,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Key Insights -->
-      <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h4 class="text-sm font-medium text-gray-900 mb-3">Key Insights & Recommendations</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Current Strengths -->
-          <div>
-            <h5 class="text-sm font-medium text-emerald-700 mb-2">What's Working Well</h5>
-            <ul class="space-y-2">
-              {#if metrics.flowEfficiency >= 60}
-                <li class="text-sm text-gray-600">✓ High flow efficiency indicates smooth work processes</li>
-              {/if}
-              {#if metrics.utilizationRate >= 75}
-                <li class="text-sm text-gray-600">✓ Teams are effectively utilizing their capacity</li>
-              {/if}
-              {#if metrics.dependencyImpactScore <= 40}
-                <li class="text-sm text-gray-600">✓ Well-managed team dependencies</li>
-              {/if}
-              {#if metrics.avgLeadTime <= teamParams.baseLeadTime * 1.5}
-                <li class="text-sm text-gray-600">✓ Quick delivery times despite dependencies</li>
-              {/if}
-            </ul>
-          </div>
-
-          <!-- Areas for Improvement -->
-          <div>
-            <h5 class="text-sm font-medium text-blue-700 mb-2">Opportunities for Improvement</h5>
-            <ul class="space-y-2">
-              {#if metrics.flowEfficiency < 60}
-                <li class="text-sm text-gray-600">• Streamline workflows to reduce wait times</li>
-              {/if}
-              {#if metrics.utilizationRate < 75}
-                <li class="text-sm text-gray-600">• Reduce overhead activities and meetings</li>
-              {/if}
-              {#if metrics.dependencyImpactScore > 40}
-                <li class="text-sm text-gray-600">• Consider restructuring team boundaries</li>
-              {/if}
-              {#if metrics.avgLeadTime > teamParams.baseLeadTime * 1.5}
-                <li class="text-sm text-gray-600">• Look for ways to reduce handoffs between teams</li>
-              {/if}
-            </ul>
-          </div>
-        </div>
-      </div>
     {/if}
   </div>
 

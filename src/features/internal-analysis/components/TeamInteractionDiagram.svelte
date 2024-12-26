@@ -540,6 +540,29 @@
       generateNodes();
     }
   }
+
+  // Add function to calculate metrics for independent teams
+  function calculateIndependentTeamMetrics() {
+    const independentCosts = {
+      weeklyMeetingCost: costParams.meetings.weeklyDuration * 
+        costParams.meetings.attendeesPerTeam * 
+        costParams.hourlyRate.developer * 
+        nodes.length, // Only internal team meetings
+      communicationCost: nodes.length * costParams.hourlyRate.developer * 5, // Minimal communication
+      processOverhead: nodes.length * costParams.hourlyRate.developer * 2, // Minimal process overhead
+    } as CostAnalysis;
+    
+    independentCosts.totalCost = independentCosts.weeklyMeetingCost + 
+      independentCosts.communicationCost + 
+      independentCosts.processOverhead;
+    
+    return {
+      costs: independentCosts,
+      flowEfficiency: 95, // High efficiency due to independence
+      leadTime: teamParams.baseLeadTime, // Minimal lead time
+      utilizationRate: 90, // High utilization due to less overhead
+    };
+  }
 </script>
 
 <div class="space-y-6">
@@ -679,65 +702,141 @@
     <!-- Configuration Section -->
     {#if mode !== 'advanced'}
       <!-- Simple Configuration -->
-      <div class="space-y-6">
-        <!-- Team Count -->
-        <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-3">Number of Teams</h4>
-          <div class="flex items-center gap-4">
-            <input
-              type="range"
-              bind:value={teamCount}
-              min="2"
-              max="10"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-            />
-            <div class="w-16 px-3 py-2 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{teamCount}</span>
+      <div class="space-y-4">
+        <!-- Basic Parameters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Team Count -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Number of Teams</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={teamCount}
+                min="2"
+                max="10"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{teamCount}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Company Dependency Level -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Dependency Level</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={companyDependencyLevel}
+                min="1"
+                max="5"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
+              </div>
+            </div>
+            <div class="mt-1 grid grid-cols-5 gap-1 text-xs text-gray-500">
+              <span>V.Low</span>
+              <span>Low</span>
+              <span>Med</span>
+              <span>High</span>
+              <span>V.High</span>
+            </div>
+          </div>
+
+          <!-- Default Team Size -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Team Size</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={teamParams.teams[0].size}
+                min="1"
+                max="20"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+                on:input={() => {
+                  teamParams.teams.forEach(team => team.size = teamParams.teams[0].size);
+                  generateNodes();
+                }}
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{teamParams.teams[0].size}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dev Rate -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Dev Rate ($/hr)</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.hourlyRate.developer}
+                min="20"
+                max="200"
+                step="5"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Company Dependency Level -->
-        <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-3">Company Dependency Level</h4>
-          <div class="flex items-center gap-4">
-            <input
-              type="range"
-              bind:value={companyDependencyLevel}
-              min="1"
-              max="5"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-            />
-            <div class="w-16 px-3 py-2 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
+        <!-- Cost Parameters -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+          <!-- Weekly Meeting Hours -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Weekly Meeting Hours</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.meetings.weeklyDuration}
+                min="1"
+                max="20"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
+              </div>
             </div>
           </div>
-          <div class="mt-2 grid grid-cols-5 gap-1 text-xs text-gray-500">
-            <span>Very Low</span>
-            <span>Low</span>
-            <span>Medium</span>
-            <span>High</span>
-            <span>Very High</span>
-          </div>
-        </div>
 
-        <!-- Default Team Size -->
-        <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-3">Default Team Size</h4>
-          <div class="flex items-center gap-4">
-            <input
-              type="range"
-              bind:value={teamParams.teams[0].size}
-              min="1"
-              max="20"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              on:input={() => {
-                teamParams.teams.forEach(team => team.size = teamParams.teams[0].size);
-                generateNodes();
-              }}
-            />
-            <div class="w-16 px-3 py-2 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{teamParams.teams[0].size}</span>
+          <!-- Meeting Attendees -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Meeting Attendees</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.meetings.attendeesPerTeam}
+                min="1"
+                max="20"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Communication Overhead -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Communication Overhead</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.overhead.communicationOverhead}
+                min="1"
+                max="2"
+                step="0.1"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
+              </div>
             </div>
           </div>
         </div>
@@ -745,96 +844,136 @@
     {:else}
       <!-- Advanced Configuration -->
       <div class="space-y-6">
-        <!-- Global Parameters -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg">
+        <!-- Basic Parameters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Team Count -->
           <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-3">Team Parameters</h4>
-            <div class="space-y-4">
-              <div class="bg-white p-3 rounded-lg border border-gray-200">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-sm font-medium text-gray-700">Base Lead Time:</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    step="0.5"
-                    class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary"
-                    bind:value={teamParams.baseLeadTime}
-                  />
-                  <span class="text-sm text-gray-500">days</span>
-                </div>
-                <p class="text-xs text-gray-600">
-                  The average time it takes to complete a work item without considering dependencies or delays.
-                  This serves as the baseline for calculating actual delivery times when team dependencies are factored in.
-                </p>
-              </div>
-              <div class="bg-white p-3 rounded-lg border border-gray-200">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-sm font-medium text-gray-700">Dependency Impact:</span>
-                  <input
-                    type="number"
-                    min="0.05"
-                    max="0.5"
-                    step="0.05"
-                    class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary"
-                    bind:value={teamParams.dependencyImpact}
-                  />
-                </div>
-                <p class="text-xs text-gray-600">
-                  A multiplier (0.05-0.5) that determines how much team dependencies affect performance.
-                  Higher values mean dependencies have a stronger impact on delivery times and team efficiency.
-                  <span class="block mt-1">
-                    • 0.05: Minimal impact - Teams work mostly independently
-                    • 0.25: Moderate impact - Some coordination needed
-                    • 0.50: High impact - Heavy dependency overhead
-                  </span>
-                </p>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Number of Teams</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={teamCount}
+                min="2"
+                max="10"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{teamCount}</span>
               </div>
             </div>
           </div>
+
+          <!-- Base Lead Time -->
           <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-3">Dependency Levels Guide</h4>
-            <div class="space-y-2">
-              <div class="p-3 bg-white rounded-lg border border-green-200 border-l-4">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-700 font-medium">0-1</div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">Low Dependency</div>
-                    <div class="text-xs text-gray-600">Occasional information sharing, teams can work independently most of the time</div>
-                  </div>
-                </div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Base Lead Time (days)</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={teamParams.baseLeadTime}
+                min="1"
+                max="30"
+                step="0.5"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{teamParams.baseLeadTime}</span>
               </div>
-              <div class="p-3 bg-white rounded-lg border border-yellow-200 border-l-4">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-700 font-medium">2-3</div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">Medium Dependency</div>
-                    <div class="text-xs text-gray-600">Regular collaboration needed, some coordination overhead</div>
-                  </div>
-                </div>
+            </div>
+          </div>
+
+          <!-- Dependency Impact -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Dependency Impact</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={teamParams.dependencyImpact}
+                min="0.05"
+                max="0.5"
+                step="0.05"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{teamParams.dependencyImpact}</span>
               </div>
-              <div class="p-3 bg-white rounded-lg border border-orange-200 border-l-4">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-700 font-medium">4</div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">High Dependency</div>
-                    <div class="text-xs text-gray-600">Critical path dependencies, significant coordination required</div>
-                  </div>
-                </div>
-              </div>
-              <div class="p-3 bg-white rounded-lg border border-red-200 border-l-4">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-700 font-medium">5</div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">Critical Dependency</div>
-                    <div class="text-xs text-gray-600">Blocking dependencies, extensive coordination needed</div>
-                  </div>
-                </div>
+            </div>
+          </div>
+
+          <!-- Dev Rate -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Dev Rate ($/hr)</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.hourlyRate.developer}
+                min="20"
+                max="200"
+                step="5"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Cost Parameters -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+          <!-- Weekly Meeting Hours -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Weekly Meeting Hours</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.meetings.weeklyDuration}
+                min="1"
+                max="20"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Meeting Attendees -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Meeting Attendees</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.meetings.attendeesPerTeam}
+                min="1"
+                max="20"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Communication Overhead -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Communication Overhead</h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.overhead.communicationOverhead}
+                min="1"
+                max="2"
+                step="0.1"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Details and Dependencies -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Team Configuration -->
           <div>
@@ -843,10 +982,10 @@
               <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 h-[80px]">Team</th>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Size</th>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Cap</th>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Eff</th>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Team</th>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Size</th>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Cap</th>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Eff</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -896,33 +1035,56 @@
                 </tbody>
               </table>
             </div>
+            <div class="mt-2 text-xs text-gray-500 space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-medium">Size:</span>
+                <span>Number of team members (1-20)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium">Cap:</span>
+                <span>Items/person/week capacity (1-20)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium">Eff:</span>
+                <span>Team efficiency multiplier (0.1-2.0)</span>
+              </div>
+            </div>
           </div>
 
           <!-- Dependency Matrix -->
           <div class="lg:col-span-2">
-            <h4 class="text-sm font-medium text-gray-700 mb-3">Team Dependencies</h4>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-medium text-gray-700">Team Dependencies</h4>
+              <div class="flex items-center gap-4 text-xs text-gray-500">
+                <div class="flex items-center gap-1">
+                  <span class="w-3 h-3 rounded-sm bg-green-100 border border-green-300"></span>
+                  <span>0-1: Low</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="w-3 h-3 rounded-sm bg-yellow-100 border border-yellow-300"></span>
+                  <span>2-3: Medium</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="w-3 h-3 rounded-sm bg-red-100 border border-red-300"></span>
+                  <span>4-5: High</span>
+                </div>
+              </div>
+            </div>
             <div class="overflow-x-auto border rounded-lg">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider h-[80px]">Team</th>
+                    <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
                     {#each dependencyMatrix.teams as team}
-                      <th class="px-2 bg-gray-50 h-[80px] align-bottom relative w-12">
-                        <div 
-                          class="absolute bottom-2 left-1/2 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          style="transform: translateX(-50%) rotate(-45deg); transform-origin: left bottom; width: max-content; transform-box: fill-box;"
-                        >
-                          {team}
-                        </div>
-                      </th>
+                      <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{team}</th>
                     {/each}
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                   {#each dependencyMatrix.teams as fromTeam, fromIndex}
                     <tr class="hover:bg-gray-50">
-                      <th class="px-2 py-2 bg-gray-50 text-left">
-                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">{fromTeam}</div>
+                      <th class="px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {fromTeam}
                       </th>
                       {#each dependencyMatrix.teams as toTeam, toIndex}
                         <td class="px-2 py-2">
@@ -931,7 +1093,9 @@
                               type="number"
                               min="0"
                               max="5"
-                              class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors hover:bg-gray-50"
+                              class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors
+                                {dependencyMatrix.dependencies[fromIndex][toIndex] <= 1 ? 'bg-green-50' : 
+                                 dependencyMatrix.dependencies[fromIndex][toIndex] <= 3 ? 'bg-yellow-50' : 'bg-red-50'}"
                               value={dependencyMatrix.dependencies[fromIndex][toIndex]}
                               on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
                             />
@@ -949,25 +1113,7 @@
         </div>
 
         <!-- Apply Dependencies Button -->
-        <div class="flex justify-between items-center border-t pt-4">
-          <div class="flex gap-8">
-            <div class="flex items-center gap-2">
-              <div class="text-xs font-medium text-gray-700">Team:</div>
-              <span class="text-xs text-gray-600">Team identifier</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="text-xs font-medium text-gray-700">Size:</div>
-              <span class="text-xs text-gray-600">Team members (1-20)</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="text-xs font-medium text-gray-700">Cap:</div>
-              <span class="text-xs text-gray-600">Items/person/week (1-20)</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="text-xs font-medium text-gray-700">Eff:</div>
-              <span class="text-xs text-gray-600">Performance factor (0.1-2.0)</span>
-            </div>
-          </div>
+        <div class="flex justify-end">
           <button
             type="button"
             class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
@@ -976,8 +1122,294 @@
             <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            Calculate Impact
+            Apply Dependencies
           </button>
+        </div>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Analysis Summary -->
+  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+    <h3 class="text-lg font-semibold text-gray-900 mb-6">Impact Analysis</h3>
+    
+    <!-- Comparison with Independent Teams -->
+    {#if nodes.length > 0}
+      {@const independentMetrics = calculateIndependentTeamMetrics()}
+      {@const currentCosts = calculateCosts()}
+      {@const costDifference = currentCosts.totalCost - independentMetrics.costs.totalCost}
+      
+      <div class="mb-8">
+        <h4 class="text-sm font-medium text-gray-700 mb-4">Cost Impact of Team Dependencies</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Current Model -->
+          <div class="bg-white rounded-lg p-4 border-2 border-secondary">
+            <div class="text-sm font-medium text-secondary mb-2">Current Model</div>
+            <div class="space-y-3">
+              <div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Weekly Cost</span>
+                  <span class="font-medium">${currentCosts.totalCost.toFixed(2)}</span>
+                </div>
+                <div class="text-xs text-gray-500">Including dependencies and coordination</div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Team Efficiency</span>
+                  <span class="font-medium">{metrics.flowEfficiency.toFixed(1)}%</span>
+                </div>
+                <div class="text-xs text-gray-500">Time spent on value-adding work</div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Average Lead Time</span>
+                  <span class="font-medium">{metrics.avgLeadTime.toFixed(1)} days</span>
+                </div>
+                <div class="text-xs text-gray-500">Time to complete work items</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Independent Teams -->
+          <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <div class="text-sm font-medium text-gray-600 mb-2">If Teams Were Independent</div>
+            <div class="space-y-3">
+              <div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Weekly Cost</span>
+                  <span class="font-medium">${independentMetrics.costs.totalCost.toFixed(2)}</span>
+                </div>
+                <div class="text-xs text-gray-500">Minimal coordination needed</div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Team Efficiency</span>
+                  <span class="font-medium">{independentMetrics.flowEfficiency}%</span>
+                </div>
+                <div class="text-xs text-gray-500">Theoretical maximum efficiency</div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Average Lead Time</span>
+                  <span class="font-medium">{independentMetrics.leadTime.toFixed(1)} days</span>
+                </div>
+                <div class="text-xs text-gray-500">Without dependency delays</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cost Difference Explanation -->
+        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+          <h5 class="text-sm font-medium text-gray-900 mb-2">Impact Summary</h5>
+          <div class="space-y-2">
+            <p class="text-sm text-gray-600">
+              Team dependencies are adding <span class="font-medium text-secondary">${costDifference.toFixed(2)}</span> in weekly costs 
+              ({((costDifference / independentMetrics.costs.totalCost) * 100).toFixed(1)}% increase).
+            </p>
+            <p class="text-sm text-gray-600">
+              This cost represents necessary coordination and communication between teams, but can be optimized through:
+            </p>
+            <ul class="text-sm text-gray-600 space-y-1 mt-2">
+              <li>• Clear team boundaries and well-defined interfaces</li>
+              <li>• Efficient communication channels and processes</li>
+              <li>• Strategic dependency management</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Metrics Dashboard -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Flow Efficiency -->
+        <div class="bg-gradient-to-br from-secondary/10 to-white p-4 rounded-lg border border-secondary/20">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="text-sm font-medium text-secondary">Flow Efficiency</h4>
+              <p class="text-xs text-gray-600 mt-1">How effectively teams deliver value</p>
+            </div>
+            <div class="relative w-16 h-16">
+              <svg class="w-16 h-16 transform -rotate-90">
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  fill="none"
+                  stroke="#e0e7ff"
+                  stroke-width="6"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  fill="none"
+                  stroke="#6366f1"
+                  stroke-width="6"
+                  stroke-dasharray={`${metrics.flowEfficiency * 1.76} 176`}
+                />
+              </svg>
+              <span class="absolute inset-0 flex items-center justify-center text-lg font-semibold text-secondary">
+                {metrics.flowEfficiency.toFixed(0)}%
+              </span>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-600">Value-Adding Time</span>
+              <span class="font-medium text-secondary">{metrics.flowEfficiency.toFixed(1)}%</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-600">Wait Time & Overhead</span>
+              <span class="font-medium text-red-600">{(100 - metrics.flowEfficiency).toFixed(1)}%</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-1">
+              {metrics.flowEfficiency < 40 ? 'Opportunity to reduce handoffs and streamline processes' :
+               metrics.flowEfficiency < 60 ? 'Good balance of coordination and execution' :
+               'Excellent flow with minimal bottlenecks'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Dependency Impact -->
+        <div class="bg-gradient-to-br from-blue-50 to-white p-4 rounded-lg border border-blue-200">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="text-sm font-medium text-blue-900">Dependency Complexity</h4>
+              <p class="text-xs text-gray-600 mt-1">How interconnected teams are</p>
+            </div>
+            <div class="relative w-16 h-16">
+              <svg class="w-16 h-16 transform -rotate-90">
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  fill="none"
+                  stroke="#e0e7ff"
+                  stroke-width="6"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  fill="none"
+                  stroke="#3b82f6"
+                  stroke-width="6"
+                  stroke-dasharray={`${metrics.dependencyImpactScore * 1.76} 176`}
+                />
+              </svg>
+              <span class="absolute inset-0 flex items-center justify-center text-lg font-semibold text-blue-700">
+                {metrics.dependencyImpactScore.toFixed(0)}%
+              </span>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-600">Network Density</span>
+              <span class="font-medium text-blue-700">{(edges.length / (nodes.length * (nodes.length - 1)) * 100).toFixed(1)}%</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-600">Avg Dependency Strength</span>
+              <span class="font-medium text-blue-700">{(edges.reduce((sum, edge) => sum + edge.data.strength, 0) / edges.length).toFixed(1)}/5</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-1">
+              {metrics.dependencyImpactScore < 30 ? 'Low coupling, teams work independently' :
+               metrics.dependencyImpactScore < 60 ? 'Moderate dependencies, manageable coordination' :
+               'High coupling, consider restructuring teams'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Utilization -->
+        <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="text-sm font-medium text-emerald-900">Team Utilization</h4>
+              <p class="text-xs text-gray-600 mt-1">How effectively time is used</p>
+            </div>
+            <div class="relative w-16 h-16">
+              <svg class="w-16 h-16 transform -rotate-90">
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  fill="none"
+                  stroke="#e0e7ff"
+                  stroke-width="6"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  fill="none"
+                  stroke="#10b981"
+                  stroke-width="6"
+                  stroke-dasharray={`${metrics.utilizationRate * 1.76} 176`}
+                />
+              </svg>
+              <span class="absolute inset-0 flex items-center justify-center text-lg font-semibold text-emerald-700">
+                {metrics.utilizationRate.toFixed(0)}%
+              </span>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-600">Productive Time</span>
+              <span class="font-medium text-emerald-700">{metrics.utilizationRate.toFixed(1)}%</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-600">Overhead Time</span>
+              <span class="font-medium text-red-600">{(100 - metrics.utilizationRate).toFixed(1)}%</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-1">
+              {metrics.utilizationRate < 60 ? 'High overhead, review coordination needs' :
+               metrics.utilizationRate < 80 ? 'Good balance of work and coordination' :
+               'Excellent utilization of team capacity'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Insights -->
+      <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+        <h4 class="text-sm font-medium text-gray-900 mb-3">Key Insights & Recommendations</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Current Strengths -->
+          <div>
+            <h5 class="text-sm font-medium text-emerald-700 mb-2">What's Working Well</h5>
+            <ul class="space-y-2">
+              {#if metrics.flowEfficiency >= 60}
+                <li class="text-sm text-gray-600">✓ High flow efficiency indicates smooth work processes</li>
+              {/if}
+              {#if metrics.utilizationRate >= 75}
+                <li class="text-sm text-gray-600">✓ Teams are effectively utilizing their capacity</li>
+              {/if}
+              {#if metrics.dependencyImpactScore <= 40}
+                <li class="text-sm text-gray-600">✓ Well-managed team dependencies</li>
+              {/if}
+              {#if metrics.avgLeadTime <= teamParams.baseLeadTime * 1.5}
+                <li class="text-sm text-gray-600">✓ Quick delivery times despite dependencies</li>
+              {/if}
+            </ul>
+          </div>
+
+          <!-- Areas for Improvement -->
+          <div>
+            <h5 class="text-sm font-medium text-blue-700 mb-2">Opportunities for Improvement</h5>
+            <ul class="space-y-2">
+              {#if metrics.flowEfficiency < 60}
+                <li class="text-sm text-gray-600">• Streamline workflows to reduce wait times</li>
+              {/if}
+              {#if metrics.utilizationRate < 75}
+                <li class="text-sm text-gray-600">• Reduce overhead activities and meetings</li>
+              {/if}
+              {#if metrics.dependencyImpactScore > 40}
+                <li class="text-sm text-gray-600">• Consider restructuring team boundaries</li>
+              {/if}
+              {#if metrics.avgLeadTime > teamParams.baseLeadTime * 1.5}
+                <li class="text-sm text-gray-600">• Look for ways to reduce handoffs between teams</li>
+              {/if}
+            </ul>
+          </div>
         </div>
       </div>
     {/if}
@@ -1198,137 +1630,14 @@
 
   <!-- Cost Analysis Section -->
   <div class="space-y-8">
-    <!-- Cost Parameters -->
-    <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-      <h3 class="text-lg font-semibold text-gray-900 mb-6">Cost Analysis Parameters</h3>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Meeting Parameters -->
-        <div class="space-y-3">
-          <h4 class="text-sm font-medium text-gray-700">Meeting Parameters</h4>
-          <div>
-            <label for="developerRate" class="text-xs text-gray-500 flex items-center gap-1" title="The fully loaded hourly cost for developers, including benefits, equipment, and overhead. Used to calculate meeting and communication costs.">
-              Developer Rate ($/hr)
-              <button 
-                class="tooltip"
-                aria-label="Help information">
-                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </label>
-            <input 
-              id="developerRate"
-              type="number" 
-              bind:value={costParams.hourlyRate.developer}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="0"
-              title="The fully loaded hourly cost for developers, including benefits, equipment, and overhead. Used to calculate meeting and communication costs."
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="Total hours spent in meetings per week per team, including standups, planning sessions, reviews, and other collaborative sessions.">
-              Weekly Hours
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.meetings.weeklyDuration}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="0"
-              title="Total hours spent in meetings per week per team, including standups, planning sessions, reviews, and other collaborative sessions."
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="Average number of team members who regularly attend meetings. Used to calculate total meeting costs and coordination overhead.">
-              Attendees per Team
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.meetings.attendeesPerTeam}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="1"
-              title="Average number of team members who regularly attend meetings. Used to calculate total meeting costs and coordination overhead."
-            />
-          </div>
-        </div>
-
-        <!-- Communication Parameters -->
-        <div class="space-y-3">
-          <h4 class="text-sm font-medium text-gray-700">Communication Parameters</h4>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="Multiplier that represents additional time spent on communication. 1.0 means no overhead, 1.5 means 50% extra time spent on communication activities like documentation, emails, and chat.">
-              Overhead Factor
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.overhead.communicationOverhead}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="1"
-              step="0.1"
-              title="Multiplier that represents additional time spent on communication. 1.0 means no overhead, 1.5 means 50% extra time spent on communication activities like documentation, emails, and chat."
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="Factor applied to waiting time between communications. Higher values indicate longer delays in responses and coordination between teams.">
-              Wait Time Multiplier
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.overhead.waitTimeMultiplier}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="1"
-              step="0.1"
-              title="Factor applied to waiting time between communications. Higher values indicate longer delays in responses and coordination between teams."
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Cost Summary and Distribution -->
     {#if nodes.length > 0}
       {@const costs = calculateCosts()}
       {@const totalCost = costs.totalCost}
 
-      <!-- Cost Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-          <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
-          <div class="text-2xl font-bold text-secondary mt-1">
-            ${costs.weeklyMeetingCost.toFixed(2)}
-          </div>
-        </div>
-        <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-          <div class="text-sm font-medium text-gray-600">Communication</div>
-          <div class="text-2xl font-bold text-secondary mt-1">
-            ${costs.communicationCost.toFixed(2)}
-          </div>
-        </div>
-        <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-          <div class="text-sm font-medium text-gray-600">Total Weekly Cost</div>
-          <div class="text-2xl font-bold text-secondary mt-1">
-            ${costs.totalCost.toFixed(2)}
-          </div>
-          <div class="text-xs text-gray-500 mt-1">
-            Annual: ${(costs.totalCost * 52).toFixed(2)}
-          </div>
-        </div>
-      </div>
-
       <!-- Cost Distribution Section -->
       <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">Cost Distribution</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Cost Analysis</h3>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Chart -->
@@ -1341,304 +1650,111 @@
             </div>
           </div>
 
-          <!-- Cost Category Explanations -->
-          <div class="space-y-4">
-            <div class="p-4 bg-gray-50 rounded-lg">
-              <h4 class="text-sm font-medium text-gray-900 mb-3">Cost Categories & Formulas</h4>
-              <div class="space-y-4">
-                <div>
-                  <h5 class="text-sm font-medium text-blue-600">Meeting Costs</h5>
-                  <p class="text-xs text-gray-600 mt-1">
-                    Calculated from scheduled team meetings, planning sessions, and retrospectives.
-                    Formula considers hourly rates, meeting duration, and number of attendees.
-                    High costs (>30%) may indicate excessive synchronous communication.
-                  </p>
+          <!-- Cost Breakdown -->
+          <div class="space-y-6">
+            <!-- Weekly Cost Summary -->
+            <div class="grid grid-cols-3 gap-4">
+              <div class="bg-gradient-to-br from-secondary/10 to-white p-4 rounded-lg border border-secondary/20">
+                <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
+                <div class="text-xl font-bold text-secondary mt-1">
+                  ${costs.weeklyMeetingCost.toFixed(2)}
                 </div>
-                
-                <div>
-                  <h5 class="text-sm font-medium text-amber-600">Communication Overhead</h5>
-                  <p class="text-xs text-gray-600 mt-1">
-                    Accounts for async communication, documentation, and cross-team coordination.
-                    Includes an overhead factor for context switching and wait times.
-                    Values above 40% suggest potential communication bottlenecks.
-                  </p>
+                <div class="text-xs text-gray-500 mt-1">
+                  {((costs.weeklyMeetingCost / costs.totalCost) * 100).toFixed(1)}% of total
                 </div>
-                
-                <div>
-                  <h5 class="text-sm font-medium text-emerald-600">Process Overhead</h5>
-                  <p class="text-xs text-gray-600 mt-1">
-                    Covers coordination overhead and process maintenance costs.
-                    Includes time spent on process optimization and quality assurance.
-                    Should be monitored to prevent excessive overhead.
-                  </p>
+              </div>
+              <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
+                <div class="text-sm font-medium text-gray-600">Communication</div>
+                <div class="text-xl font-bold text-amber-600 mt-1">
+                  ${costs.communicationCost.toFixed(2)}
                 </div>
+                <div class="text-xs text-gray-500 mt-1">
+                  {((costs.communicationCost / costs.totalCost) * 100).toFixed(1)}% of total
+                </div>
+              </div>
+              <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
+                <div class="text-sm font-medium text-gray-600">Process Overhead</div>
+                <div class="text-xl font-bold text-emerald-600 mt-1">
+                  ${costs.processOverhead.toFixed(2)}
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                  {((costs.processOverhead / costs.totalCost) * 100).toFixed(1)}% of total
+                </div>
+              </div>
+            </div>
+
+            <!-- Cost Analysis Details -->
+            <div class="space-y-4">
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Cost Breakdown & Impact</h4>
+                <div class="space-y-4">
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <h5 class="text-sm font-medium text-secondary">Meeting Costs</h5>
+                      <span class="text-xs text-gray-500">Per Team Member: ${(costs.weeklyMeetingCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week</span>
+                    </div>
+                    <p class="text-xs text-gray-600">
+                      Based on {costParams.meetings.weeklyDuration}hr/week × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <h5 class="text-sm font-medium text-amber-600">Communication Impact</h5>
+                      <span class="text-xs text-gray-500">Overhead Factor: {costParams.overhead.communicationOverhead}x</span>
+                    </div>
+                    <p class="text-xs text-gray-600">
+                      Includes async communication, documentation, and cross-team coordination costs
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <h5 class="text-sm font-medium text-emerald-600">Process Efficiency</h5>
+                      <span class="text-xs text-gray-500">Annual Cost: ${(costs.totalCost * 52).toFixed(2)}</span>
+                    </div>
+                    <p class="text-xs text-gray-600">
+                      Total coordination cost per team member: ${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Optimization Suggestions -->
+              <div class="p-4 bg-secondary/5 rounded-lg border border-secondary/20">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Cost Optimization Opportunities</h4>
+                <ul class="space-y-2 text-sm text-gray-600">
+                  {#if (costs.weeklyMeetingCost / costs.totalCost) > 0.4}
+                    <li class="flex items-start gap-2">
+                      <span class="text-secondary">•</span>
+                      Consider reducing meeting frequency or attendee count
+                    </li>
+                  {/if}
+                  {#if (costs.communicationCost / costs.totalCost) > 0.4}
+                    <li class="flex items-start gap-2">
+                      <span class="text-secondary">•</span>
+                      Look for ways to streamline team communication channels
+                    </li>
+                  {/if}
+                  {#if (costs.processOverhead / costs.totalCost) > 0.3}
+                    <li class="flex items-start gap-2">
+                      <span class="text-secondary">•</span>
+                      Review and optimize coordination processes
+                    </li>
+                  {/if}
+                  {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 10)}
+                    <li class="flex items-start gap-2">
+                      <span class="text-secondary">•</span>
+                      Total coordination costs are high relative to team size
+                    </li>
+                  {/if}
+                </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
     {/if}
-  </div>
-
-  <!-- Analysis Summary -->
-  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Analysis Summary</h3>
-    
-    <!-- Key Insights Dashboard -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <!-- Efficiency Score -->
-      <div class="bg-gradient-to-br from-secondary/10 to-white p-4 rounded-lg border border-secondary/20">
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="text-sm font-medium text-secondary">Efficiency Score</h4>
-          <div class="relative w-12 h-12">
-            <svg class="w-12 h-12 transform -rotate-90">
-              <circle
-                cx="24"
-                cy="24"
-                r="20"
-                fill="none"
-                stroke="#e0e7ff"
-                stroke-width="4"
-              />
-              <circle
-                cx="24"
-                cy="24"
-                r="20"
-                fill="none"
-                stroke="#6366f1"
-                stroke-width="4"
-                stroke-dasharray={`${metrics.flowEfficiency * 1.256} 126`}
-              />
-            </svg>
-            <span class="absolute inset-0 flex items-center justify-center text-sm font-semibold text-indigo-700">
-              {metrics.flowEfficiency.toFixed(0)}%
-            </span>
-          </div>
-        </div>
-        <div class="space-y-1">
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-secondary">Flow Efficiency</span>
-            <span class="font-medium text-secondary">{metrics.flowEfficiency.toFixed(1)}%</span>
-          </div>
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-secondary">Service Efficiency</span>
-            <span class="font-medium text-secondary">{metrics.serviceEfficiency.toFixed(1)}%</span>
-          </div>
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-secondary">Team Utilization</span>
-            <span class="font-medium text-secondary">{metrics.utilizationRate.toFixed(1)}%</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bureaucracy Impact -->
-      <div class="bg-gradient-to-br from-red-50 to-white p-4 rounded-lg border border-red-100">
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="text-sm font-medium text-red-900">Bureaucracy Impact</h4>
-          <div class="relative w-12 h-12">
-            <svg class="w-12 h-12 transform -rotate-90">
-              <circle
-                cx="24"
-                cy="24"
-                r="20"
-                fill="none"
-                stroke="#fee2e2"
-                stroke-width="4"
-              />
-              <circle
-                cx="24"
-                cy="24"
-                r="20"
-                fill="none"
-                stroke="#ef4444"
-                stroke-width="4"
-                stroke-dasharray={`${metrics.overheadRatio * 100 * 1.256} 126`}
-              />
-            </svg>
-            <span class="absolute inset-0 flex items-center justify-center text-sm font-semibold text-red-700">
-              {(metrics.overheadRatio * 100).toFixed(0)}%
-            </span>
-          </div>
-        </div>
-        <div class="space-y-1">
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-red-700">Overhead Ratio</span>
-            <span class="font-medium text-red-900">{metrics.overheadRatio.toFixed(1)}%</span>
-          </div>
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-red-700">Dependency Impact</span>
-            <span class="font-medium text-red-900">{metrics.dependencyImpactScore.toFixed(1)}%</span>
-          </div>
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-red-700">Coordination Cost</span>
-            <span class="font-medium text-red-900">${(metrics.costPerFTE * metrics.overheadRatio).toFixed(0)}/FTE</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Delivery Performance -->
-      <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-100">
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="text-sm font-medium text-emerald-900">Delivery Performance</h4>
-          <div class="relative w-12 h-12">
-            <svg class="w-12 h-12 transform -rotate-90">
-              <circle
-                cx="24"
-                cy="24"
-                r="20"
-                fill="none"
-                stroke="#d1fae5"
-                stroke-width="4"
-              />
-              <circle
-                cx="24"
-                cy="24"
-                r="20"
-                fill="none"
-                stroke="#10b981"
-                stroke-width="4"
-                stroke-dasharray={`${Math.min(100, (metrics.avgThroughput / 10) * 100) * 1.256} 126`}
-              />
-            </svg>
-            <span class="absolute inset-0 flex items-center justify-center text-sm font-semibold text-emerald-700">
-              {metrics.avgThroughput.toFixed(1)}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Combined Value Stream and Cost Analysis -->
-    <div class="space-y-6 mb-6">
-      <!-- Value Stream Analysis -->
-      <div class="bg-gray-50 rounded-lg p-4">
-        <h4 class="text-sm font-medium text-gray-700 mb-4">Value Stream Analysis</h4>
-        <div class="relative h-24">
-          <svg class="w-full h-full">
-            <!-- Value Stream Flow -->
-            <defs>
-              <linearGradient id="valueStreamGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-                <stop offset="{metrics.flowEfficiency}%" style="stop-color:#6366f1;stop-opacity:1" />
-                <stop offset="{metrics.flowEfficiency}%" style="stop-color:#ef4444;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
-              </linearGradient>
-            </defs>
-            
-            <!-- Main Flow Path -->
-            <path 
-              d="M 40 60 H {40 + (metrics.flowEfficiency * 8)} L {80 + (metrics.flowEfficiency * 8)} 40 H 960"
-              stroke="url(#valueStreamGradient)"
-              fill="none"
-              stroke-width="16"
-              stroke-linecap="round"
-            />
-            
-            <!-- Value-Adding Time Label -->
-            <text x="40" y="30" class="text-xs font-medium fill-secondary">Value-Adding Time ({metrics.flowEfficiency.toFixed(1)}%)</text>
-            
-            <!-- Non-Value-Adding Time Label -->
-            <text x="{40 + (metrics.flowEfficiency * 8)}" y="90" class="text-xs font-medium fill-red-700">Wait Time & Overhead ({(100 - metrics.flowEfficiency).toFixed(1)}%)</text>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <!-- Network and Recommendations -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Dependency Network Health -->
-      <div class="bg-gray-50 rounded-lg p-4">
-        <h4 class="text-sm font-medium text-gray-700 mb-3">Dependency Network Health</h4>
-        <div class="space-y-3">
-          <div>
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-gray-600">Network Density</span>
-              <span class="font-medium">{(edges.length / (nodes.length * (nodes.length - 1)) * 100).toFixed(1)}%</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-2">
-              <div 
-                class="bg-blue-500 h-2 rounded-full" 
-                style="width: {(edges.length / (nodes.length * (nodes.length - 1)) * 100)}%"
-              ></div>
-            </div>
-          </div>
-          <div>
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-gray-600">Average Dependency Strength</span>
-              <span class="font-medium">{(edges.reduce((sum, edge) => sum + edge.data.strength, 0) / edges.length).toFixed(1)}</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-2">
-              <div 
-                class="bg-blue-500 h-2 rounded-full" 
-                style="width: {(edges.reduce((sum, edge) => sum + edge.data.strength, 0) / edges.length / 5 * 100)}%"
-              ></div>
-            </div>
-          </div>
-          <div>
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-gray-600">Coordination Overhead</span>
-              <span class="font-medium">{metrics.dependencyImpactScore.toFixed(1)}%</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-2">
-              <div 
-                class="bg-blue-500 h-2 rounded-full" 
-                style="width: {metrics.dependencyImpactScore}%"
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Key Recommendations -->
-      <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 rounded-lg p-4">
-        <h4 class="text-sm font-medium text-gray-900 mb-3">Key Recommendations</h4>
-        <div class="space-y-3">
-          {#if metrics.flowEfficiency < 40}
-            <div class="bg-white/80 rounded p-3 border border-secondary/20">
-              <h5 class="text-sm font-medium text-secondary mb-2">Improve Flow Efficiency</h5>
-              <ul class="text-xs text-secondary space-y-1">
-                <li>• Reduce approval steps and handoffs</li>
-                <li>• Implement WIP limits</li>
-                <li>• Streamline team interfaces</li>
-              </ul>
-            </div>
-          {/if}
-          
-          {#if metrics.overheadRatio > 0.3}
-            <div class="bg-white/80 rounded p-3 border border-purple-100">
-              <h5 class="text-sm font-medium text-purple-900 mb-2">Reduce Bureaucratic Overhead</h5>
-              <ul class="text-xs text-purple-700 space-y-1">
-                <li>• Flatten management structure</li>
-                <li>• Automate administrative tasks</li>
-                <li>• Optimize meeting schedules</li>
-              </ul>
-            </div>
-          {/if}
-          
-          {#if metrics.dependencyImpactScore > 50}
-            <div class="bg-white/80 rounded p-3 border border-blue-100">
-              <h5 class="text-sm font-medium text-blue-900 mb-2">Optimize Dependencies</h5>
-              <ul class="text-xs text-blue-700 space-y-1">
-                <li>• Clear team boundaries</li>
-                <li>• Well-defined interfaces</li>
-                <li>• Async communication patterns</li>
-              </ul>
-            </div>
-          {/if}
-          
-          {#if metrics.utilizationRate < 75}
-            <div class="bg-white/80 rounded p-3 border border-emerald-100">
-              <h5 class="text-sm font-medium text-emerald-900 mb-2">Improve Team Utilization</h5>
-              <ul class="text-xs text-emerald-700 space-y-1">
-                <li>• Reduce context switching</li>
-                <li>• Balance team workload</li>
-                <li>• Optimize team size</li>
-              </ul>
-            </div>
-          {/if}
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 

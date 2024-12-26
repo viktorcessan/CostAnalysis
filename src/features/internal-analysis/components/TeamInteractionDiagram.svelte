@@ -54,10 +54,24 @@
 
   let nodes: any[] = [];
   let edges: any[] = [];
-  let mode: 'even' | 'uneven' = 'even';
+  let mode: 'even' | 'uneven' | 'advanced' = 'even';
   let teamCount = 5;
+  let companyDependencyLevel = 3; // Scale of 1-5 for overall company dependency level
   let dependencyMatrix = initializeDependencyMatrix(teamCount);
-  let metrics = { 
+
+  interface Metrics {
+    avgThroughput: number;
+    avgLeadTime: number;
+    dependencyComplexity: number;
+    flowEfficiency: number;
+    dependencyImpactScore: number;
+    utilizationRate: number;
+    serviceEfficiency: number;
+    costPerFTE: number;
+    overheadRatio: number;
+  }
+
+  let metrics: Metrics = { 
     avgThroughput: 0, 
     avgLeadTime: 0, 
     dependencyComplexity: 0,
@@ -82,10 +96,7 @@
     },
     overhead: {
       communicationOverhead: 1.2,
-      waitTimeMultiplier: 1.5,
-      toolingCost: 50,
-      managementCost: 2000,  // Monthly management overhead per team
-      supportCost: 1000      // Monthly support cost per team
+      waitTimeMultiplier: 1.5
     }
   };
 
@@ -95,8 +106,6 @@
   interface CostAnalysis {
     weeklyMeetingCost: number;
     communicationCost: number;
-    toolingCost: number;
-    managementCost: number;
     processOverhead: number;
     totalCost: number;
   }
@@ -110,20 +119,16 @@
       type: 'doughnut',
       plugins: [ChartDataLabels as Plugin],
       data: {
-        labels: ['Meetings', 'Communication', 'Tools & Support', 'Management', 'Process'],
+        labels: ['Meetings', 'Communication', 'Process'],
         datasets: [{
           data: [
             costs.weeklyMeetingCost,
             costs.communicationCost,
-            costs.toolingCost,
-            costs.managementCost,
             costs.processOverhead
           ],
           backgroundColor: [
             '#dd9933',  // secondary (was blue)
             '#f59e0b',  // amber
-            '#10b981',  // emerald
-            '#8b5cf6',  // purple
             '#ec4899'   // pink
           ],
           borderWidth: 2,
@@ -162,8 +167,6 @@
                 const details = [
                   ['Weekly sync meetings', 'Sprint planning', 'Retrospectives'],
                   ['Inter-team coordination', 'Documentation', 'Knowledge sharing'],
-                  ['Development tools', 'Cloud services', 'Support systems'],
-                  ['Team leadership', 'Project oversight', 'Strategic planning'],
                   ['Process maintenance', 'Quality assurance', 'Workflow optimization']
                 ][context.dataIndex];
                 
@@ -180,7 +183,6 @@
               size: 12
             }
           },
-          // @ts-ignore
           datalabels: {
             color: '#ffffff',
             font: {
@@ -333,8 +335,8 @@
   }
 
   function generateNodes() {
-      nodes = [];
-      edges = [];
+    nodes = [];
+    edges = [];
     dependencyMatrix = initializeDependencyMatrix(teamCount);
     
     // Ensure we have enough team sizes
@@ -365,7 +367,10 @@
       nodes = [...nodes, node];
     }
 
-    if (mode === 'even') {
+    if (mode === 'advanced') {
+      // For advanced mode, dependencies are manually set in the matrix
+      applyMatrix();
+    } else if (mode === 'even') {
       generateEvenEdges();
     } else {
       generateHubAndSpokeEdges();
@@ -382,7 +387,7 @@
         source: source.id,
         target: nodes[nextIndex].id,
         data: {
-          strength: 2,
+          strength: companyDependencyLevel,
           type: 'balanced'
         }
       }];
@@ -397,7 +402,7 @@
         source: hub.id,
         target: node.id,
         data: {
-          strength: 3,
+          strength: companyDependencyLevel,
           type: 'hub'
         }
       }];
@@ -445,29 +450,15 @@
       costParams.hourlyRate.developer * 10 + // 10 hours baseline communication
       edges.reduce((sum, edge) => sum + (edge.data.strength * 4 * costParams.hourlyRate.developer), 0); // Additional cost based on dependency strength
 
-    // Infrastructure and tooling costs
-    const toolingCost =
-      costParams.overhead.toolingCost * totalPeople + // Per person tooling cost
-      (totalTeams * costParams.overhead.supportCost) + // Support infrastructure
-      edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.toolingCost * 0.2), 0); // Additional tooling cost for dependencies
-
-    // Management overhead
-    const managementCost = 
-      totalTeams * costParams.overhead.managementCost + // Base management cost
-      (totalConnections * costParams.hourlyRate.manager * 2); // Additional management time for dependencies
-
     // Process and coordination overhead
     const processOverhead = 
-      totalTeams * costParams.overhead.supportCost * 0.5 + // Process maintenance
       edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.hourlyRate.developer * 3), 0); // Coordination overhead
 
     return {
       weeklyMeetingCost,
       communicationCost,
-      toolingCost,
-      managementCost,
       processOverhead,
-      totalCost: weeklyMeetingCost + communicationCost + toolingCost + managementCost + processOverhead
+      totalCost: weeklyMeetingCost + communicationCost + processOverhead
     };
   }
 
@@ -517,12 +508,9 @@
     const totalFTE = nodes.reduce((sum: number, node: Node) => sum + node.data.size, 0);
     const costPerFTE = totalFTE > 0 ? costs.totalCost / totalFTE : 0;
     
-    const managementCost = nodes.length * costParams.overhead.managementCost;
-    const supportCost = nodes.length * costParams.overhead.supportCost;
-    const totalCost = costs.totalCost + managementCost + supportCost;
-    const overheadRatio = Math.min(1, Math.max(0, 
-      totalCost > 0 ? ((managementCost + supportCost + overheadTime * costParams.hourlyRate.developer) / totalCost) : 0
-    ));
+    // Calculate overhead ratio based on coordination overhead time
+    const overheadCost = overheadTime * costParams.hourlyRate.developer;
+    const calculatedOverheadRatio = costs.totalCost > 0 ? Math.min(1, overheadCost / costs.totalCost) : 0;
 
     return {
       flowEfficiency,
@@ -530,7 +518,7 @@
       utilizationRate,
       serviceEfficiency,
       costPerFTE,
-      overheadRatio
+      overheadRatio: calculatedOverheadRatio
     };
   }
 
@@ -544,17 +532,25 @@
     teamCount;
     generateNodes();
   }
+
+  // Add new reactive statement for company dependency level
+  $: {
+    companyDependencyLevel;
+    if (mode !== 'advanced') {
+      generateNodes();
+    }
+  }
 </script>
 
 <div class="space-y-6">
   <!-- Mode Selection Controls -->
-      <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Structure Configuration</h3>
     
     <!-- Distribution Mode Selection -->
     <div class="mb-8">
       <h4 class="text-sm font-medium text-gray-700 mb-4">Select Distribution Pattern</h4>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Even Distribution -->
         <button
           class="relative p-4 border-2 rounded-lg transition-all {
@@ -575,7 +571,7 @@
                   <circle cx="8" cy="8" r="4" fill="white"/>
                 </svg>
               {/if}
-          </div>
+            </div>
             <span class="font-medium text-gray-900">Even Distribution</span>
           </div>
           <p class="text-sm text-gray-600 mb-3">Teams are evenly connected with balanced dependencies</p>
@@ -646,271 +642,345 @@
             {/each}
           </svg>
         </button>
-      </div>
-    </div>
 
-    <!-- Team Count Selection -->
-            <div>
-      <h4 class="text-sm font-medium text-gray-700 mb-3">Number of Teams</h4>
-      <div class="flex items-center gap-4">
-              <input
-          type="range"
-                bind:value={teamCount}
-                min="2"
-                max="10"
-          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-        />
-        <div class="w-16 px-3 py-2 bg-gray-50 rounded-md border border-gray-200 text-center">
-          <span class="text-sm font-medium text-gray-900">{teamCount}</span>
-        </div>
-      </div>
-      <div class="mt-2 flex justify-between text-xs text-gray-500">
-        <span>Min: 2</span>
-        <span>Max: 10</span>
-      </div>
-    </div>
+        <!-- Advanced -->
+        <button
+          class="relative p-4 border-2 rounded-lg transition-all {
+            mode === 'advanced'
+              ? 'border-secondary bg-secondary/10'
+              : 'border-gray-200 hover:border-gray-300'
+          }"
+          on:click={() => mode = 'advanced'}
+        >
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-4 h-4 rounded-full border-2 {
+              mode === 'advanced'
+                ? 'border-secondary bg-secondary'
+                : 'border-gray-300'
+            }">
+              {#if mode === 'advanced'}
+                <svg class="w-4 h-4 text-white" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="4" fill="white"/>
+                </svg>
+              {/if}
             </div>
-
-  <!-- Combined Team Configuration and Dependency Matrix -->
-  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <div class="flex justify-between items-center mb-6">
-      <h3 class="text-lg font-semibold text-gray-900">Team Configuration & Dependencies</h3>
-    </div>
-
-    <!-- Global Parameters -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 bg-gray-50 p-4 rounded-lg">
-              <div>
-        <h4 class="text-sm font-medium text-gray-700 mb-3">Team Parameters</h4>
-        <div class="space-y-4">
-          <div class="bg-white p-3 rounded-lg border border-gray-200">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-sm font-medium text-gray-700">Base Lead Time:</span>
-              <input
-                type="number"
-                min="1"
-                max="30"
-                step="0.5"
-                class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary"
-                bind:value={teamParams.baseLeadTime}
-              />
-              <span class="text-sm text-gray-500">days</span>
-      </div>
-            <p class="text-xs text-gray-600">
-              The average time it takes to complete a work item without considering dependencies or delays.
-              This serves as the baseline for calculating actual delivery times when team dependencies are factored in.
-            </p>
-    </div>
-          <div class="bg-white p-3 rounded-lg border border-gray-200">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-sm font-medium text-gray-700">Dependency Impact:</span>
-              <input
-                type="number"
-                min="0.05"
-                max="0.5"
-                step="0.05"
-                class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary"
-                bind:value={teamParams.dependencyImpact}
-              />
+            <span class="font-medium text-gray-900">Advanced Configuration</span>
           </div>
-            <p class="text-xs text-gray-600">
-              A multiplier (0.05-0.5) that determines how much team dependencies affect performance.
-              Higher values mean dependencies have a stronger impact on delivery times and team efficiency.
-              <span class="block mt-1">
-                • 0.05: Minimal impact - Teams work mostly independently
-                • 0.25: Moderate impact - Some coordination needed
-                • 0.50: High impact - Heavy dependency overhead
-              </span>
-            </p>
+          <p class="text-sm text-gray-600 mb-3">Customize team dependencies and parameters</p>
+          <!-- Simple visualization -->
+          <svg class="w-full h-20" viewBox="0 0 160 80">
+            <rect x="30" y="20" width="100" height="40" rx="4" fill="none" stroke="#6366f1" stroke-width="1" stroke-dasharray="4 2"/>
+            <text x="80" y="45" text-anchor="middle" class="text-xs fill-indigo-600">Custom Matrix</text>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Configuration Section -->
+    {#if mode !== 'advanced'}
+      <!-- Simple Configuration -->
+      <div class="space-y-6">
+        <!-- Team Count -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-3">Number of Teams</h4>
+          <div class="flex items-center gap-4">
+            <input
+              type="range"
+              bind:value={teamCount}
+              min="2"
+              max="10"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-16 px-3 py-2 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{teamCount}</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div>
-        <h4 class="text-sm font-medium text-gray-700 mb-3">Dependency Levels Guide</h4>
-        <div class="space-y-2">
-          <div class="p-3 bg-white rounded-lg border border-green-200 border-l-4">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-700 font-medium">0-1</div>
-              <div>
-                <div class="text-sm font-medium text-gray-900">Low Dependency</div>
-                <div class="text-xs text-gray-600">Occasional information sharing, teams can work independently most of the time</div>
-          </div>
+
+        <!-- Company Dependency Level -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-3">Company Dependency Level</h4>
+          <div class="flex items-center gap-4">
+            <input
+              type="range"
+              bind:value={companyDependencyLevel}
+              min="1"
+              max="5"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-16 px-3 py-2 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
             </div>
           </div>
-          <div class="p-3 bg-white rounded-lg border border-yellow-200 border-l-4">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-700 font-medium">2-3</div>
-              <div>
-                <div class="text-sm font-medium text-gray-900">Medium Dependency</div>
-                <div class="text-xs text-gray-600">Regular collaboration needed, some coordination overhead</div>
-              </div>
-            </div>
+          <div class="mt-2 grid grid-cols-5 gap-1 text-xs text-gray-500">
+            <span>Very Low</span>
+            <span>Low</span>
+            <span>Medium</span>
+            <span>High</span>
+            <span>Very High</span>
           </div>
-          <div class="p-3 bg-white rounded-lg border border-orange-200 border-l-4">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-700 font-medium">4</div>
-              <div>
-                <div class="text-sm font-medium text-gray-900">High Dependency</div>
-                <div class="text-xs text-gray-600">Critical path dependencies, significant coordination required</div>
-              </div>
-            </div>
-          </div>
-          <div class="p-3 bg-white rounded-lg border border-red-200 border-l-4">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-700 font-medium">5</div>
-              <div>
-                <div class="text-sm font-medium text-gray-900">Critical Dependency</div>
-                <div class="text-xs text-gray-600">Blocking dependencies, extensive coordination needed</div>
-              </div>
+        </div>
+
+        <!-- Default Team Size -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-3">Default Team Size</h4>
+          <div class="flex items-center gap-4">
+            <input
+              type="range"
+              bind:value={teamParams.teams[0].size}
+              min="1"
+              max="20"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              on:input={() => {
+                teamParams.teams.forEach(team => team.size = teamParams.teams[0].size);
+                generateNodes();
+              }}
+            />
+            <div class="w-16 px-3 py-2 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{teamParams.teams[0].size}</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Team Configuration -->
-      <div>
-        <h4 class="text-sm font-medium text-gray-700 mb-3">Team Details</h4>
-        <div class="overflow-x-auto border rounded-lg">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead>
-          <tr>
-                <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 h-[80px]">Team</th>
-                <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Size</th>
-                <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Cap</th>
-                <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Eff</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          {#each teamParams.teams.slice(0, teamCount) as team, i}
-            <tr class="hover:bg-gray-50">
-                  <td class="px-2 py-2">
-                <input
-                  type="text"
-                  value={team.name}
-                      class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs"
-                  on:change={(e) => updateTeamName(i, e.currentTarget.value)}
-                />
-              </td>
-                  <td class="px-2 py-2">
-                <input
-                  type="number"
-                  min="1"
-                    max="20"
-                      class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                    value={team.size}
-                    on:input={(e) => updateTeamParam(i, 'size', parseInt(e.currentTarget.value) || 1)}
-                  />
-              </td>
-                  <td class="px-2 py-2">
+    {:else}
+      <!-- Advanced Configuration -->
+      <div class="space-y-6">
+        <!-- Global Parameters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-3">Team Parameters</h4>
+            <div class="space-y-4">
+              <div class="bg-white p-3 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-sm font-medium text-gray-700">Base Lead Time:</span>
                   <input
                     type="number"
                     min="1"
-                    max="20"
-                      class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                    value={team.baseCapacity}
-                    on:input={(e) => updateTeamParam(i, 'baseCapacity', parseInt(e.currentTarget.value) || 1)}
+                    max="30"
+                    step="0.5"
+                    class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary"
+                    bind:value={teamParams.baseLeadTime}
                   />
-              </td>
-                  <td class="px-2 py-2">
+                  <span class="text-sm text-gray-500">days</span>
+                </div>
+                <p class="text-xs text-gray-600">
+                  The average time it takes to complete a work item without considering dependencies or delays.
+                  This serves as the baseline for calculating actual delivery times when team dependencies are factored in.
+                </p>
+              </div>
+              <div class="bg-white p-3 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-sm font-medium text-gray-700">Dependency Impact:</span>
                   <input
                     type="number"
-                    min="0.1"
-                    max="2"
-                    step="0.1"
-                      class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                    value={team.efficiency}
-                    on:input={(e) => updateTeamParam(i, 'efficiency', parseFloat(e.currentTarget.value) || 1)}
+                    min="0.05"
+                    max="0.5"
+                    step="0.05"
+                    class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary"
+                    bind:value={teamParams.dependencyImpact}
                   />
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-      </div>
-    </div>
+                </div>
+                <p class="text-xs text-gray-600">
+                  A multiplier (0.05-0.5) that determines how much team dependencies affect performance.
+                  Higher values mean dependencies have a stronger impact on delivery times and team efficiency.
+                  <span class="block mt-1">
+                    • 0.05: Minimal impact - Teams work mostly independently
+                    • 0.25: Moderate impact - Some coordination needed
+                    • 0.50: High impact - Heavy dependency overhead
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-3">Dependency Levels Guide</h4>
+            <div class="space-y-2">
+              <div class="p-3 bg-white rounded-lg border border-green-200 border-l-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-700 font-medium">0-1</div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">Low Dependency</div>
+                    <div class="text-xs text-gray-600">Occasional information sharing, teams can work independently most of the time</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-3 bg-white rounded-lg border border-yellow-200 border-l-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-700 font-medium">2-3</div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">Medium Dependency</div>
+                    <div class="text-xs text-gray-600">Regular collaboration needed, some coordination overhead</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-3 bg-white rounded-lg border border-orange-200 border-l-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-700 font-medium">4</div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">High Dependency</div>
+                    <div class="text-xs text-gray-600">Critical path dependencies, significant coordination required</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-3 bg-white rounded-lg border border-red-200 border-l-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-700 font-medium">5</div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">Critical Dependency</div>
+                    <div class="text-xs text-gray-600">Blocking dependencies, extensive coordination needed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <!-- Dependency Matrix -->
-      <div class="lg:col-span-2">
-        <h4 class="text-sm font-medium text-gray-700 mb-3">Team Dependencies</h4>
-        <div class="overflow-x-auto border rounded-lg">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead>
-          <tr>
-                <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider h-[80px]">Team</th>
-            {#each dependencyMatrix.teams as team}
-                  <th class="px-2 bg-gray-50 h-[80px] align-bottom relative w-12">
-                    <div 
-                      class="absolute bottom-2 left-1/2 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      style="transform: translateX(-50%) rotate(-45deg); transform-origin: left bottom; width: max-content; transform-box: fill-box;"
-                    >
-                      {team}
-                    </div>
-              </th>
-            {/each}
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          {#each dependencyMatrix.teams as fromTeam, fromIndex}
-            <tr class="hover:bg-gray-50">
-                  <th class="px-2 py-2 bg-gray-50 text-left">
-                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">{fromTeam}</div>
-              </th>
-              {#each dependencyMatrix.teams as toTeam, toIndex}
-                <td class="px-2 py-2">
-                  {#if fromIndex !== toIndex}
-                    <input
-                      type="number"
-                      min="0"
-                      max="5"
-                          class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors hover:bg-gray-50"
-                      value={dependencyMatrix.dependencies[fromIndex][toIndex]}
-                      on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
-                    />
-                  {:else}
-                        <div class="w-12 h-8 bg-gray-100 rounded-md"></div>
-      {/if}
-                </td>
-              {/each}
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-        </div>
-      </div>
-    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Team Configuration -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-3">Team Details</h4>
+            <div class="overflow-x-auto border rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 h-[80px]">Team</th>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Size</th>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Cap</th>
+                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16 h-[80px]">Eff</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {#each teamParams.teams.slice(0, teamCount) as team, i}
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-2 py-2">
+                        <input
+                          type="text"
+                          value={team.name}
+                          class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs"
+                          on:change={(e) => updateTeamName(i, e.currentTarget.value)}
+                        />
+                      </td>
+                      <td class="px-2 py-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                          value={team.size}
+                          on:input={(e) => updateTeamParam(i, 'size', parseInt(e.currentTarget.value) || 1)}
+                        />
+                      </td>
+                      <td class="px-2 py-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                          value={team.baseCapacity}
+                          on:input={(e) => updateTeamParam(i, 'baseCapacity', parseInt(e.currentTarget.value) || 1)}
+                        />
+                      </td>
+                      <td class="px-2 py-2">
+                        <input
+                          type="number"
+                          min="0.1"
+                          max="2"
+                          step="0.1"
+                          class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                          value={team.efficiency}
+                          on:input={(e) => updateTeamParam(i, 'efficiency', parseFloat(e.currentTarget.value) || 1)}
+                        />
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-    <!-- Apply Dependencies Button -->
-    <div class="mt-6 flex justify-between items-center border-t pt-4">
-      <div class="flex gap-8">
-        <div class="flex items-center gap-2">
-          <div class="text-xs font-medium text-gray-700">Team:</div>
-          <span class="text-xs text-gray-600">Team identifier</span>
+          <!-- Dependency Matrix -->
+          <div class="lg:col-span-2">
+            <h4 class="text-sm font-medium text-gray-700 mb-3">Team Dependencies</h4>
+            <div class="overflow-x-auto border rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider h-[80px]">Team</th>
+                    {#each dependencyMatrix.teams as team}
+                      <th class="px-2 bg-gray-50 h-[80px] align-bottom relative w-12">
+                        <div 
+                          class="absolute bottom-2 left-1/2 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                          style="transform: translateX(-50%) rotate(-45deg); transform-origin: left bottom; width: max-content; transform-box: fill-box;"
+                        >
+                          {team}
+                        </div>
+                      </th>
+                    {/each}
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  {#each dependencyMatrix.teams as fromTeam, fromIndex}
+                    <tr class="hover:bg-gray-50">
+                      <th class="px-2 py-2 bg-gray-50 text-left">
+                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">{fromTeam}</div>
+                      </th>
+                      {#each dependencyMatrix.teams as toTeam, toIndex}
+                        <td class="px-2 py-2">
+                          {#if fromIndex !== toIndex}
+                            <input
+                              type="number"
+                              min="0"
+                              max="5"
+                              class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors hover:bg-gray-50"
+                              value={dependencyMatrix.dependencies[fromIndex][toIndex]}
+                              on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
+                            />
+                          {:else}
+                            <div class="w-12 h-8 bg-gray-100 rounded-md"></div>
+                          {/if}
+                        </td>
+                      {/each}
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="text-xs font-medium text-gray-700">Size:</div>
-          <span class="text-xs text-gray-600">Team members (1-20)</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="text-xs font-medium text-gray-700">Cap:</div>
-          <span class="text-xs text-gray-600">Items/person/week (1-20)</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="text-xs font-medium text-gray-700">Eff:</div>
-          <span class="text-xs text-gray-600">Performance factor (0.1-2.0)</span>
+
+        <!-- Apply Dependencies Button -->
+        <div class="flex justify-between items-center border-t pt-4">
+          <div class="flex gap-8">
+            <div class="flex items-center gap-2">
+              <div class="text-xs font-medium text-gray-700">Team:</div>
+              <span class="text-xs text-gray-600">Team identifier</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="text-xs font-medium text-gray-700">Size:</div>
+              <span class="text-xs text-gray-600">Team members (1-20)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="text-xs font-medium text-gray-700">Cap:</div>
+              <span class="text-xs text-gray-600">Items/person/week (1-20)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="text-xs font-medium text-gray-700">Eff:</div>
+              <span class="text-xs text-gray-600">Performance factor (0.1-2.0)</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+            on:click={applyMatrix}
+          >
+            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            Calculate Impact
+          </button>
         </div>
       </div>
-      <button
-        type="button"
-        class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
-        on:click={applyMatrix}
-      >
-        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-        </svg>
-        Calculate Impact
-      </button>
-    </div>
+    {/if}
   </div>
 
   <!-- Team Visualization -->
@@ -973,15 +1043,22 @@
           {@const startX = x1 + (dx * nodeRadius / totalLength)}
           {@const startY = y1 + (dy * nodeRadius / totalLength)}
           
+          <!-- Calculate color and thickness based on dependency strength -->
+          {@const strength = edge.data.strength}
+          {@const strokeWidth = 1 + (strength - 1) * 0.8} <!-- Scale from 1px to 4.2px -->
+          {@const color = strength <= 1 ? '#22c55e' : 
+                         strength <= 2 ? '#84cc16' :
+                         strength <= 3 ? '#eab308' :
+                         strength <= 4 ? '#f97316' : '#ef4444'}
+          {@const opacity = 0.6 + (strength - 1) * 0.1} <!-- Scale from 0.6 to 1.0 -->
+          
           <path 
             d="M {startX} {startY} Q {midX + normalX} {midY + normalY} {endX} {endY}"
             fill="none"
-            stroke={edge.data.strength >= 4 ? '#ef4444' : 
-                    edge.data.strength >= 3 ? '#f97316' :
-                    edge.data.strength >= 2 ? '#84cc16' : '#22c55e'}
-            stroke-width="2"
-            stroke-opacity="0.6"
-            marker-end="url(#arrowhead)"
+            stroke={color}
+            stroke-width={strokeWidth}
+            stroke-opacity={opacity}
+            marker-end="url(#arrowhead-{strength})"
           />
         {/each}
 
@@ -1039,8 +1116,8 @@
             <g class="text-xs fill-gray-700">
               <!-- Team Size and Efficiency -->
               <g transform="translate(-70, -10)">
-              <text 
-                text-anchor="start"
+                <text 
+                  text-anchor="start"
                   class="font-medium"
                 >Size</text>
                 <text 
@@ -1050,8 +1127,8 @@
                 >{node.data.size}</text>
               </g>
               <g transform="translate(70, -10)">
-              <text 
-                text-anchor="end"
+                <text 
+                  text-anchor="end"
                   class="font-medium"
                 >⚡ Eff</text>
                 <text 
@@ -1062,8 +1139,8 @@
               </g>
               <!-- Throughput and Lead Time -->
               <g transform="translate(-70, 35)">
-              <text 
-                text-anchor="start"
+                <text 
+                  text-anchor="start"
                   class="font-medium"
                 >📈 Items/d</text>
                 <text 
@@ -1073,11 +1150,11 @@
                 >{node.data.throughput.toFixed(1)}</text>
               </g>
               <g transform="translate(70, 35)">
-              <text 
-                text-anchor="end"
+                <text 
+                  text-anchor="end"
                   class="font-medium"
                 >⏱️ Days</text>
-              <text 
+                <text 
                   text-anchor="end"
                   y="20"
                   class="text-base font-semibold fill-gray-900"
@@ -1093,31 +1170,38 @@
           <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.15"/>
           </filter>
-          <!-- Enhanced arrow marker -->
-          <marker
-            id="arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon
-              points="0 0, 10 3.5, 0 7"
-              fill="#64748b"
-            />
-          </marker>
+          <!-- Enhanced arrow markers for each strength level -->
+          {#each [1, 2, 3, 4, 5] as strength}
+            {@const color = strength <= 1 ? '#22c55e' : 
+                           strength <= 2 ? '#84cc16' :
+                           strength <= 3 ? '#eab308' :
+                           strength <= 4 ? '#f97316' : '#ef4444'}
+            <marker
+              id="arrowhead-{strength}"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon
+                points="0 0, 10 3.5, 0 7"
+                fill={color}
+                opacity={0.6 + (strength - 1) * 0.1}
+              />
+            </marker>
+          {/each}
         </defs>
-        </svg>
+      </svg>
     </div>
-    </div>
+  </div>
 
   <!-- Cost Analysis Section -->
   <div class="space-y-8">
     <!-- Cost Parameters -->
     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
       <h3 class="text-lg font-semibold text-gray-900 mb-6">Cost Analysis Parameters</h3>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Meeting Parameters -->
         <div class="space-y-3">
           <h4 class="text-sm font-medium text-gray-700">Meeting Parameters</h4>
@@ -1209,76 +1293,6 @@
             />
           </div>
         </div>
-
-        <!-- Tools & Support Parameters -->
-        <div class="space-y-3">
-          <h4 class="text-sm font-medium text-gray-700">Tools & Support</h4>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="Monthly cost per development tool or license, including IDEs, cloud services, CI/CD tools, monitoring systems, and other development infrastructure.">
-              Per Tool Cost ($)
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.overhead.toolingCost}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="0"
-              title="Monthly cost per development tool or license, including IDEs, cloud services, CI/CD tools, monitoring systems, and other development infrastructure."
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="Monthly support infrastructure cost per team, covering technical support, infrastructure maintenance, DevOps activities, and operational costs.">
-              Support Cost/Team ($)
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.overhead.supportCost}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="0"
-              title="Monthly support infrastructure cost per team, covering technical support, infrastructure maintenance, DevOps activities, and operational costs."
-            />
-          </div>
-        </div>
-
-        <!-- Management Parameters -->
-        <div class="space-y-3">
-          <h4 class="text-sm font-medium text-gray-700">Management</h4>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="Monthly management overhead cost per team, including team leadership, project management, administrative tasks, and process overhead.">
-              Management Cost/Team ($)
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.overhead.managementCost}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="0"
-              title="Monthly management overhead cost per team, including team leadership, project management, administrative tasks, and process overhead."
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="The fully loaded hourly cost for managers, including benefits and overhead. Used to calculate management and coordination costs.">
-              Manager Rate ($/hr)
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </label>
-            <input
-              type="number"
-              bind:value={costParams.hourlyRate.manager}
-              class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
-              min="0"
-              title="The fully loaded hourly cost for managers, including benefits and overhead. Used to calculate management and coordination costs."
-            />
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1288,7 +1302,7 @@
       {@const totalCost = costs.totalCost}
 
       <!-- Cost Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
           <div class="text-2xl font-bold text-secondary mt-1">
@@ -1299,12 +1313,6 @@
           <div class="text-sm font-medium text-gray-600">Communication</div>
           <div class="text-2xl font-bold text-secondary mt-1">
             ${costs.communicationCost.toFixed(2)}
-          </div>
-        </div>
-        <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-          <div class="text-sm font-medium text-gray-600">Tools & Support</div>
-          <div class="text-2xl font-bold text-secondary mt-1">
-            ${costs.toolingCost.toFixed(2)}
           </div>
         </div>
         <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
@@ -1357,20 +1365,11 @@
                 </div>
                 
                 <div>
-                  <h5 class="text-sm font-medium text-emerald-600">Tools & Support</h5>
+                  <h5 class="text-sm font-medium text-emerald-600">Process Overhead</h5>
                   <p class="text-xs text-gray-600 mt-1">
-                    Combines per-tool licensing costs and team support infrastructure.
-                    Includes development tools, cloud services, and technical support.
-                    Typically should stay below 25% of total costs for optimal efficiency.
-                  </p>
-                </div>
-                
-                <div>
-                  <h5 class="text-sm font-medium text-purple-600">Management & Process</h5>
-                  <p class="text-xs text-gray-600 mt-1">
-                    Covers leadership overhead and process maintenance costs.
-                    Includes management time, oversight activities, and process optimization.
-                    Should be monitored to prevent excessive bureaucratic overhead.
+                    Covers coordination overhead and process maintenance costs.
+                    Includes time spent on process optimization and quality assurance.
+                    Should be monitored to prevent excessive overhead.
                   </p>
                 </div>
               </div>
@@ -1588,7 +1587,7 @@
             </div>
           </div>
         </div>
-            </div>
+      </div>
 
       <!-- Key Recommendations -->
       <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 rounded-lg p-4">
@@ -1602,8 +1601,8 @@
                 <li>• Implement WIP limits</li>
                 <li>• Streamline team interfaces</li>
               </ul>
-              </div>
-                  {/if}
+            </div>
+          {/if}
           
           {#if metrics.overheadRatio > 0.3}
             <div class="bg-white/80 rounded p-3 border border-purple-100">
@@ -1613,8 +1612,8 @@
                 <li>• Automate administrative tasks</li>
                 <li>• Optimize meeting schedules</li>
               </ul>
-              </div>
-                {/if}
+            </div>
+          {/if}
           
           {#if metrics.dependencyImpactScore > 50}
             <div class="bg-white/80 rounded p-3 border border-blue-100">
@@ -1624,8 +1623,8 @@
                 <li>• Well-defined interfaces</li>
                 <li>• Async communication patterns</li>
               </ul>
-              </div>
-                {/if}
+            </div>
+          {/if}
           
           {#if metrics.utilizationRate < 75}
             <div class="bg-white/80 rounded p-3 border border-emerald-100">
@@ -1636,7 +1635,7 @@
                 <li>• Optimize team size</li>
               </ul>
             </div>
-                {/if}
+          {/if}
         </div>
       </div>
     </div>

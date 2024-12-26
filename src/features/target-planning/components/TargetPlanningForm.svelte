@@ -356,9 +356,10 @@
           <label class="field-label" for="teamSize">
             Team Size
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Number of full-time employees on the team">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -389,9 +390,10 @@
           <label class="field-label" for="hourlyRate">
             Hourly Rate
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Average hourly cost per team member">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -425,9 +427,10 @@
           <label class="field-label" for="serviceEfficiency">
             Service Efficiency
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Percentage of time spent on productive work">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -461,9 +464,10 @@
           <label class="field-label" for="operationalOverhead">
             Operational Overhead
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Additional costs as percentage of base costs">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -497,9 +501,10 @@
           <label class="field-label" for="monthlyTickets">
             Monthly Tickets
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Average number of tickets processed per month">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -530,9 +535,10 @@
           <label class="field-label" for="hoursPerTicket">
             Hours per Ticket
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Average hours spent per ticket">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -566,9 +572,10 @@
           <label class="field-label" for="peoplePerTicket">
             People per Ticket
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Average number of people involved per ticket">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -599,9 +606,10 @@
           <label class="field-label" for="vendorRate">
             Vendor Rate
             <button 
-              class="tooltip" 
+              class="tooltip"
+              aria-label="Help information" 
               data-tippy-content="Average hourly rate charged by vendors">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
@@ -642,9 +650,10 @@
         <label class="field-label" for="breakEvenTarget">
           Break Even Time
           <button 
-            class="tooltip" 
+            class="tooltip"
+            aria-label="Help information" 
             data-tippy-content="Target months to break even on investment">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
@@ -678,9 +687,10 @@
         <label class="field-label" for="teamReductionTarget">
           Team Reduction
           <button 
-            class="tooltip" 
+            class="tooltip"
+            aria-label="Help information" 
             data-tippy-content="Target percentage reduction in team size">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
@@ -714,9 +724,10 @@
         <label class="field-label" for="efficiencyTarget">
           Process Efficiency
           <button 
-            class="tooltip" 
+            class="tooltip"
+            aria-label="Help information" 
             data-tippy-content="Target improvement in process efficiency">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
@@ -750,9 +761,10 @@
         <label class="field-label" for="implementationTarget">
           Implementation Time
           <button 
-            class="tooltip" 
+            class="tooltip"
+            aria-label="Help information" 
             data-tippy-content="Target time to implement the platform">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>

@@ -70,6 +70,9 @@
       activeMode = 'base';
     }
   }
+
+  // Add logic to toggle active class if needed
+  let isActive = false;
 </script>
 
 <div class="min-h-screen bg-gray-50">

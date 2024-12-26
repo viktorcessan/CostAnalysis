@@ -1122,14 +1122,19 @@
         <div class="space-y-3">
           <h4 class="text-sm font-medium text-gray-700">Meeting Parameters</h4>
           <div>
-            <label class="text-xs text-gray-500 flex items-center gap-1" title="The fully loaded hourly cost for developers, including benefits, equipment, and overhead. Used to calculate meeting and communication costs.">
+            <label for="developerRate" class="text-xs text-gray-500 flex items-center gap-1" title="The fully loaded hourly cost for developers, including benefits, equipment, and overhead. Used to calculate meeting and communication costs.">
               Developer Rate ($/hr)
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <button 
+                class="tooltip"
+                aria-label="Help information">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
             </label>
-            <input
-              type="number"
+            <input 
+              id="developerRate"
+              type="number" 
               bind:value={costParams.hourlyRate.developer}
               class="w-full mt-1 px-2 py-1.5 text-sm border border-gray-200 rounded"
               min="0"

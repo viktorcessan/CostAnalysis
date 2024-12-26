@@ -1,164 +1,188 @@
-# Cost Analysis Models Documentation
+# Mathematical Models Documentation
 
-This document provides detailed information about the cost analysis models used in the application.
-
-## Base Models
+## Base Analysis
 
 ### Team-Based Model
 
-The team-based model calculates costs based on the full-time equivalent (FTE) team size and associated parameters.
+The team-based cost model calculates the total monthly cost based on team size, hourly rates, and efficiency factors:
 
-Base cost calculation:
-```math
-C_b = n \cdot h \cdot w \cdot \eta_s \cdot (1 + \eta_o)
 ```
+C_b = n · h · w · η_s · (1 + η_o)
 
-Parameters:
-- n: Team size in FTEs
-- h: Hourly rate per FTE
-- w: Working hours per month
-- η_s: Service efficiency factor [0,1]
-- η_o: Operational overhead factor [0,∞)
+where:
+n = team size
+h = hourly rate
+w = working hours per month (typically 160)
+η_s = service efficiency (0-1)
+η_o = operational overhead (0-1)
+```
 
 ### Ticket-Based Model
 
-The ticket-based model calculates costs based on the volume of tickets and effort required per ticket.
+The ticket-based model calculates costs based on ticket volume and resource requirements:
 
-Base cost calculation:
-```math
-C_t = m \cdot t_h \cdot p \cdot h
+```
+C_t = m · t_h · p · h
+
+where:
+m = monthly tickets
+t_h = hours per ticket
+p = people per ticket
+h = vendor hourly rate
 ```
 
-Parameters:
-- m: Monthly ticket volume
-- t_h: Average hours per ticket
-- p: Average people per ticket
-- h: Hourly rate
+## Target-Based Planning
 
-## Transformation Solutions
+### Maximum Allowable Cost
+
+Calculates the maximum investment based on ROI period and savings targets:
+
+```
+C_max = min(0.5 · A, 1.5 · S_t)
+
+where:
+A = annual labor cost
+S_t = target savings over ROI period
+```
+
+### Required Efficiency Gains
+
+Determines necessary efficiency improvements to achieve savings:
+
+```
+E_req = min(S_m / (n · h · w), M_current)
+
+where:
+S_m = desired monthly savings
+M_current = current manual work percentage
+```
+
+### Break-even Scenarios
+
+Generates scenarios with different timeframes (T) and assumptions:
+
+```
+S_required = C_max / T
+
+Assumptions vary by timeframe:
+- Conservative (24m): η_e = 15%, η_t = 10%, η_q = 5%
+- Moderate (18m): η_e = 25%, η_t = 15%, η_q = 10%
+- Aggressive (12m): η_e = 35%, η_t = 20%, η_q = 15%
+
+where:
+η_e = efficiency gain
+η_t = team reduction
+η_q = quality improvement
+```
+
+## Process Analysis
+
+### Quality Value
+
+Calculates the potential value of quality improvements:
+
+```
+V_q = Q_t · 1.5
+
+where:
+Q_t = quality improvement target
+```
+
+### Knowledge Retention Impact
+
+Estimates the impact of improved knowledge management:
+
+```
+I_k = K_g · 1.2
+
+where:
+K_g = knowledge retention goal
+```
+
+### Standardization Benefits
+
+Quantifies benefits from process standardization:
+
+```
+B_s = S_l · 2
+
+where:
+S_l = standardization level
+```
+
+## Team Dependencies
+
+### Dependency Impact Score
+
+Calculates the total impact of team dependencies:
+
+```
+I_total = Σ(i_n)
+
+where:
+i_n = impact level of dependency n
+```
+
+### WIP Effects
+
+Measures the impact of work-in-progress limits:
+
+```
+E_wip = W_avg · 0.8
+
+where:
+W_avg = average WIP limit across teams
+```
+
+### Lead Time Optimization
+
+Calculates potential lead time improvements:
+
+```
+O_lt = 100 - L_avg
+
+where:
+L_avg = average lead time across teams
+```
+
+## Solution Cost Models
 
 ### Platform Solution
 
-The platform solution aims to reduce costs through automation and process efficiency.
-
-Cost calculation:
-```math
-C_p = C_b \cdot (1 - \alpha_t) \cdot (1 - \alpha_p) + P_m
 ```
+C_p = C_b · (1 - α_t) · (1 - α_p) + P_m
 
-Parameters:
-- α_t: Team reduction factor [0,1]
-- α_p: Process efficiency improvement [0,1]
-- P_m: Monthly platform maintenance cost
-- C_b: Base cost (from team or ticket model)
-- T_b: Time to build (months)
-
-Break-even calculation:
-```math
-T_{be} = \begin{cases}
-    T_b + \lceil\frac{P_i}{C_b - C_p}\rceil & \text{if } C_b > C_p \\
-    \infty & \text{otherwise}
-\end{cases}
+where:
+α_t = team reduction factor
+α_p = process efficiency improvement
+P_m = platform maintenance cost
 ```
-
-The break-even period includes both:
-- Initial build time (T_b)
-- Time to recover investment through savings
 
 ### Outsourcing Solution
 
-The outsourcing solution considers vendor rates, quality impact, and knowledge loss over time.
-
-Cost calculation:
-```math
-C_o = v \cdot w \cdot n \cdot (1 + \beta_m) \cdot Q(\beta_q) \cdot (1 + \beta_k \cdot \log_{10}(T_t + 1))
 ```
+C_o = v · h_b · (1 + β_m) · Q(β_q) · K(β_k, T_t)
 
-Parameters:
-- v: Vendor hourly rate
-- w: Working hours per month
-- n: Team size in FTEs
-- β_m: Management overhead factor [0,∞)
-- β_q: Quality impact factor [-1,1]
-- β_k: Knowledge loss factor [0,1]
-- T_t: Time since transition (months)
-
-Quality impact function:
-```math
-Q(\beta_q) = \begin{cases}
-    1 - \beta_q & \text{if } \beta_q \geq 0 \text{ (quality improvement)} \\
-    1 + |\beta_q| & \text{if } \beta_q < 0 \text{ (quality degradation)}
-\end{cases}
+where:
+v = vendor rate
+h_b = baseline hours
+β_m = management overhead
+β_q = quality impact factor
+β_k = knowledge loss factor
+T_t = transition time
 ```
 
 ### Hybrid Solution
 
-The hybrid solution combines platform, outsourcing, and internal delivery.
-
-Cost calculation:
-```math
-C_h = \gamma_p \cdot C_p + \gamma_o \cdot C_o + (1 - \gamma_p - \gamma_o) \cdot C_b
 ```
+C_h = γ_p · C_p + γ_v · C_o + (1 - γ_p - γ_v) · C_b
 
-Parameters:
-- γ_p: Platform portion [0,1]
-- γ_o: Outsourced portion [0,1]
-- 1 - γ_p - γ_o: Internal portion
-- C_p: Platform solution cost
-- C_o: Outsourcing solution cost
-- C_b: Base cost
-
-## Break-Even Analysis
-
-The break-even analysis determines how long it takes for a solution to become cost-effective.
-
-Break-even period calculation:
-```math
-T_{be} = \begin{cases}
-    \lceil\frac{I_s}{C_b - C_s}\rceil & \text{if } C_b > C_s \\
-    \infty & \text{otherwise}
-\end{cases}
+where:
+γ_p = platform portion
+γ_v = vendor portion
+C_p = platform solution cost
+C_o = outsourcing solution cost
+C_b = baseline cost
 ```
-
-For platform solutions, the build time T_b is added to this period.
-
-Parameters:
-- I_s: Initial investment for solution s
-- C_b: Current base cost
-- C_s: Monthly cost for solution s
-- T_b: Time to build (for platform solutions)
-
-A solution is considered viable if T_be ≤ 24 months.
-
-## Cost Structure
-
-Each solution includes the following cost components:
-
-1. Base Pay
-   - Regular working hours
-   - Standard rates
-
-2. Operational Costs
-   - Management overhead
-   - Tools and infrastructure
-   - Training and documentation
-
-3. Transition Costs (where applicable)
-   - Knowledge transfer
-   - Setup and configuration
-   - Initial training
-
-4. Quality Impact Costs
-   - Service level adjustments
-   - Rework and corrections
-   - Customer satisfaction measures
-
-## Implementation Notes
-
-1. All monetary values should be in the same currency
-2. Time periods are calculated in months
-3. Percentages are expressed as decimals [0,1]
-4. Logarithmic functions use base 10
-5. Ceiling function is used for break-even calculations
 ```
 

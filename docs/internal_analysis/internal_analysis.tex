@@ -1,0 +1,567 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{longtable}
+\usepackage{placeins}
+\usepackage{cleveref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,shapes.geometric}
+
+% Define modern colors
+\definecolor{definitionheader}{RGB}{41, 128, 185} % Blue
+\definecolor{explanationheader}{RGB}{46, 204, 113} % Green
+\definecolor{observationheader}{RGB}{230, 126, 34} % Orange
+\definecolor{boxbg}{RGB}{248, 249, 250} % Light gray background
+
+% Style configurations
+\titleformat{\section}
+{\normalfont\LARGE\bfseries}{\thesection}{1em}{}[\vspace{0.2cm}]
+\titleformat{\subsection}
+{\normalfont\Large\bfseries}{\thesubsection}{1em}{}[\vspace{0.1cm}]
+
+% Modern box styles
+\mdfdefinestyle{definitionstyle}{
+    linecolor=definitionheader,
+    backgroundcolor=boxbg,
+    linewidth=0.5pt,
+    roundcorner=5pt,
+    innertopmargin=10pt,
+    innerbottommargin=10pt,
+    innerleftmargin=12pt,
+    innerrightmargin=12pt,
+    skipabove=\baselineskip,
+    skipbelow=\baselineskip,
+    needspace=3\baselineskip,
+    frametitlebackgroundcolor=definitionheader,
+    frametitlefont=\normalfont\bfseries\color{white},
+    frametitlerule=true,
+    frametitleaboveskip=3pt,
+    frametitlebelowskip=7pt,
+    frametitlerulewidth=0pt
+}
+
+\mdfdefinestyle{explanationstyle}{
+    linecolor=explanationheader,
+    backgroundcolor=boxbg,
+    linewidth=0.5pt,
+    roundcorner=5pt,
+    innertopmargin=10pt,
+    innerbottommargin=10pt,
+    innerleftmargin=12pt,
+    innerrightmargin=12pt,
+    skipabove=\baselineskip,
+    skipbelow=\baselineskip,
+    needspace=3\baselineskip,
+    frametitlebackgroundcolor=explanationheader,
+    frametitlefont=\normalfont\bfseries\color{white},
+    frametitlerule=true,
+    frametitleaboveskip=3pt,
+    frametitlebelowskip=7pt,
+    frametitlerulewidth=0pt
+}
+
+\mdfdefinestyle{observationstyle}{
+    linecolor=observationheader,
+    backgroundcolor=boxbg,
+    linewidth=0.5pt,
+    roundcorner=5pt,
+    innertopmargin=10pt,
+    innerbottommargin=10pt,
+    innerleftmargin=12pt,
+    innerrightmargin=12pt,
+    skipabove=\baselineskip,
+    skipbelow=\baselineskip,
+    needspace=3\baselineskip,
+    frametitlebackgroundcolor=observationheader,
+    frametitlefont=\normalfont\bfseries\color{white},
+    frametitlerule=true,
+    frametitleaboveskip=3pt,
+    frametitlebelowskip=7pt,
+    frametitlerulewidth=0pt
+}
+
+% Custom environments with modern headers
+\newenvironment{definition}[1]
+{\begin{mdframed}[style=definitionstyle,frametitle={Definition: #1}]}
+{\end{mdframed}}
+
+\newenvironment{explanation}
+{\begin{mdframed}[style=explanationstyle,frametitle={Explanation}]}
+{\end{mdframed}}
+
+\newenvironment{observation}
+{\begin{mdframed}[style=observationstyle,frametitle={Observation}]}
+{\end{mdframed}}
+
+% Hyperref configuration
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,
+    urlcolor=blue,
+    citecolor=black
+}
+
+% List styling
+\setlist[itemize]{leftmargin=*,label=\textbullet,itemsep=0.2em,parsep=0.2em}
+
+\title{\textbf{\LARGE Internal Analysis \& Target-Based Planning}}
+\author{\Large}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\tableofcontents
+\clearpage
+
+\section{Part I: Internal Analysis}
+
+\subsection{Overview}
+
+\begin{explanation}
+Internal Analysis is designed to help organizations understand and optimize their team interactions, dependencies, and workflow efficiency. This analysis focuses on three key aspects:
+\begin{itemize}
+    \item Team dependencies and their impact
+    \item Work distribution and flow efficiency
+    \item Coordination costs and optimization opportunities
+\end{itemize}
+\end{explanation}
+
+\section{Team Dependency Analysis}
+
+\subsection{Motivation}
+
+\begin{explanation}
+Team dependencies in modern organizations can significantly impact productivity, lead times, and costs. Understanding these dependencies helps:
+\begin{itemize}
+    \item Identify bottlenecks and inefficiencies
+    \item Optimize team structures and interactions
+    \item Reduce coordination overhead
+    \item Improve delivery predictability
+\end{itemize}
+\end{explanation}
+
+\subsection{Key Metrics and Formulations}
+
+\subsubsection{Dependency Impact Score (DIS)}
+
+\begin{definition}{Dependency Impact Score}
+\[
+DIS = \sum(W_i \times D_i \times C_i)
+\]
+Where:
+\begin{itemize}
+    \item $W_i$ = Work item volume between teams i
+    \item $D_i$ = Dependency strength (1-5 scale)
+    \item $C_i$ = Coordination cost factor
+\end{itemize}
+\end{definition}
+
+\begin{observation}
+Dependency Strength Scale:
+\begin{itemize}
+    \item 1: Minimal - Occasional information sharing
+    \item 2: Low - Regular updates needed
+    \item 3: Medium - Shared deliverables
+    \item 4: High - Critical path dependencies
+    \item 5: Critical - Blocking dependencies
+\end{itemize}
+\end{observation}
+
+\subsubsection{Flow Efficiency Analysis}
+
+\begin{definition}{Flow Efficiency}
+\[
+FE = \frac{\sum VAT}{\sum LT} \times 100\%
+\]
+Where:
+\begin{itemize}
+    \item VAT = Value-added time (actual work)
+    \item LT = Total lead time (including wait times)
+\end{itemize}
+\end{definition}
+
+\begin{explanation}
+This metric helps understand:
+\begin{itemize}
+    \item Actual value-adding activities vs. wait times
+    \item Process efficiency
+    \item Opportunity areas for improvement
+\end{itemize}
+\end{explanation}
+
+\subsection{Input Parameters}
+
+\begin{definition}{Input Parameters}
+Key parameters for analysis:
+\begin{itemize}
+    \item Team Size: Number of team members (Integer)
+    \item Dependencies: Team dependency mapping (Matrix)
+    \item WIP Limits: Maximum concurrent work (Integer)
+    \item Throughput: Items completed per time (Float)
+\end{itemize}
+
+Example Dependency Matrix:
+\[
+\begin{matrix}
+    & T1 & T2 & T3 & T4 \\
+T1 & - & 3 & 1 & 0 \\
+T2 & 3 & - & 2 & 1 \\
+T3 & 1 & 2 & - & 4 \\
+T4 & 0 & 1 & 4 & -
+\end{matrix}
+\]
+\end{definition}
+
+\subsection{System Performance Indicators}
+
+\begin{definition}{Performance Metrics}
+\begin{itemize}
+    \item Flow Efficiency: $FE = \frac{VAT}{LT}$ (Target: > 40\%)
+    \item WIP Impact: $WIS = \sum(\frac{WIP_i}{T_i})$ (Target: < 1.5)
+    \item Lead Time: $SLT = \sum(LT_i \times \frac{D_i}{D_{max}})$ (Target: Varies)
+\end{itemize}
+\end{definition}
+
+\section{Distribution Models}
+
+\subsection{Even Distribution Model}
+
+\begin{definition}{Dependency Balance Index}
+\[
+DBI = \frac{\sigma(D_i)}{\mu(D_i)}
+\]
+Target: DBI < 0.3 indicates good balance
+\end{definition}
+
+\begin{explanation}
+Key Characteristics:
+\begin{itemize}
+    \item Equal number of dependencies per team
+    \item Balanced workload distribution
+    \item Minimized coordination overhead
+\end{itemize}
+\end{explanation}
+
+\subsection{Uneven Distribution (Hub-and-Spoke)}
+
+\begin{definition}{Centrality Impact}
+\[
+CI = \left(\frac{D_c}{D_{avg}}\right) \times \left(\frac{T_c}{T_{avg}}\right)
+\]
+Where:
+\begin{itemize}
+    \item $D_c$ = Central team dependencies
+    \item $D_{avg}$ = Average team dependencies
+    \item $T_c$ = Central team throughput
+    \item $T_{avg}$ = Average team throughput
+\end{itemize}
+\end{definition}
+
+\subsection{Cost Analysis}
+
+\begin{definition}{Cost Structure}
+Total Cost = Direct Costs + Indirect Costs + Overhead
+
+Where:
+\begin{itemize}
+    \item Direct Costs = Meeting costs + Communication time
+    \item Indirect Costs = Context switching + Wait times
+    \item Overhead = Management coordination + Tools
+\end{itemize}
+
+Annual Cost per Team:
+\[
+AC = BC \times (1 + DF)
+\]
+Where:
+\begin{itemize}
+    \item BC = Team Size × Hourly Rate × Annual Hours
+    \item DF = Number of Dependencies × 0.15
+\end{itemize}
+\end{definition}
+
+\section{Part II: Target-Based Planning}
+
+\begin{explanation}
+Target-Based Planning simplifies platform solution development by working backwards:
+\begin{itemize}
+    \item Start with the desired business outcome (e.g., "reduce ticket processing time by 30\%")
+    \item Define clear, measurable targets
+    \item Design the minimum viable platform features needed to achieve these targets
+\end{itemize}
+This approach helps avoid over-engineering by focusing only on platform capabilities that directly contribute to target achievement.
+\end{explanation}
+
+\begin{observation}
+Two main approaches for platform solutions:
+\begin{itemize}
+    \item Team-Based Platform: Focuses on team collaboration and workflow automation
+    \item Ticket-Based Platform: Emphasizes process automation and routing optimization
+\end{itemize}
+The choice depends on which metrics you want to improve most: team efficiency or process throughput.
+\end{observation}
+
+\subsection{Model-Specific Analysis}
+
+\subsubsection{Team-Based Planning}
+
+\begin{explanation}
+Team-based planning focuses on human resource optimization. Instead of starting with detailed team structures and workflows, it begins with target outcomes:
+\begin{itemize}
+    \item Desired cost savings or efficiency improvements
+    \item Required service level maintenance or improvements
+    \item Acceptable timeline for changes
+\end{itemize}
+This approach helps avoid over-engineering team structures and focuses on necessary changes to meet business goals.
+\end{explanation}
+
+\begin{definition}{Maximum Allowable Investment (Team)}
+\[
+MAI_{team} = \min(0.5 \times AC_{team}, 1.5 \times TS)
+\]
+Where:
+\begin{itemize}
+    \item $AC_{team}$ = Annual labor cost (team-based)
+    \item $TS$ = Target savings over ROI period
+\end{itemize}
+\end{definition}
+
+\begin{observation}
+The MAI formula enforces two key constraints:
+\begin{itemize}
+    \item Investment cannot exceed 50\% of current annual costs (practicality constraint)
+    \item Investment must be justified by 150\% of target savings (ROI constraint)
+\end{itemize}
+These constraints help ensure that proposed changes remain practical and economically viable.
+\end{observation}
+
+\begin{definition}{Required Team Efficiency Gains}
+\[
+RTEG = \min\left(\frac{MS}{N \times H \times W}, MC\right)
+\]
+Where:
+\begin{itemize}
+    \item $MS$ = Monthly savings target
+    \item $N$ = Team size
+    \item $H$ = Hourly rate
+    \item $W$ = Working hours
+    \item $MC$ = Current manual work percentage
+\end{itemize}
+\end{definition}
+
+\begin{explanation}
+The RTEG formula helps determine if targets are achievable:
+\begin{itemize}
+    \item It calculates the minimum efficiency improvement needed
+    \item Caps improvements at current manual work percentage (can't automate more than exists)
+    \item Provides early warning if targets are unrealistic
+\end{itemize}
+This helps teams quickly identify if targets need adjustment before detailed planning begins.
+\end{explanation}
+
+\subsubsection{Ticket-Based Planning}
+
+\begin{explanation}
+Ticket-based planning focuses on process optimization. It starts with desired outcomes in terms of:
+\begin{itemize}
+    \item Target processing times
+    \item Quality improvements
+    \item Cost per ticket reduction
+\end{itemize}
+This approach is particularly effective for service desk, customer support, and other ticket-driven operations.
+\end{explanation}
+
+\begin{definition}{Maximum Allowable Investment (Ticket)}
+\[
+MAI_{ticket} = \min(0.5 \times AC_{ticket}, 1.5 \times TS)
+\]
+Where:
+\begin{itemize}
+    \item $AC_{ticket}$ = Annual cost (ticket volume × cost per ticket)
+    \item $TS$ = Target savings over ROI period
+\end{itemize}
+\end{definition}
+
+\begin{observation}
+The ticket-based MAI follows similar constraints as team-based but considers:
+\begin{itemize}
+    \item Volume scalability (higher volumes may justify higher investment)
+    \item Process standardization potential
+    \item Automation opportunity size
+\end{itemize}
+This helps ensure investments scale appropriately with ticket volumes and complexity.
+\end{observation}
+
+\begin{definition}{Required Ticket Efficiency Gains}
+\[
+RTEG = \min\left(\frac{MS}{M \times T \times P}, PE\right)
+\]
+Where:
+\begin{itemize}
+    \item $MS$ = Monthly savings target
+    \item $M$ = Monthly tickets
+    \item $T$ = Hours per ticket
+    \item $P$ = People per ticket
+    \item $PE$ = Current processing efficiency
+\end{itemize}
+\end{definition}
+
+\begin{explanation}
+The ticket efficiency formula helps organizations:
+\begin{itemize}
+    \item Identify minimum required improvement per ticket
+    \item Account for current process inefficiencies
+    \item Consider both time and resource optimization
+\end{itemize}
+This granular approach helps teams focus on specific aspects of ticket processing that need improvement.
+\end{explanation}
+
+\section{Break-even Analysis}
+
+\begin{explanation}
+Break-even analysis in target-based planning differs from traditional approaches:
+\begin{itemize}
+    \item Starts with required break-even period
+    \item Works backwards to determine required monthly improvements
+    \item Considers different scenarios to achieve the same target
+\end{itemize}
+This helps teams explore multiple paths to the same goal while maintaining focus on the target timeline.
+\end{explanation}
+
+\subsection{Team-Based Scenarios}
+
+\begin{explanation}
+Scenarios in target-based planning provide structured paths to achieve the desired outcomes. Each scenario represents a different risk-reward balance:
+\begin{itemize}
+    \item Conservative: Minimal disruption, longer timeline
+    \item Moderate: Balanced approach, medium timeline
+    \item Aggressive: Maximum change, shorter timeline
+\end{itemize}
+The key is choosing a scenario that aligns with organizational risk tolerance while meeting target deadlines.
+\end{explanation}
+
+\begin{observation}
+Standard scenarios for team-based model:
+\begin{itemize}
+    \item Conservative:
+        \begin{itemize}
+            \item Team Reduction: 10\%
+            \item Service Efficiency: +15\%
+            \item Operational Overhead: -5\%
+            \item Monthly Savings: MAI/24
+        \end{itemize}
+    \item Moderate:
+        \begin{itemize}
+            \item Team Reduction: 15\%
+            \item Service Efficiency: +25\%
+            \item Operational Overhead: -10\%
+            \item Monthly Savings: MAI/18
+        \end{itemize}
+    \item Aggressive:
+        \begin{itemize}
+            \item Team Reduction: 20\%
+            \item Service Efficiency: +35\%
+            \item Operational Overhead: -15\%
+            \item Monthly Savings: MAI/12
+        \end{itemize}
+\end{itemize}
+\end{observation}
+
+\begin{explanation}
+Each scenario component is carefully balanced:
+\begin{itemize}
+    \item Team Reduction correlates with automation/efficiency gains
+    \item Service Efficiency improvements offset reduced team size
+    \item Operational Overhead reduction ensures sustainable operations
+    \item Monthly Savings determine break-even timeline
+\end{itemize}
+This ensures that efficiency gains can realistically support team size changes while maintaining service levels.
+\end{explanation}
+
+\subsection{Ticket-Based Scenarios}
+
+\begin{explanation}
+Ticket-based scenarios focus on process optimization rather than organizational changes:
+\begin{itemize}
+    \item Processing Time improvements through automation and streamlining
+    \item Resource Allocation optimization through better routing and assignment
+    \item Quality Impact through standardization and validation
+\end{itemize}
+Each scenario balances these elements differently to achieve the target outcome.
+\end{explanation}
+
+\begin{observation}
+Standard scenarios for ticket-based model:
+\begin{itemize}
+    \item Conservative:
+        \begin{itemize}
+            \item Processing Time: -10\%
+            \item Resource Allocation: -15\%
+            \item Quality Impact: +5\%
+            \item Monthly Savings: MAI/24
+        \end{itemize}
+    \item Moderate:
+        \begin{itemize}
+            \item Processing Time: -20\%
+            \item Resource Allocation: -25\%
+            \item Quality Impact: +10\%
+            \item Monthly Savings: MAI/18
+        \end{itemize}
+    \item Aggressive:
+        \begin{itemize}
+            \item Processing Time: -30\%
+            \item Resource Allocation: -35\%
+            \item Quality Impact: +15\%
+            \item Monthly Savings: MAI/12
+        \end{itemize}
+\end{itemize}
+\end{observation}
+
+\begin{explanation}
+The ticket-based scenarios are designed to:
+\begin{itemize}
+    \item Achieve efficiency gains through process improvements
+    \item Maintain or improve quality while reducing resources
+    \item Balance speed of implementation with organizational capacity
+    \item Ensure sustainable improvements through measured changes
+\end{itemize}
+This approach focuses on systematic process improvement rather than organizational restructuring.
+\end{explanation}
+
+\section{Conclusion}
+
+\begin{explanation}
+This technical documentation provides a framework for:
+\begin{itemize}
+    \item Understanding team dependencies and their impact on efficiency
+    \item Analyzing distribution models and cost structures
+    \item Applying target-based planning to simplify platform solutions
+    \item Choosing between team-based and ticket-based approaches
+\end{itemize}
+
+The methodology emphasizes:
+\begin{itemize}
+    \item Working backwards from clear business targets
+    \item Minimizing complexity in solution design
+    \item Balancing efficiency gains with operational stability
+    \item Adapting approaches based on organizational context
+\end{itemize}
+\end{explanation}
+
+\end{document} 

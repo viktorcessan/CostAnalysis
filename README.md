@@ -1,153 +1,38 @@
-# Service Delivery Cost Analysis Tool
+# sv
 
-A web-based application for analyzing and comparing different service delivery models. This tool helps organizations make data-driven decisions about service transformation initiatives by providing detailed cost analysis, break-even calculations, and visualizations.
+Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
+## Creating a project
 
-## Features
+If you're seeing this, you've probably already done this step. Congrats!
 
-- Multiple cost models:
-  - Team-based (FTE-driven calculations)
-  - Ticket-based (volume-driven calculations)
-- Three transformation solutions:
-  - Platform automation
-  - Outsourcing
-  - Hybrid approach
-- Interactive visualizations:
-  - Cost comparison charts
-  - Break-even analysis
-  - Monthly savings projections
-- Responsive design for desktop and mobile
-- Built with modern web components
+```bash
+# create a new project in the current directory
+npx sv create
 
-
-## Technical Stack
-
-- **Framework**: Vanilla JavaScript with Web Components (Lit)
-- **Bundler**: Vite
-- **Styling**: Tailwind CSS
-- **Charts**: Chart.js
-- **Math Rendering**: KaTeX
-- **Build Output**: Static HTML/JS/CSS
-
-## Cost Models
-
-### Team-Based Model (FTE-Driven)
-
-Calculates costs based on team size and efficiency:
-```math
-C_b = n × h × w × η_s × (1 + η_o)
+# create a new project in my-app
+npx sv create my-app
 ```
-Where:
-- n: Team size (FTEs)
-- h: Hourly rate
-- w: Working hours per month
-- η_s: Service efficiency (0-1)
-- η_o: Operational overhead (0-1)
 
-### Ticket-Based Model (Volume-Driven)
+## Developing
 
-Calculates costs based on ticket volume:
-```math
-C_t = m × t_h × p × h
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+
+```bash
+npm run dev
+
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
-Where:
-- m: Monthly tickets
-- t_h: Hours per ticket
-- p: People per ticket
-- h: Hourly rate
 
-## Local Development
+## Building
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/cost-analysis.git
-   cd cost-analysis
-   ```
+To create a production version of your app:
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+npm run build
+```
 
-3. Start development server:
-   ```bash
-   npm run dev
-   ```
+You can preview the production build with `npm run preview`.
 
-4. Open http://localhost:5173 in your browser
-
-## Deployment
-
-### GitHub Pages
-
-1. Update `vite.config.js`:
-   ```javascript
-   export default defineConfig({
-     base: '/cost-analysis/',  // Replace with your repo name
-     // ... other config
-   });
-   ```
-
-2. Build the project:
-   ```bash
-   npm run build
-   ```
-
-3. Deploy using GitHub Actions:
-   ```yaml
-   name: Deploy to GitHub Pages
-   on:
-     push:
-       branches: [ main ]
-   jobs:
-     build-and-deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v2
-         - name: Install
-           run: npm ci
-         - name: Build
-           run: npm run build
-         - name: Deploy
-           uses: JamesIves/github-pages-deploy-action@4.1.5
-           with:
-             branch: gh-pages
-             folder: dist
-   ```
-
-### Netlify
-
-1. Connect your GitHub repository to Netlify
-
-2. Configure build settings:
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-
-3. Deploy:
-   ```bash
-   npm install netlify-cli -g
-   netlify deploy
-   ```
-
-### Azure Static Web Apps
-
-1. Create a Static Web App in Azure Portal
-
-2. Configure build settings:
-   ```yaml
-   app_location: "/"
-   api_location: "api"
-   output_location: "dist"
-   ```
-
-3. Deploy using Azure CLI:
-   ```bash
-   az staticwebapp create \
-     --name "cost-analysis" \
-     --resource-group "your-resource-group" \
-     --source "https://github.com/your-username/cost-analysis" \
-     --branch "main" \
-     --app-location "/" \
-     --output-location "dist"
-   ```
-
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.

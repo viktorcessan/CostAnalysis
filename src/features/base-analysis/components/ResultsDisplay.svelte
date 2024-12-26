@@ -100,7 +100,12 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
         plugins: {
+          datalabels: false,
           tooltip: {
             callbacks: {
               label: (context: any) => {
@@ -108,6 +113,9 @@
                 return `${context.dataset.label}: ${formatCurrency(value)}`;
               }
             }
+          },
+          legend: {
+            display: false
           }
         },
         scales: {

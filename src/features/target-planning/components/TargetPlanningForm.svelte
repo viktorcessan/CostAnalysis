@@ -258,6 +258,7 @@
           intersect: false
         },
         plugins: {
+          datalabels: false,
           tooltip: {
             mode: 'index',
             intersect: false,

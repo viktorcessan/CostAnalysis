@@ -382,30 +382,54 @@
   function generateEvenEdges() {
     nodes.forEach((source, i) => {
       const nextIndex = (i + 1) % nodes.length;
-      edges = [...edges, {
-        id: `edge-${edges.length + 1}`,
-        source: source.id,
-        target: nodes[nextIndex].id,
-        data: {
-          strength: companyDependencyLevel,
-          type: 'balanced'
+      // Add edge in both directions
+      edges = [...edges, 
+        {
+          id: `edge-${edges.length + 1}`,
+          source: source.id,
+          target: nodes[nextIndex].id,
+          data: {
+            strength: companyDependencyLevel,
+            type: 'balanced'
+          }
+        },
+        {
+          id: `edge-${edges.length + 2}`,
+          source: nodes[nextIndex].id,
+          target: source.id,
+          data: {
+            strength: companyDependencyLevel,
+            type: 'balanced'
+          }
         }
-      }];
+      ];
     });
   }
 
   function generateHubAndSpokeEdges() {
     const hub = nodes[0];
     nodes.slice(1).forEach(node => {
-      edges = [...edges, {
-        id: `edge-${edges.length + 1}`,
-        source: hub.id,
-        target: node.id,
-        data: {
-          strength: companyDependencyLevel,
-          type: 'hub'
+      // Add edges in both directions between hub and spoke
+      edges = [...edges, 
+        {
+          id: `edge-${edges.length + 1}`,
+          source: hub.id,
+          target: node.id,
+          data: {
+            strength: companyDependencyLevel,
+            type: 'hub'
+          }
+        },
+        {
+          id: `edge-${edges.length + 2}`,
+          source: node.id,
+          target: hub.id,
+          data: {
+            strength: companyDependencyLevel,
+            type: 'spoke'
+          }
         }
-      }];
+      ];
     });
   }
 

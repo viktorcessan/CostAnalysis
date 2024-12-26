@@ -133,13 +133,11 @@
   });
 
   let cumulativeChart: Chart | null = null;
-  let monthlyChart: Chart | null = null;
 
-  // Update chart tabs to match base analysis
+  // Update chart tabs to only show cumulative costs
   let selectedTab = 'costs';
   const tabs = [
-    { id: 'costs', label: 'Cost Analysis' },
-    { id: 'monthly', label: 'Monthly View' }
+    { id: 'costs', label: 'Cost Analysis' }
   ];
 
   // Add function to find actual break-even point
@@ -230,25 +228,20 @@
     if (!results) return;
 
     const data = generateTimelineData(results);
-    const chartId = selectedTab === 'costs' ? 'cumulativeCostChart' : 'monthlyCostChart';
-    const ctx = document.getElementById(chartId) as HTMLCanvasElement;
+    const ctx = document.getElementById('cumulativeCostChart') as HTMLCanvasElement;
     if (!ctx) return;
 
-    // Destroy existing charts
+    // Destroy existing chart
     if (cumulativeChart) {
       cumulativeChart.destroy();
       cumulativeChart = null;
-    }
-    if (monthlyChart) {
-      monthlyChart.destroy();
-      monthlyChart = null;
     }
 
     const chartConfig: ChartConfiguration = {
       type: 'line',
       data: {
         labels: data.labels,
-        datasets: data.datasets[selectedTab === 'costs' ? 'costs' : 'monthly']
+        datasets: data.datasets.costs
       },
       options: {
         responsive: true,
@@ -295,7 +288,7 @@
             type: 'linear',
             title: {
               display: true,
-              text: selectedTab === 'costs' ? 'Cumulative Cost ($)' : 'Monthly Cost ($)'
+              text: 'Cumulative Cost ($)'
             },
             ticks: {
               callback: function(this: Scale<CoreScaleOptions>, tickValue: number | string, index: number, ticks: any[]) {
@@ -313,24 +306,17 @@
       }
     };
 
-    if (selectedTab === 'costs') {
-      cumulativeChart = new Chart(ctx, chartConfig);
-    } else {
-      monthlyChart = new Chart(ctx, chartConfig);
-    }
+    cumulativeChart = new Chart(ctx, chartConfig);
   }
 
   // Update reactive statements for charts
-  $: if (results && selectedTab) {
+  $: if (results) {
     setTimeout(updateCharts, 0);
   }
 
   onDestroy(() => {
     if (cumulativeChart) {
       cumulativeChart.destroy();
-    }
-    if (monthlyChart) {
-      monthlyChart.destroy();
     }
   });
 </script>
@@ -776,7 +762,7 @@
               type="number"
               id="implementationTarget"
               bind:value={targets[3].value}
-              min={6}
+              min={3}
               max={24}
               step={3}
               class="number-input pr-8"
@@ -799,114 +785,99 @@
   <!-- Results Display -->
   {#if results}
     <div class="space-y-6">
-      <!-- Metrics Overview -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Current Solution -->
+      <!-- Key Metrics -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <p class="text-sm text-gray-500">Platform Investment</p>
+          <p class="text-xl font-semibold text-gray-900">${results.platformCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <p class="text-sm text-gray-500">Monthly Savings</p>
+          <p class="text-xl font-semibold text-green-600">${results.monthlyOperatingCostReduction.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <p class="text-sm text-gray-500">Break-Even Period</p>
+          <p class="text-xl font-semibold text-gray-900">{results.timeframe} months</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <p class="text-sm text-gray-500">Implementation Time</p>
+          <p class="text-xl font-semibold text-gray-900">{results.timeToBuild} months</p>
+        </div>
+      </div>
+
+      <!-- Detailed Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Current vs Future State -->
         <div class="bg-white rounded-lg shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Current Solution</h3>
+          <h3 class="text-sm font-semibold text-gray-900 mb-4">Cost Comparison</h3>
           <div class="space-y-4">
-            <div>
-              <p class="text-sm text-gray-500">Monthly Cost</p>
-              <p class="text-2xl font-semibold text-gray-900">${(results.baselineCost / 12).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm text-gray-500">Current Monthly Cost</p>
+                <p class="text-lg font-medium text-gray-900">${(results.monthlyBaseCost).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500">Future Monthly Cost</p>
+                <p class="text-lg font-medium text-green-600">${(results.monthlyBaseCost - results.monthlyOperatingCostReduction).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+              </div>
             </div>
-            <div>
-              <p class="text-sm text-gray-500">Annual Cost</p>
-              <p class="text-2xl font-semibold text-gray-900">${results.baselineCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            </div>
-            <div class="pt-2 border-t border-gray-100">
-              <p class="text-sm text-gray-500">Service Efficiency</p>
-              <p class="text-lg font-medium text-gray-900">{serviceEfficiency}%</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Operational Overhead</p>
-              <p class="text-lg font-medium text-gray-900">{operationalOverhead}%</p>
+            <div class="pt-4 border-t border-gray-100">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="text-sm text-gray-500">Current Annual Cost</p>
+                  <p class="text-lg font-medium text-gray-900">${results.baselineCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500">Future Annual Cost</p>
+                  <p class="text-lg font-medium text-green-600">${(results.baselineCost - (results.monthlyOperatingCostReduction * 12)).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Platform Solution -->
+        <!-- Efficiency Metrics -->
         <div class="bg-white rounded-lg shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Platform Solution</h3>
+          <h3 class="text-sm font-semibold text-gray-900 mb-4">Efficiency Metrics</h3>
           <div class="space-y-4">
-            <div>
-              <p class="text-sm text-gray-500">Platform Investment</p>
-              <p class="text-2xl font-semibold text-gray-900">${results.platformCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm text-gray-500">Team Reduction</p>
+                <p class="text-lg font-medium text-gray-900">{(results.teamReduction * 100).toFixed(0)}%</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500">Process Efficiency Gain</p>
+                <p class="text-lg font-medium text-gray-900">{(results.processEfficiency * 100).toFixed(0)}%</p>
+              </div>
             </div>
-            <div>
-              <p class="text-sm text-gray-500">Monthly Maintenance</p>
-              <p class="text-2xl font-semibold text-gray-900">${results.platformMaintenance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            </div>
-            <div class="pt-2 border-t border-gray-100">
-              <p class="text-sm text-gray-500">Implementation Time</p>
-              <p class="text-lg font-medium text-gray-900">{results.timeToBuild} months</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Break-Even Period</p>
-              <p class="text-lg font-medium text-gray-900">{results.timeframe} months</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Efficiency Gains -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Efficiency Gains</h3>
-          <div class="space-y-4">
-            <div>
-              <p class="text-sm text-gray-500">Monthly Savings</p>
-              <p class="text-2xl font-semibold text-green-600">${((results.baselineCost / 12) - ((results.baselineCost * (1 - results.teamReduction) * (1 - results.processEfficiency)) / 12 + results.platformMaintenance)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Annual Savings</p>
-              <p class="text-2xl font-semibold text-green-600">${(results.baselineCost - (results.baselineCost * (1 - results.teamReduction) * (1 - results.processEfficiency) + results.platformMaintenance * 12)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            </div>
-            <div class="pt-2 border-t border-gray-100">
-              <p class="text-sm text-gray-500">Team Size Reduction</p>
-              <p class="text-lg font-medium text-gray-900">{(results.teamReduction * 100).toFixed(2)}%</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Process Efficiency Gain</p>
-              <p class="text-lg font-medium text-gray-900">{(results.processEfficiency * 100).toFixed(2)}%</p>
+            <div class="pt-4 border-t border-gray-100">
+              <div>
+                <p class="text-sm text-gray-500">Platform Maintenance</p>
+                <p class="text-lg font-medium text-gray-900">${results.platformMaintenance.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} / month</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Cost Analysis Charts -->
+      <!-- Cost Analysis Chart -->
       <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="border-b border-gray-200">
-          <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-            {#each tabs as tab}
-              <button
-                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                {selectedTab === tab.id ? 'border-secondary text-secondary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-                on:click={() => selectedTab = tab.id}
-              >
-                {tab.label}
-              </button>
-            {/each}
-          </nav>
+        <h3 class="text-sm font-semibold text-gray-900 mb-4">Cumulative Cost Analysis</h3>
+        <div class="h-80 relative">
+          <canvas id="cumulativeCostChart"></canvas>
         </div>
-
-        <div class="mt-4">
-          {#if selectedTab === 'costs'}
-            <div class="h-80 relative">
-              <canvas id="cumulativeCostChart"></canvas>
-            </div>
-          {:else}
-            <div class="h-80 relative">
-              <canvas id="monthlyCostChart"></canvas>
-            </div>
-          {/if}
-        </div>
-
-        <div class="mt-4 grid grid-cols-2 gap-4">
-          <div class="text-sm text-gray-500">
-            <span class="inline-block w-3 h-3 bg-secondary rounded-full mr-2"></span>
-            Break-Even Point: {results.timeframe} months
+        <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+          <div>
+            <span class="inline-block w-3 h-3 bg-[#94a3b8] rounded-full mr-2"></span>
+            Current Solution
           </div>
-          <div class="text-sm text-gray-500 text-right">
+          <div>
+            <span class="inline-block w-3 h-3 bg-[#dd9933] rounded-full mr-2"></span>
+            Platform Solution
+          </div>
+          <div>
             <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-            Annual Savings: ${((results.baselineCost - (results.baselineCost * (1 - results.teamReduction) * (1 - results.processEfficiency) + results.platformMaintenance * 12))).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            Break-Even: {results.timeframe} months
           </div>
         </div>
       </div>

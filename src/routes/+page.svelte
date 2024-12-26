@@ -36,21 +36,21 @@
   ];
 </script>
 
-<div class="min-h-screen">
+<div class="min-h-screen bg-gray-50">
   <!-- Hero Section -->
-  <div class="bg-secondary py-16">
+  <div class="pt-24 pb-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-3xl font-semibold text-white mb-4">
+        <h1 class="text-3xl font-semibold text-secondary mb-4">
           Service Delivery Calculator
         </h1>
-        <p class="text-xl text-white/90 mb-6">
+        <p class="text-xl text-gray-600 mb-6">
           Optimize your service delivery model with data-driven insights
         </p>
         <div class="flex justify-center gap-4">
           <a
             href="{base}/calculator"
-            class="px-6 py-3 bg-white text-secondary rounded-lg text-lg font-medium"
+            class="px-6 py-3 bg-secondary text-white rounded-lg text-lg font-medium hover:bg-secondary/90 transition-colors"
           >
             Start Calculating
           </a>

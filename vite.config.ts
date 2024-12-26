@@ -3,5 +3,5 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
-	base: process.env.NODE_ENV === 'production' ? '/migrationapp/' : '/'
+	base: process.env.NODE_ENV === 'production' ? '/CostAnalysis/' : '/'
 });

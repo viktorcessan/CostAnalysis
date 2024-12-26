@@ -3,30 +3,13 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	preprocess: vitePreprocess(),
-
 	kit: {
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: '404.html',
-			precompress: false,
-			strict: true
-		}),
+		adapter: adapter(),
 		paths: {
-			base: process.env.NODE_ENV === 'production' ? '/migrationapp' : ''
-		},
-		prerender: {
-			handleHttpError: ({ path, referrer, message }) => {
-				// Ignore base path errors during prerendering
-				if (path === '/' || path.startsWith('/calculator')) {
-					return;
-				}
-				throw new Error(message);
-			},
-			entries: ['/']
+			base: process.env.NODE_ENV === 'production' ? '/CostAnalysis' : ''
 		}
-	}
+	},
+	preprocess: vitePreprocess()
 };
 
 export default config;

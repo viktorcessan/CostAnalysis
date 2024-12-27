@@ -27,6 +27,7 @@
       throughput: number;
       leadTime: number;
       dependencyFactor: number;
+      isHub: boolean;
     };
   }
 
@@ -54,7 +55,7 @@
 
   let nodes: any[] = [];
   let edges: any[] = [];
-  let mode: 'even' | 'uneven' | 'advanced' = 'even';
+  let mode: 'even' | 'hub-spoke' = 'even';
   let teamCount = 5;
   let companyDependencyLevel = 3; // Scale of 1-5 for overall company dependency level
   let dependencyMatrix = initializeDependencyMatrix(teamCount);
@@ -225,23 +226,23 @@
     }
   }
 
-  function initializeDependencyMatrix(size: number): DependencyMatrix {
-    const teams = teamParams.teams.slice(0, size).map(t => t.name);
-    const dependencies = Array.from({ length: size }, () => 
-      Array.from({ length: size }, () => 0)
-    );
-
-    // Preload dependencies based on mode
+  function initializeDependencyMatrix(size: number) {
+    const teams = Array.from({ length: size }, (_, i) => `Team ${i + 1}`);
+    const dependencies = Array.from({ length: size }, () => Array(size).fill(0));
+    
+    // Initialize dependencies based on mode and company dependency level
     if (mode === 'even') {
-      // Each team depends on the next team in sequence
+      // For even distribution, create circular dependencies with strength based on company dependency level
       for (let i = 0; i < size; i++) {
         const nextIndex = (i + 1) % size;
-        dependencies[i][nextIndex] = 3;
+        dependencies[i][nextIndex] = Math.max(1, Math.min(5, companyDependencyLevel));
+        dependencies[nextIndex][i] = Math.max(1, Math.min(5, companyDependencyLevel));
       }
     } else { // hub and spoke
       // First team (hub) has dependencies with all other teams
       for (let i = 1; i < size; i++) {
-        dependencies[0][i] = 3; // Hub to spoke
+        dependencies[0][i] = Math.max(1, Math.min(5, companyDependencyLevel)); // Hub to spoke
+        dependencies[i][0] = Math.max(1, Math.min(5, companyDependencyLevel)); // Spoke to hub
       }
     }
 
@@ -343,7 +344,7 @@
     while (teamParams.teams.length < teamCount) {
       teamParams.teams.push({
         name: `Team ${teamParams.teams.length + 1}`,
-        size: 5,
+        size: teamParams.teams[0].size,
         baseCapacity: 8,
         efficiency: 1.0
       });
@@ -361,16 +362,15 @@
           efficiency: teamParams.teams[i].efficiency,
           throughput: metrics.throughput,
           leadTime: metrics.leadTime,
-          dependencyFactor: metrics.dependencyFactor
+          dependencyFactor: metrics.dependencyFactor,
+          isHub: mode === 'hub-spoke' && i === 0
         }
       };
       nodes = [...nodes, node];
     }
 
-    if (mode === 'advanced') {
-      // For advanced mode, dependencies are manually set in the matrix
-      applyMatrix();
-    } else if (mode === 'even') {
+    // Generate edges based on mode
+    if (mode === 'even') {
       generateEvenEdges();
     } else {
       generateHubAndSpokeEdges();
@@ -380,25 +380,26 @@
   }
 
   function generateEvenEdges() {
+    edges = [];
     nodes.forEach((source, i) => {
       const nextIndex = (i + 1) % nodes.length;
-      // Add edge in both directions
+      // Add edge in both directions with strength based on company dependency level
       edges = [...edges, 
         {
           id: `edge-${edges.length + 1}`,
           source: source.id,
-          target: nodes[nextIndex].id,
+          target: `node-${nextIndex + 1}`,
           data: {
-            strength: companyDependencyLevel,
+            strength: Math.max(1, Math.min(5, companyDependencyLevel)),
             type: 'balanced'
           }
         },
         {
           id: `edge-${edges.length + 2}`,
-          source: nodes[nextIndex].id,
+          source: `node-${nextIndex + 1}`,
           target: source.id,
           data: {
-            strength: companyDependencyLevel,
+            strength: Math.max(1, Math.min(5, companyDependencyLevel)),
             type: 'balanced'
           }
         }
@@ -407,25 +408,28 @@
   }
 
   function generateHubAndSpokeEdges() {
-    const hub = nodes[0];
-    nodes.slice(1).forEach(node => {
-      // Add edges in both directions between hub and spoke
-      edges = [...edges, 
+    edges = [];
+    // Hub is always the first node (index 0)
+    const hubNode = nodes[0];
+    
+    // Create edges from hub to all spokes and back
+    nodes.slice(1).forEach((spokeNode, i) => {
+      edges = [...edges,
         {
           id: `edge-${edges.length + 1}`,
-          source: hub.id,
-          target: node.id,
+          source: hubNode.id,
+          target: spokeNode.id,
           data: {
-            strength: companyDependencyLevel,
+            strength: Math.max(1, Math.min(5, companyDependencyLevel)),
             type: 'hub'
           }
         },
         {
           id: `edge-${edges.length + 2}`,
-          source: node.id,
-          target: hub.id,
+          source: spokeNode.id,
+          target: hubNode.id,
           data: {
-            strength: companyDependencyLevel,
+            strength: Math.max(1, Math.min(5, companyDependencyLevel)),
             type: 'spoke'
           }
         }
@@ -560,7 +564,7 @@
   // Add new reactive statement for company dependency level
   $: {
     companyDependencyLevel;
-    if (mode !== 'advanced') {
+    if (mode !== 'hub-spoke') {
       generateNodes();
     }
   }
@@ -597,7 +601,7 @@
     <!-- Distribution Mode Selection -->
     <div class="mb-8">
       <h4 class="text-sm font-medium text-gray-700 mb-4">Select Distribution Pattern</h4>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Even Distribution -->
         <button
           class="relative p-4 border-2 rounded-lg transition-all {
@@ -605,7 +609,11 @@
               ? 'border-secondary bg-secondary/10'
               : 'border-gray-200 hover:border-gray-300'
           }"
-          on:click={() => mode = 'even'}
+          on:click={() => {
+            mode = 'even';
+            dependencyMatrix = initializeDependencyMatrix(teamCount);
+            generateNodes();
+          }}
         >
           <div class="flex items-center gap-3 mb-2">
             <div class="w-4 h-4 rounded-full border-2 {
@@ -621,26 +629,34 @@
             </div>
             <span class="font-medium text-gray-900">Even Distribution</span>
           </div>
-          <p class="text-sm text-gray-600 mb-3">Teams are evenly connected with balanced dependencies</p>
-          <!-- Simple visualization -->
-          <svg class="w-full h-20" viewBox="0 0 160 80">
-            <circle cx="80" cy="40" r="35" fill="none" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 2"/>
+          <p class="text-sm text-gray-600 mb-3">Teams work together with balanced dependencies</p>
+          <svg class="w-full h-32" viewBox="0 0 200 100">
             {#each Array(6) as _, i}
-              {@const angle = (2 * Math.PI * i) / 6}
-              {@const x = 80 + 35 * Math.cos(angle)}
-              {@const y = 40 + 35 * Math.sin(angle)}
-              <circle cx={x} cy={y} r="4" fill="#6366f1"/>
-              {#if i > 0}
-                <line 
-                  x1={x} 
-                  y1={y} 
-                  x2={80 + 35 * Math.cos((2 * Math.PI * (i-1)) / 6)} 
-                  y2={40 + 35 * Math.sin((2 * Math.PI * (i-1)) / 6)}
-                  stroke="#6366f1"
-                  stroke-width="1"
-                  stroke-opacity="0.3"
-                />
-              {/if}
+              {@const angle = (i * Math.PI * 2) / 6}
+              {@const x = 100 + Math.cos(angle) * 40}
+              {@const y = 50 + Math.sin(angle) * 40}
+              <circle
+                cx={x}
+                cy={y}
+                r="5"
+                class="fill-secondary"
+              />
+              {#each Array(6) as _, j}
+                {@const angle2 = (j * Math.PI * 2) / 6}
+                {@const x2 = 100 + Math.cos(angle2) * 40}
+                {@const y2 = 50 + Math.sin(angle2) * 40}
+                {#if i !== j}
+                  <line
+                    x1={x}
+                    y1={y}
+                    x2={x2}
+                    y2={y2}
+                    class="stroke-secondary"
+                    stroke-width="1"
+                    stroke-opacity="0.3"
+                  />
+                {/if}
+              {/each}
             {/each}
           </svg>
         </button>
@@ -648,19 +664,23 @@
         <!-- Hub and Spoke -->
         <button
           class="relative p-4 border-2 rounded-lg transition-all {
-            mode === 'uneven'
+            mode === 'hub-spoke'
               ? 'border-secondary bg-secondary/10'
               : 'border-gray-200 hover:border-gray-300'
           }"
-          on:click={() => mode = 'uneven'}
+          on:click={() => {
+            mode = 'hub-spoke';
+            dependencyMatrix = initializeDependencyMatrix(teamCount);
+            generateNodes();
+          }}
         >
           <div class="flex items-center gap-3 mb-2">
             <div class="w-4 h-4 rounded-full border-2 {
-              mode === 'uneven'
+              mode === 'hub-spoke'
                 ? 'border-secondary bg-secondary'
                 : 'border-gray-300'
             }">
-              {#if mode === 'uneven'}
+              {#if mode === 'hub-spoke'}
                 <svg class="w-4 h-4 text-white" viewBox="0 0 16 16">
                   <circle cx="8" cy="8" r="4" fill="white"/>
                 </svg>
@@ -669,488 +689,524 @@
             <span class="font-medium text-gray-900">Hub and Spoke</span>
           </div>
           <p class="text-sm text-gray-600 mb-3">Central team coordinates with satellite teams</p>
-          <!-- Simple visualization -->
-          <svg class="w-full h-20" viewBox="0 0 160 80">
-            <circle cx="80" cy="40" r="6" fill="#6366f1"/>
+          <svg class="w-full h-32" viewBox="0 0 200 100">
+            <!-- Center hub -->
+            <circle
+              cx="100"
+              cy="50"
+              r="8"
+              class="fill-secondary"
+            />
             {#each Array(5) as _, i}
-              {@const angle = (2 * Math.PI * i) / 5}
-              {@const x = 80 + 30 * Math.cos(angle)}
-              {@const y = 40 + 30 * Math.sin(angle)}
-              <circle cx={x} cy={y} r="4" fill="#6366f1" fill-opacity="0.6"/>
-              <line 
-                x1="80" 
-                y1="40" 
-                x2={x} 
+              {@const angle = (i * Math.PI * 2) / 5}
+              {@const x = 100 + Math.cos(angle) * 40}
+              {@const y = 50 + Math.sin(angle) * 40}
+              <circle
+                cx={x}
+                cy={y}
+                r="5"
+                class="fill-secondary/60"
+              />
+              <line
+                x1="100"
+                y1="50"
+                x2={x}
                 y2={y}
-                stroke="#6366f1"
-                stroke-width="1"
-                stroke-opacity="0.3"
+                class="stroke-secondary"
+                stroke-width="1.5"
+                stroke-opacity="0.5"
               />
             {/each}
-          </svg>
-        </button>
-
-        <!-- Advanced -->
-        <button
-          class="relative p-4 border-2 rounded-lg transition-all {
-            mode === 'advanced'
-              ? 'border-secondary bg-secondary/10'
-              : 'border-gray-200 hover:border-gray-300'
-          }"
-          on:click={() => mode = 'advanced'}
-        >
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-4 h-4 rounded-full border-2 {
-              mode === 'advanced'
-                ? 'border-secondary bg-secondary'
-                : 'border-gray-300'
-            }">
-              {#if mode === 'advanced'}
-                <svg class="w-4 h-4 text-white" viewBox="0 0 16 16">
-                  <circle cx="8" cy="8" r="4" fill="white"/>
-                </svg>
-              {/if}
-            </div>
-            <span class="font-medium text-gray-900">Advanced Configuration</span>
-          </div>
-          <p class="text-sm text-gray-600 mb-3">Customize team dependencies and parameters</p>
-          <!-- Simple visualization -->
-          <svg class="w-full h-20" viewBox="0 0 160 80">
-            <rect x="30" y="20" width="100" height="40" rx="4" fill="none" stroke="#6366f1" stroke-width="1" stroke-dasharray="4 2"/>
-            <text x="80" y="45" text-anchor="middle" class="text-xs fill-indigo-600">Custom Matrix</text>
           </svg>
         </button>
       </div>
     </div>
 
-    <!-- Configuration Section -->
-    {#if mode !== 'advanced'}
-      <!-- Simple Configuration -->
-      <div class="space-y-4">
-        <!-- Basic Parameters -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Team Count -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Number of Teams</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={teamCount}
-                min="2"
-                max="10"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{teamCount}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Company Dependency Level -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Dependency Level</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={companyDependencyLevel}
-                min="1"
-                max="5"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
-              </div>
-            </div>
-            <div class="mt-1 grid grid-cols-5 gap-1 text-xs text-gray-500">
-              <span>V.Low</span>
-              <span>Low</span>
-              <span>Med</span>
-              <span>High</span>
-              <span>V.High</span>
-            </div>
-          </div>
-
-          <!-- Default Team Size -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Team Size</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={teamParams.teams[0].size}
-                min="1"
-                max="20"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-                on:input={() => {
-                  teamParams.teams.forEach(team => team.size = teamParams.teams[0].size);
-                  generateNodes();
-                }}
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{teamParams.teams[0].size}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dev Rate -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Dev Rate ($/hr)</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.hourlyRate.developer}
-                min="20"
-                max="200"
-                step="5"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
-              </div>
+    <!-- Configuration Panel -->
+    <div class="space-y-6">
+      <!-- Basic Parameters -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Number of Teams -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Number of Teams</h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={teamCount}
+              min="3"
+              max="10"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              on:input={() => {
+                dependencyMatrix = initializeDependencyMatrix(teamCount);
+                generateNodes();
+              }}
+            />
+            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{teamCount}</span>
             </div>
           </div>
         </div>
 
-        <!-- Cost Parameters -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
-          <!-- Weekly Meeting Hours -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Weekly Meeting Hours</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.meetings.weeklyDuration}
-                min="1"
-                max="20"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
-              </div>
+        <!-- Company Dependency Level -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Dependency Level</h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={companyDependencyLevel}
+              min="1"
+              max="5"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              on:input={() => {
+                dependencyMatrix = initializeDependencyMatrix(teamCount);
+                generateNodes();
+              }}
+            />
+            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
             </div>
           </div>
-
-          <!-- Meeting Attendees -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Meeting Attendees</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.meetings.attendeesPerTeam}
-                min="1"
-                max="20"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
-              </div>
-            </div>
+          <div class="mt-1 grid grid-cols-5 gap-1 text-xs text-gray-500">
+            <span>V.Low</span>
+            <span>Low</span>
+            <span>Med</span>
+            <span>High</span>
+            <span>V.High</span>
           </div>
+        </div>
 
-          <!-- Communication Overhead -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Communication Overhead</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.overhead.communicationOverhead}
-                min="1"
-                max="2"
-                step="0.1"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
-              </div>
+        <!-- Dev Rate -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Dev Rate ($/hr)</h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={costParams.hourlyRate.developer}
+              min="20"
+              max="200"
+              step="5"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
             </div>
           </div>
         </div>
       </div>
-    {:else}
-      <!-- Advanced Configuration -->
-      <div class="space-y-6">
-        <!-- Basic Parameters -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Team Count -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Number of Teams</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={teamCount}
-                min="2"
-                max="10"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{teamCount}</span>
-              </div>
-            </div>
-          </div>
 
-          <!-- Base Lead Time -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Base Lead Time (days)</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={teamParams.baseLeadTime}
-                min="1"
-                max="30"
-                step="0.5"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{teamParams.baseLeadTime}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dependency Impact -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Dependency Impact</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={teamParams.dependencyImpact}
-                min="0.05"
-                max="0.5"
-                step="0.05"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{teamParams.dependencyImpact}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dev Rate -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Dev Rate ($/hr)</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.hourlyRate.developer}
-                min="20"
-                max="200"
-                step="5"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
-              </div>
+      <!-- Cost Parameters -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+        <!-- Weekly Meeting Hours -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Weekly Meeting Hours</h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={costParams.meetings.weeklyDuration}
+              min="1"
+              max="20"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
             </div>
           </div>
         </div>
 
-        <!-- Cost Parameters -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
-          <!-- Weekly Meeting Hours -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Weekly Meeting Hours</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.meetings.weeklyDuration}
-                min="1"
-                max="20"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Meeting Attendees -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Meeting Attendees</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.meetings.attendeesPerTeam}
-                min="1"
-                max="20"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Communication Overhead -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Communication Overhead</h4>
-            <div class="flex items-center gap-2">
-              <input
-                type="range"
-                bind:value={costParams.overhead.communicationOverhead}
-                min="1"
-                max="2"
-                step="0.1"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              />
-              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
-              </div>
+        <!-- Meeting Attendees -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Meeting Attendees</h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={costParams.meetings.attendeesPerTeam}
+              min="1"
+              max="20"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
             </div>
           </div>
         </div>
 
-        <!-- Team Details and Dependencies -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Team Configuration -->
-          <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-3">Team Details</h4>
-            <div class="overflow-x-auto border rounded-lg">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Team</th>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Size</th>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Cap</th>
-                    <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Eff</th>
+        <!-- Communication Overhead -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Communication Overhead</h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={costParams.overhead.communicationOverhead}
+              min="1"
+              max="2"
+              step="0.1"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Details and Dependencies -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Team Configuration -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-3">Team Details</h4>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Team</th>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Size</th>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Cap</th>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Eff</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                {#each teamParams.teams.slice(0, teamCount) as team, i}
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-2 py-2">
+                      <input
+                        type="text"
+                        value={team.name}
+                        class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs"
+                        on:change={(e) => updateTeamName(i, e.currentTarget.value)}
+                      />
+                    </td>
+                    <td class="px-2 py-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        value={team.size}
+                        on:input={(e) => updateTeamParam(i, 'size', parseInt(e.currentTarget.value) || 1)}
+                      />
+                    </td>
+                    <td class="px-2 py-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        value={team.baseCapacity}
+                        on:input={(e) => updateTeamParam(i, 'baseCapacity', parseInt(e.currentTarget.value) || 1)}
+                      />
+                    </td>
+                    <td class="px-2 py-2">
+                      <input
+                        type="number"
+                        min="0.1"
+                        max="2"
+                        step="0.1"
+                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        value={team.efficiency}
+                        on:input={(e) => updateTeamParam(i, 'efficiency', parseFloat(e.currentTarget.value) || 0.1)}
+                      />
+                    </td>
                   </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  {#each teamParams.teams.slice(0, teamCount) as team, i}
-                    <tr class="hover:bg-gray-50">
-                      <td class="px-2 py-2">
-                        <input
-                          type="text"
-                          value={team.name}
-                          class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs"
-                          on:change={(e) => updateTeamName(i, e.currentTarget.value)}
-                        />
-                      </td>
-                      <td class="px-2 py-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max="20"
-                          class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                          value={team.size}
-                          on:input={(e) => updateTeamParam(i, 'size', parseInt(e.currentTarget.value) || 1)}
-                        />
-                      </td>
-                      <td class="px-2 py-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max="20"
-                          class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                          value={team.baseCapacity}
-                          on:input={(e) => updateTeamParam(i, 'baseCapacity', parseInt(e.currentTarget.value) || 1)}
-                        />
-                      </td>
-                      <td class="px-2 py-2">
-                        <input
-                          type="number"
-                          min="0.1"
-                          max="2"
-                          step="0.1"
-                          class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                          value={team.efficiency}
-                          on:input={(e) => updateTeamParam(i, 'efficiency', parseFloat(e.currentTarget.value) || 1)}
-                        />
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2 space-y-1 text-xs text-gray-500">
+            <div class="flex gap-2">
+              <span class="font-medium">Size:</span>
+              <span>Number of team members</span>
             </div>
-            <div class="mt-2 text-xs text-gray-500 space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="font-medium">Size:</span>
-                <span>Number of team members (1-20)</span>
+            <div class="flex gap-2">
+              <span class="font-medium">Cap:</span>
+              <span>Base capacity (story points/sprint)</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="font-medium">Eff:</span>
+              <span>Team efficiency multiplier (0.1-2.0)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dependency Matrix -->
+        <div class="lg:col-span-2">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-medium text-gray-700">Team Dependencies</h4>
+            <div class="flex items-center gap-4 text-xs text-gray-500">
+              <div class="flex items-center gap-1">
+                <span class="w-3 h-3 rounded-sm bg-green-100 border border-green-300"></span>
+                <span>0-1: Low</span>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="font-medium">Cap:</span>
-                <span>Items/person/week capacity (1-20)</span>
+              <div class="flex items-center gap-1">
+                <span class="w-3 h-3 rounded-sm bg-yellow-100 border border-yellow-300"></span>
+                <span>2-3: Medium</span>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="font-medium">Eff:</span>
-                <span>Team efficiency multiplier (0.1-2.0)</span>
+              <div class="flex items-center gap-1">
+                <span class="w-3 h-3 rounded-sm bg-red-100 border border-red-300"></span>
+                <span>4-5: High</span>
               </div>
             </div>
           </div>
-
-          <!-- Dependency Matrix -->
-          <div class="lg:col-span-2">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-medium text-gray-700">Team Dependencies</h4>
-              <div class="flex items-center gap-4 text-xs text-gray-500">
-                <div class="flex items-center gap-1">
-                  <span class="w-3 h-3 rounded-sm bg-green-100 border border-green-300"></span>
-                  <span>0-1: Low</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="w-3 h-3 rounded-sm bg-yellow-100 border border-yellow-300"></span>
-                  <span>2-3: Medium</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="w-3 h-3 rounded-sm bg-red-100 border border-red-300"></span>
-                  <span>4-5: High</span>
-                </div>
-              </div>
-            </div>
-            <div class="overflow-x-auto border rounded-lg">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
-                    {#each dependencyMatrix.teams as team}
-                      <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{team}</th>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                  {#each dependencyMatrix.teams as team}
+                    <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{team}</th>
+                  {/each}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                {#each dependencyMatrix.teams as fromTeam, fromIndex}
+                  <tr class="hover:bg-gray-50">
+                    <th class="px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {fromTeam}
+                    </th>
+                    {#each dependencyMatrix.teams as toTeam, toIndex}
+                      <td class="px-2 py-2">
+                        {#if fromIndex !== toIndex}
+                          <input
+                            type="number"
+                            min="0"
+                            max="5"
+                            class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors
+                              {dependencyMatrix.dependencies[fromIndex][toIndex] <= 1 ? 'bg-green-50' : 
+                               dependencyMatrix.dependencies[fromIndex][toIndex] <= 3 ? 'bg-yellow-50' : 'bg-red-50'}"
+                            value={dependencyMatrix.dependencies[fromIndex][toIndex]}
+                            on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
+                          />
+                        {:else}
+                          <div class="w-12 h-8 bg-gray-100 rounded-md"></div>
+                        {/if}
+                      </td>
                     {/each}
                   </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                  {#each dependencyMatrix.teams as fromTeam, fromIndex}
-                    <tr class="hover:bg-gray-50">
-                      <th class="px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {fromTeam}
-                      </th>
-                      {#each dependencyMatrix.teams as toTeam, toIndex}
-                        <td class="px-2 py-2">
-                          {#if fromIndex !== toIndex}
-                            <input
-                              type="number"
-                              min="0"
-                              max="5"
-                              class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors
-                                {dependencyMatrix.dependencies[fromIndex][toIndex] <= 1 ? 'bg-green-50' : 
-                                 dependencyMatrix.dependencies[fromIndex][toIndex] <= 3 ? 'bg-yellow-50' : 'bg-red-50'}"
-                              value={dependencyMatrix.dependencies[fromIndex][toIndex]}
-                              on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
-                            />
-                          {:else}
-                            <div class="w-12 h-8 bg-gray-100 rounded-md"></div>
-                          {/if}
-                        </td>
-                      {/each}
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
+                {/each}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <!-- Apply Dependencies Button -->
-        <div class="flex justify-end">
-          <button
-            type="button"
-            class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
-            on:click={applyMatrix}
-          >
-            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-            Apply Dependencies
-          </button>
-        </div>
       </div>
-    {/if}
+
+      <!-- Apply Dependencies Button -->
+      <div class="flex justify-end">
+        <button
+          type="button"
+          class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+          on:click={applyMatrix}
+        >
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          Apply Dependencies
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Visualization -->
+  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Dependencies</h3>
+    <div class="relative w-full h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+      <svg width="100%" height="100%" viewBox="-100 -100 1200 800" preserveAspectRatio="xMidYMid meet">
+        <!-- Background grid for professional look -->
+        <defs>
+          <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#f1f5f9" stroke-width="0.5"/>
+          </pattern>
+          <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="url(#smallGrid)"/>
+            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+          </pattern>
+          <!-- Gradient for node header -->
+          <linearGradient id="headerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#f1f5f9;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
+          </linearGradient>
+          <!-- Gradient for node body -->
+          <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:1" />
+          </linearGradient>
+          <!-- Arrow markers for each strength level -->
+          {#each [1, 2, 3, 4, 5] as strength}
+            {@const color = strength <= 1 ? '#22c55e' : 
+                          strength <= 2 ? '#84cc16' :
+                          strength <= 3 ? '#eab308' :
+                          strength <= 4 ? '#f97316' : '#ef4444'}
+            <marker
+              id="arrowhead-{strength}"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon
+                points="0 0, 10 3.5, 0 7"
+                fill={color}
+                opacity={0.6 + (strength - 1) * 0.1}
+              />
+            </marker>
+          {/each}
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- Draw edges first -->
+        {#each edges as edge}
+          {@const sourceNode = nodes.find(n => n.id === edge.source)}
+          {@const targetNode = nodes.find(n => n.id === edge.target)}
+          {@const sourceIndex = nodes.findIndex(n => n.id === edge.source)}
+          {@const targetIndex = nodes.findIndex(n => n.id === edge.target)}
+          {@const angleStep = (2 * Math.PI) / nodes.length}
+          {@const sourceAngle = angleStep * sourceIndex - Math.PI / 2}
+          {@const targetAngle = angleStep * targetIndex - Math.PI / 2}
+          {@const horizontalScale = 1.6}
+          {@const radiusX = Math.min(550, Math.max(400, 1100 / (nodes.length)))}
+          {@const radiusY = Math.min(350, Math.max(250, 700 / (nodes.length)))}
+          {@const x1 = 500 + radiusX * Math.cos(sourceAngle) * horizontalScale}
+          {@const y1 = 300 + radiusY * Math.sin(sourceAngle)}
+          {@const x2 = 500 + radiusX * Math.cos(targetAngle) * horizontalScale}
+          {@const y2 = 300 + radiusY * Math.sin(targetAngle)}
+          
+          <!-- Calculate control points for curved lines -->
+          {@const midX = (x1 + x2) / 2}
+          {@const midY = (y1 + y2) / 2}
+          {@const dx = x2 - x1}
+          {@const dy = y2 - y1}
+          {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * 50}
+          {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * 50}
+          
+          <!-- Calculate arrow end point to avoid node overlap -->
+          {@const nodeRadius = 85}
+          {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
+          {@const endX = x2 - (dx * nodeRadius / totalLength)}
+          {@const endY = y2 - (dy * nodeRadius / totalLength)}
+          {@const startX = x1 + (dx * nodeRadius / totalLength)}
+          {@const startY = y1 + (dy * nodeRadius / totalLength)}
+          
+          <!-- Calculate color and thickness based on dependency strength -->
+          {@const strength = edge.data.strength}
+          {@const strokeWidth = 1 + (strength - 1) * 0.8} <!-- Scale from 1px to 4.2px -->
+          {@const color = strength <= 1 ? '#22c55e' : 
+                         strength <= 2 ? '#84cc16' :
+                         strength <= 3 ? '#eab308' :
+                         strength <= 4 ? '#f97316' : '#ef4444'}
+          {@const opacity = 0.6 + (strength - 1) * 0.1} <!-- Scale from 0.6 to 1.0 -->
+          
+          <path 
+            d="M {startX} {startY} Q {midX + normalX} {midY + normalY} {endX} {endY}"
+            fill="none"
+            stroke={color}
+            stroke-width={strokeWidth}
+            stroke-opacity={opacity}
+            marker-end="url(#arrowhead-{strength})"
+          />
+        {/each}
+
+        <!-- Draw nodes on top of edges -->
+        {#each nodes as node, i}
+          {@const angleStep = (2 * Math.PI) / nodes.length}
+          {@const angle = angleStep * i - Math.PI / 2}
+          {@const horizontalScale = 1.6}
+          {@const radiusX = Math.min(550, Math.max(400, 1100 / (nodes.length)))}
+          {@const radiusY = Math.min(350, Math.max(250, 700 / (nodes.length)))}
+          {@const x = 500 + radiusX * Math.cos(angle) * horizontalScale}
+          {@const y = 300 + radiusY * Math.sin(angle)}
+          
+          <!-- Team Node -->
+          <g transform="translate({x}, {y})">
+            <!-- Enhanced node shadow -->
+            <rect
+              x="-80"
+              y="-64"
+              width="160"
+              height="128"
+              rx="12"
+              fill="#ffffff"
+              filter="url(#shadow)"
+            />
+            <!-- Node background with gradient -->
+            <rect
+              x="-80"
+              y="-64"
+              width="160"
+              height="128"
+              rx="12"
+              fill="url(#bodyGradient)"
+              stroke="#e2e8f0"
+              stroke-width="2"
+            />
+            <!-- Node header with gradient -->
+            <rect
+              x="-80"
+              y="-64"
+              width="160"
+              height="40"
+              rx="12"
+              fill="url(#headerGradient)"
+              stroke="#e2e8f0"
+              stroke-width="2"
+            />
+            <!-- Team name with better styling -->
+            <text 
+              text-anchor="middle"
+              y="-38"
+              class="text-base font-semibold fill-gray-700"
+            >{node.data.label}</text>
+            <!-- Metrics with improved layout -->
+            <g class="text-xs fill-gray-700">
+              <!-- Team Size and Efficiency -->
+              <g transform="translate(-70, -10)">
+                <text 
+                  text-anchor="start"
+                  class="font-medium"
+                >Size</text>
+                <text 
+                  text-anchor="start"
+                  y="20"
+                  class="text-base font-semibold fill-gray-900"
+                >{node.data.size}</text>
+              </g>
+              <g transform="translate(70, -10)">
+                <text 
+                  text-anchor="end"
+                  class="font-medium"
+                >⚡ Eff</text>
+                <text 
+                  text-anchor="end"
+                  y="20"
+                  class="text-base font-semibold fill-gray-900"
+                >{node.data.efficiency.toFixed(1)}x</text>
+              </g>
+              <!-- Throughput and Lead Time -->
+              <g transform="translate(-70, 35)">
+                <text 
+                  text-anchor="start"
+                  class="font-medium"
+                >📈 Items/d</text>
+                <text 
+                  text-anchor="start"
+                  y="20"
+                  class="text-base font-semibold fill-gray-900"
+                >{node.data.throughput.toFixed(1)}</text>
+              </g>
+              <g transform="translate(70, 35)">
+                <text 
+                  text-anchor="end"
+                  class="font-medium"
+                >⏱️ Days</text>
+                <text 
+                  text-anchor="end"
+                  y="20"
+                  class="text-base font-semibold fill-gray-900"
+                >{node.data.leadTime.toFixed(1)}</text>
+              </g>
+            </g>
+          </g>
+        {/each}
+      </svg>
+    </div>
   </div>
 
   <!-- Analysis Summary -->
@@ -1175,21 +1231,27 @@
                   <span class="text-gray-600">Weekly Cost</span>
                   <span class="font-medium">${currentCosts.totalCost.toFixed(2)}</span>
                 </div>
-                <div class="text-xs text-gray-500">Including dependencies and coordination</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  Including dependencies and coordination
+                </div>
               </div>
               <div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Team Efficiency</span>
                   <span class="font-medium">{metrics.flowEfficiency.toFixed(1)}%</span>
                 </div>
-                <div class="text-xs text-gray-500">Time spent on value-adding work</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  Time spent on value-adding work
+                </div>
               </div>
               <div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Average Lead Time</span>
                   <span class="font-medium">{metrics.avgLeadTime.toFixed(1)} days</span>
                 </div>
-                <div class="text-xs text-gray-500">Time to complete work items</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  Time to complete work items
+                </div>
               </div>
             </div>
           </div>
@@ -1203,21 +1265,27 @@
                   <span class="text-gray-600">Weekly Cost</span>
                   <span class="font-medium">${independentMetrics.costs.totalCost.toFixed(2)}</span>
                 </div>
-                <div class="text-xs text-gray-500">Minimal coordination needed</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  Minimal coordination needed
+                </div>
               </div>
               <div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Team Efficiency</span>
                   <span class="font-medium">{independentMetrics.flowEfficiency}%</span>
                 </div>
-                <div class="text-xs text-gray-500">Theoretical maximum efficiency</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  Theoretical maximum efficiency
+                </div>
               </div>
               <div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Average Lead Time</span>
                   <span class="font-medium">{independentMetrics.leadTime.toFixed(1)} days</span>
                 </div>
-                <div class="text-xs text-gray-500">Without dependency delays</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  Without dependency delays
+                </div>
               </div>
             </div>
           </div>
@@ -1393,219 +1461,6 @@
         </div>
       </div>
     {/if}
-  </div>
-
-  <!-- Team Visualization -->
-  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Dependencies</h3>
-    <div class="relative w-full h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-      <svg width="100%" height="100%" viewBox="-100 -100 1200 800" preserveAspectRatio="xMidYMid meet">
-        <!-- Background grid for professional look -->
-        <defs>
-          <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#f1f5f9" stroke-width="0.5"/>
-          </pattern>
-          <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-            <rect width="100" height="100" fill="url(#smallGrid)"/>
-            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-          </pattern>
-          <!-- Gradient for node header -->
-          <linearGradient id="headerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#f1f5f9;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
-          </linearGradient>
-          <!-- Gradient for node body -->
-          <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-
-        <!-- Draw edges first -->
-        {#each edges as edge}
-          {@const sourceNode = nodes.find(n => n.id === edge.source)}
-          {@const targetNode = nodes.find(n => n.id === edge.target)}
-          {@const sourceIndex = nodes.findIndex(n => n.id === edge.source)}
-          {@const targetIndex = nodes.findIndex(n => n.id === edge.target)}
-          {@const angleStep = (2 * Math.PI) / nodes.length}
-          {@const sourceAngle = angleStep * sourceIndex - Math.PI / 2}
-          {@const targetAngle = angleStep * targetIndex - Math.PI / 2}
-          {@const horizontalScale = 1.6}
-          {@const radiusX = Math.min(550, Math.max(400, 1100 / (nodes.length)))}
-          {@const radiusY = Math.min(350, Math.max(250, 700 / (nodes.length)))}
-          {@const x1 = 500 + radiusX * Math.cos(sourceAngle) * horizontalScale}
-          {@const y1 = 300 + radiusY * Math.sin(sourceAngle)}
-          {@const x2 = 500 + radiusX * Math.cos(targetAngle) * horizontalScale}
-          {@const y2 = 300 + radiusY * Math.sin(targetAngle)}
-          
-          <!-- Calculate control points for curved lines -->
-          {@const midX = (x1 + x2) / 2}
-          {@const midY = (y1 + y2) / 2}
-          {@const dx = x2 - x1}
-          {@const dy = y2 - y1}
-          {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * 50}
-          {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * 50}
-          
-          <!-- Calculate arrow end point to avoid node overlap -->
-          {@const nodeRadius = 85}
-          {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
-          {@const endX = x2 - (dx * nodeRadius / totalLength)}
-          {@const endY = y2 - (dy * nodeRadius / totalLength)}
-          {@const startX = x1 + (dx * nodeRadius / totalLength)}
-          {@const startY = y1 + (dy * nodeRadius / totalLength)}
-          
-          <!-- Calculate color and thickness based on dependency strength -->
-          {@const strength = edge.data.strength}
-          {@const strokeWidth = 1 + (strength - 1) * 0.8} <!-- Scale from 1px to 4.2px -->
-          {@const color = strength <= 1 ? '#22c55e' : 
-                         strength <= 2 ? '#84cc16' :
-                         strength <= 3 ? '#eab308' :
-                         strength <= 4 ? '#f97316' : '#ef4444'}
-          {@const opacity = 0.6 + (strength - 1) * 0.1} <!-- Scale from 0.6 to 1.0 -->
-          
-          <path 
-            d="M {startX} {startY} Q {midX + normalX} {midY + normalY} {endX} {endY}"
-            fill="none"
-            stroke={color}
-            stroke-width={strokeWidth}
-            stroke-opacity={opacity}
-            marker-end="url(#arrowhead-{strength})"
-          />
-        {/each}
-
-        <!-- Draw nodes on top of edges -->
-        {#each nodes as node, i}
-          {@const angleStep = (2 * Math.PI) / nodes.length}
-          {@const angle = angleStep * i - Math.PI / 2}
-          {@const horizontalScale = 1.6}
-          {@const radiusX = Math.min(550, Math.max(400, 1100 / (nodes.length)))}
-          {@const radiusY = Math.min(350, Math.max(250, 700 / (nodes.length)))}
-          {@const x = 500 + radiusX * Math.cos(angle) * horizontalScale}
-          {@const y = 300 + radiusY * Math.sin(angle)}
-          
-          <!-- Team Node -->
-          <g transform="translate({x}, {y})">
-            <!-- Enhanced node shadow -->
-            <rect
-              x="-80"
-              y="-64"
-              width="160"
-              height="128"
-              rx="12"
-              fill="#ffffff"
-              filter="url(#shadow)"
-            />
-            <!-- Node background with gradient -->
-            <rect
-              x="-80"
-              y="-64"
-              width="160"
-              height="128"
-              rx="12"
-              fill="url(#bodyGradient)"
-              stroke="#e2e8f0"
-              stroke-width="2"
-            />
-            <!-- Node header with gradient -->
-            <rect
-              x="-80"
-              y="-64"
-              width="160"
-              height="40"
-              rx="12"
-              fill="url(#headerGradient)"
-              stroke="#e2e8f0"
-              stroke-width="2"
-            />
-            <!-- Team name with better styling -->
-            <text 
-              text-anchor="middle"
-              y="-38"
-              class="text-base font-semibold fill-gray-700"
-            >{node.data.label}</text>
-            <!-- Metrics with improved layout -->
-            <g class="text-xs fill-gray-700">
-              <!-- Team Size and Efficiency -->
-              <g transform="translate(-70, -10)">
-                <text 
-                  text-anchor="start"
-                  class="font-medium"
-                >Size</text>
-                <text 
-                  text-anchor="start"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
-                >{node.data.size}</text>
-              </g>
-              <g transform="translate(70, -10)">
-                <text 
-                  text-anchor="end"
-                  class="font-medium"
-                >⚡ Eff</text>
-                <text 
-                  text-anchor="end"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
-                >{node.data.efficiency.toFixed(1)}x</text>
-              </g>
-              <!-- Throughput and Lead Time -->
-              <g transform="translate(-70, 35)">
-                <text 
-                  text-anchor="start"
-                  class="font-medium"
-                >📈 Items/d</text>
-                <text 
-                  text-anchor="start"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
-                >{node.data.throughput.toFixed(1)}</text>
-              </g>
-              <g transform="translate(70, 35)">
-                <text 
-                  text-anchor="end"
-                  class="font-medium"
-                >⏱️ Days</text>
-                <text 
-                  text-anchor="end"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
-                >{node.data.leadTime.toFixed(1)}</text>
-              </g>
-            </g>
-          </g>
-        {/each}
-
-        <!-- Enhanced definitions -->
-        <defs>
-          <!-- Improved shadow filter -->
-          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.15"/>
-          </filter>
-          <!-- Enhanced arrow markers for each strength level -->
-          {#each [1, 2, 3, 4, 5] as strength}
-            {@const color = strength <= 1 ? '#22c55e' : 
-                           strength <= 2 ? '#84cc16' :
-                           strength <= 3 ? '#eab308' :
-                           strength <= 4 ? '#f97316' : '#ef4444'}
-            <marker
-              id="arrowhead-{strength}"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3.5, 0 7"
-                fill={color}
-                opacity={0.6 + (strength - 1) * 0.1}
-              />
-            </marker>
-          {/each}
-        </defs>
-      </svg>
-    </div>
   </div>
 
   <!-- Cost Analysis Section -->

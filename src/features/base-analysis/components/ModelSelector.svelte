@@ -57,36 +57,6 @@
             {model.description}
           </div>
         </div>
-        <div class="flex-shrink-0">
-          <div class="w-8 h-8 rounded-full {
-            activeModel === model.id
-              ? 'bg-secondary/30'
-              : 'bg-secondary/10'
-          } flex items-center justify-center">
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {#if activeModel === model.id}
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              {:else}
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 4v16m8-8H4"
-                />
-              {/if}
-            </svg>
-          </div>
-        </div>
       </div>
     </button>
   {/each}

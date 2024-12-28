@@ -6,7 +6,7 @@
   import 'tippy.js/dist/tippy.css';
   import 'tippy.js/themes/light-border.css';
   import Chart from 'chart.js/auto';
-  import type { ChartConfiguration, ScaleOptionsByType, CartesianScaleTypeRegistry, Scale, CoreScaleOptions } from 'chart.js';
+  import type { ChartConfiguration } from 'chart.js';
 
   // Subscribe to calculator store
   let model: CalculatorModel;
@@ -39,6 +39,7 @@
   let monthlyTickets = 50;
   let hoursPerTicket = 4;
   let peoplePerTicket = 2;
+  let slaCompliance = 95;
 
   // Results
   let results: TargetBasedPlanningResults | null = null;
@@ -59,13 +60,60 @@
     platformMaintenance: { min: 1000, max: 1000000, step: 1000 } // $1k to $1M
   };
 
+  // Initialize tooltips
+  onMount(() => {
+    const tooltipInstances = tippy('[data-tippy-content]', {
+      theme: 'light-border',
+      placement: 'right',
+      delay: [100, 200],
+      touch: 'hold',
+      maxWidth: 300,
+      hideOnClick: false,
+      trigger: 'mouseenter focus click',
+      interactive: true,
+      appendTo: () => document.body,
+      plugins: [],
+      animation: false,
+      allowHTML: false
+    });
+  });
+
+  // Helper function to format currency
+  function formatCurrency(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  }
+
+  // Helper function to format percentage
+  function formatPercentage(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value / 100);
+  }
+
+  // Helper function to format months
+  function formatMonths(value: number): string {
+    return `${value.toLocaleString()} mo`;
+  }
+
+  // Helper function to ensure number type
+  function ensureNumber(value: string | number): number {
+    return typeof value === 'string' ? parseFloat(value) : value;
+  }
+
   // Update reactive calculation
   $: {
     // Calculate base costs
     const workingHoursPerMonth = 160;
     const monthlyBaseCost = model === 'team'
       ? teamSize * hourlyRate * workingHoursPerMonth * (serviceEfficiency / 100) * (1 + operationalOverhead / 100)
-      : monthlyTickets * hoursPerTicket * peoplePerTicket * 75; // Default hourly rate
+      : monthlyTickets * hoursPerTicket * peoplePerTicket * hourlyRate; // Use actual hourly rate
     
     const annualBaseCost = monthlyBaseCost * 12;
     const breakEvenMonths = targets[0].value;
@@ -78,10 +126,11 @@
     const monthlySavings = monthlyBaseCost - monthlyOperatingCost;
     const annualSavings = monthlySavings * 12;
 
-    // Calculate platform cost based on savings and break-even target
+    // Calculate required platform cost to hit break-even target
+    const totalSavingsAtTarget = monthlySavings * breakEvenMonths;
     const platformCost = Math.min(
       Math.max(
-        annualSavings * (breakEvenMonths / 12),
+        totalSavingsAtTarget,
         constraints.platformCost.min
       ),
       constraints.platformCost.max
@@ -122,14 +171,6 @@
     }
   }
 
-  // Initialize tooltips
-  onMount(() => {
-    tippy('[data-tippy-content]', {
-      theme: 'light-border',
-      placement: 'right'
-    });
-  });
-
   let cumulativeChart: Chart | null = null;
 
   // Update chart tabs to only show cumulative costs
@@ -158,19 +199,33 @@
   function generateTimelineData(results: TargetBasedPlanningResults) {
     const months = Math.max(60, results.timeframe + 24); // Show at least target + 2 years
     const monthlyBaseline = results.baselineCost / 12;
-    const monthlyPlatformOperatingCost = (results.baselineCost * (1 - results.teamReduction) * (1 - results.processEfficiency)) / 12 + results.platformMaintenance;
+    const targetBreakEvenMonths = results.timeframe;
+    
+    // Calculate the required platform cost and monthly operating cost to hit break-even
+    const baselineCostAtBreakEven = monthlyBaseline * targetBreakEvenMonths;
+    const requiredPlatformCost = results.platformCost;
+    
+    // Calculate the required monthly operating cost to achieve break-even
+    const remainingMonths = targetBreakEvenMonths - results.timeToBuild;
+    const requiredMonthlyOperatingCost = (baselineCostAtBreakEven - requiredPlatformCost) / remainingMonths;
 
     // Generate cost arrays
-    const baselineCosts = Array.from({length: months + 1}, (_, i) => monthlyBaseline * i);
-    const platformCosts = Array.from({length: months + 1}, (_, i) => {
+    const baselineCosts: number[] = Array.from({length: months + 1}, (_, i) => monthlyBaseline * i);
+    const platformCosts: number[] = Array.from({length: months + 1}, (_, i) => {
       if (i <= results.timeToBuild) {
         // During implementation: Only platform investment (spread evenly)
-        return (results.platformCost * i / results.timeToBuild);
+        return (requiredPlatformCost * i / results.timeToBuild);
       } else {
-        // After implementation: Platform cost + cumulative reduced operating costs
+        // After implementation: Platform cost + cumulative operating costs
         const operatingMonths = i - results.timeToBuild;
-        return results.platformCost + (monthlyPlatformOperatingCost * operatingMonths);
+        return requiredPlatformCost + (requiredMonthlyOperatingCost * operatingMonths);
       }
+    });
+
+    // Add break-even point marker
+    const breakEvenPoint = targetBreakEvenMonths;
+    const breakEvenMarker: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
+      return i === breakEvenPoint ? baselineCosts[i] : null;
     });
 
     const data = {
@@ -182,38 +237,27 @@
             data: baselineCosts,
             borderColor: '#94a3b8',
             backgroundColor: '#94a3b880',
-            fill: true
+            fill: true,
+            pointRadius: 0
           },
           {
             label: 'Platform Solution',
             data: platformCosts,
             borderColor: '#dd9933',
             backgroundColor: '#dd993380',
-            fill: true
+            fill: true,
+            pointRadius: 0
           }
         ],
         monthly: [
           {
-            label: 'Current Monthly Cost',
-            data: Array.from({length: months + 1}, () => monthlyBaseline),
-            borderColor: '#475569',
-            borderDash: [5, 5],
-            fill: false
-          },
-          {
-            label: 'Platform Monthly Cost',
-            data: Array.from({length: months + 1}, (_, i) => {
-              if (i <= results.timeToBuild) {
-                // During implementation: Platform investment rate
-                return results.platformCost / results.timeToBuild;
-              } else {
-                // After implementation: Only reduced operating costs
-                return monthlyPlatformOperatingCost;
-              }
-            }),
-            borderColor: '#b97d27',
-            borderDash: [5, 5],
-            fill: false
+            label: 'Break-Even Point',
+            data: breakEvenMarker,
+            borderColor: '#22c55e',
+            backgroundColor: '#22c55e',
+            pointRadius: 6,
+            pointStyle: 'circle',
+            showLine: false
           }
         ]
       }
@@ -239,17 +283,16 @@
       type: 'line',
       data: {
         labels: data.labels,
-        datasets: data.datasets.costs
+        datasets: [...data.datasets.costs, ...data.datasets.monthly]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
-          mode: 'index',
+          mode: 'nearest',
           intersect: false
         },
         plugins: {
-          datalabels: false,
           tooltip: {
             mode: 'index',
             intersect: false,
@@ -263,7 +306,8 @@
                   label += new Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: 'USD',
-                    minimumFractionDigits: 2
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
                   }).format(context.parsed.y);
                 }
                 return label;
@@ -274,12 +318,21 @@
             display: false
           }
         },
+        elements: {
+          point: {
+            radius: 0, // Hide points
+            hitRadius: 10 // Area for hover detection
+          }
+        },
         scales: {
           x: {
             type: 'category',
             title: {
               display: true,
               text: 'Time'
+            },
+            grid: {
+              display: false
             }
           },
           y: {
@@ -288,15 +341,20 @@
               display: true,
               text: 'Cumulative Cost ($)'
             },
+            grid: {
+              color: '#e2e8f0'
+            },
             ticks: {
-              callback: function(this: Scale<CoreScaleOptions>, tickValue: number | string, index: number, ticks: any[]) {
-                const value = typeof tickValue === 'string' ? parseFloat(tickValue) : tickValue;
-                return new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(value);
+              callback: function(value) {
+                if (typeof value === 'number') {
+                  return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(value);
+                }
+                return '';
               }
             }
           }
@@ -319,7 +377,8 @@
   });
 </script>
 
-<div class="bg-white rounded-xl shadow-lg p-4 space-y-6">
+<!-- Input Container -->
+<div class="bg-white rounded-xl shadow-sm p-4 space-y-4 mb-4">
   <!-- Model Description -->
   <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-2 rounded-lg border border-secondary/20">
     <p class="text-secondary text-xs leading-relaxed">
@@ -333,256 +392,376 @@
 
   <!-- Base Configuration -->
   <div>
-    <h3 class="text-sm font-semibold text-gray-900 mb-4">Current Configuration</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <h3 class="text-sm font-semibold text-gray-900 mb-2">Current Configuration</h3>
+    <div class="space-y-2">
       {#if model === 'team'}
         <!-- Team Model Fields -->
         <div class="field-container">
-          <label class="field-label" for="teamSize">
-            Team Size
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Number of full-time employees on the team">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <input
-              type="number"
-              id="teamSize"
-              bind:value={teamSize}
-              min={constraints.teamSize.min}
-              max={constraints.teamSize.max}
-              step={constraints.teamSize.step}
-              class="number-input"
-            />
-            <input
-              type="range"
-              bind:value={teamSize}
-              min={constraints.teamSize.min}
-              max={constraints.teamSize.max}
-              step={constraints.teamSize.step}
-              class="slider-input"
-            />
+          <div>
+            <div>
+              <label class="field-label" for="teamSize">
+                Team Size
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Number of full-time employees on the team">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Define the number of employees currently working on service delivery.
+              </p>
+            </div>
+            <div>
+              <div class="input-group">
+                <input
+                  type="number"
+                  id="teamSize"
+                  bind:value={teamSize}
+                  min={constraints.teamSize.min}
+                  max={constraints.teamSize.max}
+                  step={constraints.teamSize.step}
+                  class="number-input"
+                />
+                <input
+                  type="range"
+                  bind:value={teamSize}
+                  min={constraints.teamSize.min}
+                  max={constraints.teamSize.max}
+                  step={constraints.teamSize.step}
+                  class="slider-input"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Hourly Rate -->
         <div class="field-container">
-          <label class="field-label" for="hourlyRate">
-            Hourly Rate
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Average hourly cost per team member">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <div class="relative">
-              <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
-              <input
-                type="number"
-                id="hourlyRate"
-                bind:value={hourlyRate}
-                min={constraints.hourlyRate.min}
-                max={constraints.hourlyRate.max}
-                step={constraints.hourlyRate.step}
-                class="number-input pl-6"
-              />
+          <div>
+            <div>
+              <label class="field-label" for="hourlyRate">
+                Hourly Rate
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Average hourly cost per team member">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Average hourly cost per team member including benefits and overhead.
+              </p>
             </div>
-            <input
-              type="range"
-              bind:value={hourlyRate}
-              min={constraints.hourlyRate.min}
-              max={constraints.hourlyRate.max}
-              step={constraints.hourlyRate.step}
-              class="slider-input"
-            />
+            <div>
+              <div class="input-group">
+                <div class="relative">
+                  <span class="unit-prefix">$</span>
+                  <input
+                    type="number"
+                    id="hourlyRate"
+                    bind:value={hourlyRate}
+                    min={constraints.hourlyRate.min}
+                    max={constraints.hourlyRate.max}
+                    step={constraints.hourlyRate.step}
+                    class="number-input pl-6"
+                  />
+                </div>
+                <input
+                  type="range"
+                  bind:value={hourlyRate}
+                  min={constraints.hourlyRate.min}
+                  max={constraints.hourlyRate.max}
+                  step={constraints.hourlyRate.step}
+                  class="slider-input"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Service Efficiency -->
         <div class="field-container">
-          <label class="field-label" for="serviceEfficiency">
-            Service Efficiency
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Percentage of time spent on productive work">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <div class="relative">
-              <input
-                type="number"
-                id="serviceEfficiency"
-                bind:value={serviceEfficiency}
-                min={0}
-                max={100}
-                step={1}
-                class="number-input pr-8"
-              />
-              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+          <div>
+            <div>
+              <label class="field-label" for="serviceEfficiency">
+                Service Efficiency
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Percentage of time spent on productive work">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Percentage of time spent on productive service delivery work.
+              </p>
             </div>
-            <input
-              type="range"
-              bind:value={serviceEfficiency}
-              min={0}
-              max={100}
-              step={1}
-              class="slider-input"
-            />
+            <div>
+              <div class="input-group">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="serviceEfficiency"
+                    bind:value={serviceEfficiency}
+                    min={0}
+                    max={100}
+                    step={1}
+                    class="number-input pr-8"
+                  />
+                  <span class="unit-suffix">%</span>
+                </div>
+                <input
+                  type="range"
+                  bind:value={serviceEfficiency}
+                  min={0}
+                  max={100}
+                  step={1}
+                  class="slider-input"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Operational Overhead -->
         <div class="field-container">
-          <label class="field-label" for="operationalOverhead">
-            Operational Overhead
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Additional costs as percentage of base costs">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <div class="relative">
-              <input
-                type="number"
-                id="operationalOverhead"
-                bind:value={operationalOverhead}
-                min={0}
-                max={100}
-                step={1}
-                class="number-input pr-8"
-              />
-              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+          <div>
+            <div>
+              <label class="field-label" for="operationalOverhead">
+                Operational Overhead
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Additional costs as percentage of base costs">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Additional operational costs as a percentage of base costs.
+              </p>
             </div>
-            <input
-              type="range"
-              bind:value={operationalOverhead}
-              min={0}
-              max={100}
-              step={1}
-              class="slider-input"
-            />
+            <div>
+              <div class="input-group">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="operationalOverhead"
+                    bind:value={operationalOverhead}
+                    min={0}
+                    max={100}
+                    step={1}
+                    class="number-input pr-8"
+                  />
+                  <span class="unit-suffix">%</span>
+                </div>
+                <input
+                  type="range"
+                  bind:value={operationalOverhead}
+                  min={0}
+                  max={100}
+                  step={1}
+                  class="slider-input"
+                />
+              </div>
+            </div>
           </div>
         </div>
       {:else}
         <!-- Ticket Model Fields -->
-        <div class="field-container">
-          <label class="field-label" for="monthlyTickets">
-            Monthly Tickets
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Average number of tickets processed per month">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <input
-              type="number"
-              id="monthlyTickets"
-              bind:value={monthlyTickets}
-              min={constraints.monthlyTickets.min}
-              max={constraints.monthlyTickets.max}
-              step={constraints.monthlyTickets.step}
-              class="number-input"
-            />
-            <input
-              type="range"
-              bind:value={monthlyTickets}
-              min={constraints.monthlyTickets.min}
-              max={constraints.monthlyTickets.max}
-              step={constraints.monthlyTickets.step}
-              class="slider-input"
-            />
-          </div>
-        </div>
-
-        <!-- Hours per Ticket -->
-        <div class="field-container">
-          <label class="field-label" for="hoursPerTicket">
-            Hours per Ticket
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Average hours spent per ticket">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <div class="relative">
-              <input
-                type="number"
-                id="hoursPerTicket"
-                bind:value={hoursPerTicket}
-                min={constraints.hoursPerTicket.min}
-                max={constraints.hoursPerTicket.max}
-                step={constraints.hoursPerTicket.step}
-                class="number-input pr-8"
-              />
-              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">hrs</span>
+        <div class="space-y-2">
+          <!-- Monthly Tickets -->
+          <div class="field-container">
+            <div>
+              <div class="field-info">
+                <label class="field-label" for="monthlyTickets">
+                  Monthly Tickets
+                  <button 
+                    class="tooltip ml-1"
+                    aria-label="Help information" 
+                    data-tippy-content="Estimate the average number of tickets processed per month">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the average number of tickets processed per month. This helps calculate the workload volume.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="value-container">
+                  <input
+                    type="number"
+                    id="monthlyTickets"
+                    bind:value={monthlyTickets}
+                    min={50}
+                    max={250}
+                    step={1}
+                    class="number-input"
+                  />
+                </div>
+                <div class="slider-container">
+                  <input
+                    type="range"
+                    bind:value={monthlyTickets}
+                    min={50}
+                    max={250}
+                    step={1}
+                    class="slider-input"
+                  />
+                </div>
+              </div>
             </div>
-            <input
-              type="range"
-              bind:value={hoursPerTicket}
-              min={constraints.hoursPerTicket.min}
-              max={constraints.hoursPerTicket.max}
-              step={constraints.hoursPerTicket.step}
-              class="slider-input"
-            />
           </div>
-        </div>
 
-        <!-- People per Ticket -->
-        <div class="field-container">
-          <label class="field-label" for="peoplePerTicket">
-            People per Ticket
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Average number of people involved per ticket">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <input
-              type="number"
-              id="peoplePerTicket"
-              bind:value={peoplePerTicket}
-              min={constraints.peoplePerTicket.min}
-              max={constraints.peoplePerTicket.max}
-              step={constraints.peoplePerTicket.step}
-              class="number-input"
-            />
-            <input
-              type="range"
-              bind:value={peoplePerTicket}
-              min={constraints.peoplePerTicket.min}
-              max={constraints.peoplePerTicket.max}
-              step={constraints.peoplePerTicket.step}
-              class="slider-input"
-            />
+          <!-- Hours per Ticket -->
+          <div class="field-container">
+            <div>
+              <div class="field-info">
+                <label class="field-label" for="hoursPerTicket">
+                  Hours per Ticket
+                  <button 
+                    class="tooltip ml-1"
+                    aria-label="Help information" 
+                    data-tippy-content="Estimate the average time spent processing each ticket">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the average time spent processing each ticket. This helps calculate the total processing time.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="value-container">
+                  <div class="relative">
+                    <input
+                      type="number"
+                      id="hoursPerTicket"
+                      bind:value={hoursPerTicket}
+                      min={0.1}
+                      max={100}
+                      step={0.1}
+                      class="number-input pr-8"
+                    />
+                    <span class="unit-suffix">hrs</span>
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input
+                    type="range"
+                    bind:value={hoursPerTicket}
+                    min={0.1}
+                    max={100}
+                    step={0.1}
+                    class="slider-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- People per Ticket -->
+          <div class="field-container">
+            <div>
+              <div class="field-info">
+                <label class="field-label" for="peoplePerTicket">
+                  People per Ticket
+                  <button 
+                    class="tooltip ml-1"
+                    aria-label="Help information" 
+                    data-tippy-content="Estimate the average number of people needed to handle each ticket">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the average number of people needed to handle each ticket. This helps calculate the total number of people required.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="value-container">
+                  <input
+                    type="number"
+                    id="peoplePerTicket"
+                    bind:value={peoplePerTicket}
+                    min={1}
+                    max={10}
+                    step={1}
+                    class="number-input"
+                  />
+                </div>
+                <div class="slider-container">
+                  <input
+                    type="range"
+                    bind:value={peoplePerTicket}
+                    min={1}
+                    max={10}
+                    step={1}
+                    class="slider-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SLA Compliance -->
+          <div class="field-container">
+            <div>
+              <div class="field-info">
+                <label class="field-label" for="slaCompliance">
+                  SLA Compliance
+                  <button 
+                    class="tooltip ml-1"
+                    aria-label="Help information" 
+                    data-tippy-content="Service level agreement compliance rate [0-100%]">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Current service level agreement compliance rate. This helps measure service quality.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="value-container">
+                  <div class="relative">
+                    <input
+                      type="number"
+                      id="slaCompliance"
+                      bind:value={slaCompliance}
+                      min={0}
+                      max={100}
+                      step={1}
+                      class="number-input pr-8"
+                    />
+                    <span class="unit-suffix">%</span>
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input
+                    type="range"
+                    bind:value={slaCompliance}
+                    min={0}
+                    max={100}
+                    step={1}
+                    class="slider-input"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       {/if}
@@ -591,298 +770,382 @@
 
   <!-- Target Goals -->
   <div>
-    <h3 class="text-sm font-semibold text-gray-900 mb-4">Target Goals</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <h3 class="text-sm font-semibold text-gray-900 mb-2">Target Goals</h3>
+    <div class="space-y-2">
       <!-- Break Even Target -->
       <div class="field-container">
-        <label class="field-label" for="breakEvenTarget">
-          Break Even Time
-          <button 
-            class="tooltip"
-            aria-label="Help information" 
-            data-tippy-content="Target months to break even on investment">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
-        </label>
-        <div class="input-group">
-          <div class="relative">
-            <input
-              type="number"
-              id="breakEvenTarget"
-              bind:value={targets[0].value}
-              min={constraints.timeframe.min}
-              max={constraints.timeframe.max}
-              step={constraints.timeframe.step}
-              class="number-input pr-8"
-            />
-            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">mo</span>
+        <div>
+          <div class="field-info">
+            <label class="field-label" for="breakEvenTarget">
+              Break Even Time
+              <button 
+                class="tooltip ml-1"
+                aria-label="Help information" 
+                data-tippy-content="Target months to break even on investment">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </label>
+            <p class="input-description">
+              Target number of months to break even on the platform investment.
+            </p>
           </div>
-          <input
-            type="range"
-            bind:value={targets[0].value}
-            min={constraints.timeframe.min}
-            max={constraints.timeframe.max}
-            step={constraints.timeframe.step}
-            class="slider-input"
-          />
+          <div class="input-group">
+            <div class="value-container">
+              <div class="relative">
+                <input
+                  type="number"
+                  id="breakEvenTarget"
+                  bind:value={targets[0].value}
+                  min={constraints.timeframe.min}
+                  max={constraints.timeframe.max}
+                  step={constraints.timeframe.step}
+                  class="number-input pr-8"
+                />
+                <span class="unit-suffix">mo</span>
+              </div>
+            </div>
+            <div class="slider-container">
+              <input
+                type="range"
+                bind:value={targets[0].value}
+                min={constraints.timeframe.min}
+                max={constraints.timeframe.max}
+                step={constraints.timeframe.step}
+                class="slider-input"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Team Reduction Target -->
       <div class="field-container">
-        <label class="field-label" for="teamReductionTarget">
-          Team Reduction
-          <button 
-            class="tooltip"
-            aria-label="Help information" 
-            data-tippy-content="Target percentage reduction in team size">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
-        </label>
-        <div class="input-group">
-          <div class="relative">
-            <input
-              type="number"
-              id="teamReductionTarget"
-              bind:value={targets[1].value}
-              min={constraints.targetTeamReduction.min}
-              max={constraints.targetTeamReduction.max}
-              step={constraints.targetTeamReduction.step}
-              class="number-input pr-8"
-            />
-            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+        <div>
+          <div class="field-info">
+            <label class="field-label" for="teamReductionTarget">
+              Team Reduction
+              <button 
+                class="tooltip ml-1"
+                aria-label="Help information" 
+                data-tippy-content="Target percentage reduction in team size">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </label>
+            <p class="input-description">
+              Target percentage reduction in team size after platform implementation.
+            </p>
           </div>
-          <input
-            type="range"
-            bind:value={targets[1].value}
-            min={constraints.targetTeamReduction.min}
-            max={constraints.targetTeamReduction.max}
-            step={constraints.targetTeamReduction.step}
-            class="slider-input"
-          />
+          <div class="input-group">
+            <div class="value-container">
+              <div class="relative">
+                <input
+                  type="number"
+                  id="teamReductionTarget"
+                  bind:value={targets[1].value}
+                  min={constraints.targetTeamReduction.min}
+                  max={constraints.targetTeamReduction.max}
+                  step={constraints.targetTeamReduction.step}
+                  class="number-input pr-8"
+                />
+                <span class="unit-suffix">%</span>
+              </div>
+            </div>
+            <div class="slider-container">
+              <input
+                type="range"
+                bind:value={targets[1].value}
+                min={constraints.targetTeamReduction.min}
+                max={constraints.targetTeamReduction.max}
+                step={constraints.targetTeamReduction.step}
+                class="slider-input"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Process Efficiency Target -->
       <div class="field-container">
-        <label class="field-label" for="efficiencyTarget">
-          Process Efficiency
-          <button 
-            class="tooltip"
-            aria-label="Help information" 
-            data-tippy-content="Target improvement in process efficiency">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
-        </label>
-        <div class="input-group">
-          <div class="relative">
-            <input
-              type="number"
-              id="efficiencyTarget"
-              bind:value={targets[2].value}
-              min={constraints.targetEfficiency.min}
-              max={constraints.targetEfficiency.max}
-              step={constraints.targetEfficiency.step}
-              class="number-input pr-8"
-            />
-            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+        <div>
+          <div class="field-info">
+            <label class="field-label" for="efficiencyTarget">
+              Process Efficiency
+              <button 
+                class="tooltip ml-1"
+                aria-label="Help information" 
+                data-tippy-content="Target improvement in process efficiency">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </label>
+            <p class="input-description">
+              Target improvement in process efficiency after platform implementation.
+            </p>
           </div>
-          <input
-            type="range"
-            bind:value={targets[2].value}
-            min={constraints.targetEfficiency.min}
-            max={constraints.targetEfficiency.max}
-            step={constraints.targetEfficiency.step}
-            class="slider-input"
-          />
+          <div class="input-group">
+            <div class="value-container">
+              <div class="relative">
+                <input
+                  type="number"
+                  id="efficiencyTarget"
+                  bind:value={targets[2].value}
+                  min={constraints.targetEfficiency.min}
+                  max={constraints.targetEfficiency.max}
+                  step={constraints.targetEfficiency.step}
+                  class="number-input pr-8"
+                />
+                <span class="unit-suffix">%</span>
+              </div>
+            </div>
+            <div class="slider-container">
+              <input
+                type="range"
+                bind:value={targets[2].value}
+                min={constraints.targetEfficiency.min}
+                max={constraints.targetEfficiency.max}
+                step={constraints.targetEfficiency.step}
+                class="slider-input"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Implementation Time Target -->
       <div class="field-container">
-        <label class="field-label" for="implementationTarget">
-          Implementation Time
-          <button 
-            class="tooltip"
-            aria-label="Help information" 
-            data-tippy-content="Target time to implement the platform">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
-        </label>
-        <div class="input-group">
-          <div class="relative">
-            <input
-              type="number"
-              id="implementationTarget"
-              bind:value={targets[3].value}
-              min={3}
-              max={24}
-              step={3}
-              class="number-input pr-8"
-            />
-            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">mo</span>
+        <div>
+          <div class="field-info">
+            <label class="field-label" for="implementationTarget">
+              Implementation Time
+              <button 
+                class="tooltip ml-1"
+                aria-label="Help information" 
+                data-tippy-content="Target time to implement the platform">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </label>
+            <p class="input-description">
+              Target time required to implement the platform solution.
+            </p>
           </div>
-          <input
-            type="range"
-            bind:value={targets[3].value}
-            min={6}
-            max={24}
-            step={3}
-            class="slider-input"
-          />
+          <div class="input-group">
+            <div class="value-container">
+              <div class="relative">
+                <input
+                  type="number"
+                  id="implementationTarget"
+                  bind:value={targets[3].value}
+                  min={6}
+                  max={24}
+                  step={3}
+                  class="number-input pr-8"
+                />
+                <span class="unit-suffix">mo</span>
+              </div>
+            </div>
+            <div class="slider-container">
+              <input
+                type="range"
+                bind:value={targets[3].value}
+                min={6}
+                max={24}
+                step={3}
+                class="slider-input"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Results Display -->
-  {#if results}
-    <div class="space-y-6">
-      <!-- Key Metrics -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow-sm p-4">
-          <p class="text-sm text-gray-500">Platform Investment</p>
-          <p class="text-xl font-semibold text-gray-900">${results.platformCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm p-4">
-          <p class="text-sm text-gray-500">Monthly Savings</p>
-          <p class="text-xl font-semibold text-green-600">${results.monthlyOperatingCostReduction.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm p-4">
-          <p class="text-sm text-gray-500">Break-Even Period</p>
-          <p class="text-xl font-semibold text-gray-900">{results.timeframe} months</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm p-4">
-          <p class="text-sm text-gray-500">Implementation Time</p>
-          <p class="text-xl font-semibold text-gray-900">{results.timeToBuild} months</p>
-        </div>
+<!-- Results Container -->
+{#if results}
+  <div class="space-y-6">
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <p class="text-sm text-gray-500">Platform Investment</p>
+        <p class="text-xl font-semibold text-gray-900">${results.platformCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
       </div>
-
-      <!-- Detailed Metrics -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Current vs Future State -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Cost Comparison</h3>
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <p class="text-sm text-gray-500">Current Monthly Cost</p>
-                <p class="text-lg font-medium text-gray-900">${(results.monthlyBaseCost).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-500">Future Monthly Cost</p>
-                <p class="text-lg font-medium text-green-600">${(results.monthlyBaseCost - results.monthlyOperatingCostReduction).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-              </div>
-            </div>
-            <div class="pt-4 border-t border-gray-100">
-              <div class="flex justify-between items-center">
-                <div>
-                  <p class="text-sm text-gray-500">Current Annual Cost</p>
-                  <p class="text-lg font-medium text-gray-900">${results.baselineCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm text-gray-500">Future Annual Cost</p>
-                  <p class="text-lg font-medium text-green-600">${(results.baselineCost - (results.monthlyOperatingCostReduction * 12)).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Efficiency Metrics -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Efficiency Metrics</h3>
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <p class="text-sm text-gray-500">Team Reduction</p>
-                <p class="text-lg font-medium text-gray-900">{(results.teamReduction * 100).toFixed(0)}%</p>
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-500">Process Efficiency Gain</p>
-                <p class="text-lg font-medium text-gray-900">{(results.processEfficiency * 100).toFixed(0)}%</p>
-              </div>
-            </div>
-            <div class="pt-4 border-t border-gray-100">
-              <div>
-                <p class="text-sm text-gray-500">Platform Maintenance</p>
-                <p class="text-lg font-medium text-gray-900">${results.platformMaintenance.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} / month</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <p class="text-sm text-gray-500">Monthly Savings</p>
+        <p class="text-xl font-semibold text-green-600">${results.monthlyOperatingCostReduction.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
       </div>
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <p class="text-sm text-gray-500">Break-Even Period</p>
+        <p class="text-xl font-semibold text-gray-900">{results.timeframe} months</p>
+      </div>
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <p class="text-sm text-gray-500">Implementation Time</p>
+        <p class="text-xl font-semibold text-gray-900">{results.timeToBuild} months</p>
+      </div>
+    </div>
 
-      <!-- Cost Analysis Chart -->
+    <!-- Detailed Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Current vs Future State -->
       <div class="bg-white rounded-lg shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Cumulative Cost Analysis</h3>
-        <div class="h-80 relative">
-          <canvas id="cumulativeCostChart"></canvas>
+        <h3 class="text-sm font-semibold text-gray-900 mb-4">Cost Comparison</h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-sm text-gray-500">Current Monthly Cost</p>
+              <p class="text-lg font-medium text-gray-900">${(results.monthlyBaseCost).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-500">Future Monthly Cost</p>
+              <p class="text-lg font-medium text-green-600">${(results.monthlyBaseCost - results.monthlyOperatingCostReduction).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-gray-100">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm text-gray-500">Current Annual Cost</p>
+                <p class="text-lg font-medium text-gray-900">${results.baselineCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500">Future Annual Cost</p>
+                <p class="text-lg font-medium text-green-600">${(results.baselineCost - (results.monthlyOperatingCostReduction * 12)).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
-          <div>
-            <span class="inline-block w-3 h-3 bg-[#94a3b8] rounded-full mr-2"></span>
-            Current Solution
+      </div>
+
+      <!-- Efficiency Metrics -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-gray-900 mb-4">Efficiency Metrics</h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-sm text-gray-500">Team Reduction</p>
+              <p class="text-lg font-medium text-gray-900">{(results.teamReduction * 100).toFixed(0)}%</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-500">Process Efficiency Gain</p>
+              <p class="text-lg font-medium text-gray-900">{(results.processEfficiency * 100).toFixed(0)}%</p>
+            </div>
           </div>
-          <div>
-            <span class="inline-block w-3 h-3 bg-[#dd9933] rounded-full mr-2"></span>
-            Platform Solution
-          </div>
-          <div>
-            <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-            Break-Even: {results.timeframe} months
+          <div class="pt-4 border-t border-gray-100">
+            <div>
+              <p class="text-sm text-gray-500">Platform Maintenance</p>
+              <p class="text-lg font-medium text-gray-900">${results.platformMaintenance.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} / month</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  {/if}
-</div>
+
+    <!-- Cost Analysis Chart -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <h3 class="text-sm font-semibold text-gray-900 mb-4">Cumulative Cost Analysis</h3>
+      <div class="h-80 relative">
+        <canvas id="cumulativeCostChart"></canvas>
+      </div>
+      <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+        <div>
+          <span class="inline-block w-3 h-3 bg-[#94a3b8] rounded-full mr-2"></span>
+          Current Solution
+        </div>
+        <div>
+          <span class="inline-block w-3 h-3 bg-[#dd9933] rounded-full mr-2"></span>
+          Platform Solution
+        </div>
+        <div>
+          <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+          Break-Even: {results.timeframe} months
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
+  /* Compact container styles */
   .field-container {
-    @apply bg-white p-2 rounded-lg border border-gray-100 hover:border-secondary/20 transition-colors duration-200;
+    @apply bg-gray-50/50 p-3 rounded-lg border border-gray-200 hover:border-secondary/20 
+           transition-all duration-300 shadow-sm hover:shadow-md w-full mb-2;
   }
 
+  /* Responsive layout container */
+  .field-container > div {
+    @apply flex flex-col lg:grid lg:grid-cols-[33%_minmax(250px,1fr)] items-start gap-2 lg:gap-4;
+  }
+
+  /* Label and description container */
+  .field-info {
+    @apply w-full lg:w-auto flex flex-col justify-start pr-2 lg:pr-4 mb-1 lg:mb-0;
+  }
+
+  /* Compact label styles */
   .field-label {
-    @apply flex items-center justify-between text-xs font-medium text-gray-700 mb-1;
+    @apply flex items-center text-xs font-medium text-gray-700 mb-1;
   }
 
+  /* Compact input group styles */
   .input-group {
-    @apply space-y-2;
+    @apply flex flex-row items-center gap-3 w-full lg:col-span-1 min-w-0;
   }
 
+  /* Slider container */
+  .slider-container {
+    @apply flex-grow min-w-0;
+  }
+
+  /* Value container */
+  .value-container {
+    @apply flex justify-end w-[90px] flex-shrink-0;
+  }
+
+  /* Compact number input styles */
   .number-input {
-    @apply w-full px-2 py-1 text-right text-gray-700 bg-gray-50 border border-gray-200 
-           rounded-md focus:outline-none focus:ring-1 focus:ring-secondary focus:border-transparent
-           transition-all duration-200 text-xs;
+    @apply w-[90px] px-2 py-1 text-right text-gray-700 bg-white border border-gray-200 
+           rounded-md focus:outline-none focus:ring-1 focus:ring-secondary/50 focus:border-transparent
+           transition-all duration-200 text-sm font-medium tracking-wide flex-shrink-0;
   }
 
+  /* Compact slider styles */
   .slider-input {
-    @apply w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer
-           focus:outline-none focus:ring-1 focus:ring-secondary focus:ring-offset-1;
+    @apply w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer
+           focus:outline-none focus:ring-1 focus:ring-secondary/50 focus:ring-offset-1 min-w-0;
   }
 
+  /* Compact thumb styles */
   .slider-input::-webkit-slider-thumb {
-    @apply w-4 h-4 bg-secondary rounded-full border-none appearance-none cursor-pointer;
+    @apply w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white shadow-sm appearance-none cursor-pointer
+           hover:scale-125 transition-transform duration-200;
   }
 
   .slider-input::-moz-range-thumb {
-    @apply w-4 h-4 bg-secondary rounded-full border-none appearance-none cursor-pointer;
+    @apply w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white shadow-sm appearance-none cursor-pointer
+           hover:scale-125 transition-transform duration-200;
   }
 
-  .number-input.pl-6 {
-    padding-left: 1.5rem;
+  /* Compact description styles */
+  .input-description {
+    @apply text-xs text-gray-500 mt-0.5 leading-tight;
   }
 
-  .number-input.pr-8 {
-    padding-right: 2rem;
+  /* Unit styles */
+  .unit-prefix {
+    @apply absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm;
+  }
+
+  .unit-suffix {
+    @apply absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm;
+  }
+
+  /* Tooltip styles */
+  .tooltip {
+    @apply bg-gray-100 p-1.5 rounded-full hover:bg-gray-200 transition-colors ml-1;
   }
 </style> 

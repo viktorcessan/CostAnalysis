@@ -716,7 +716,7 @@
                 {@const angle2 = (j * Math.PI * 2) / 6}
                 {@const x2 = 100 + Math.cos(angle2) * 40}
                 {@const y2 = 50 + Math.sin(angle2) * 40}
-                {#if i !== j}
+                {#if (i + 1) % 6 === j}
                   <line
                     x1={x}
                     y1={y}

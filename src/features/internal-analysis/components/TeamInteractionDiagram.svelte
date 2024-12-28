@@ -45,6 +45,20 @@
       );
       return calculateMetricsForMatrix(adjustedMatrix);
     } else {
+      // For advanced mode, if the target matrix matches current dependencies, return current metrics
+      const isMatrixEqual = targetDependencyMatrix.every((row, i) => 
+        row.every((value, j) => value === dependencyMatrix.dependencies[i][j])
+      );
+      
+      if (isMatrixEqual) {
+        return {
+          costs: calculateCosts(),
+          flowEfficiency: metrics.flowEfficiency,
+          leadTime: metrics.avgLeadTime,
+          utilizationRate: metrics.utilizationRate,
+          serviceEfficiency: metrics.serviceEfficiency
+        };
+      }
       return calculateMetricsForMatrix(targetDependencyMatrix);
     }
   }

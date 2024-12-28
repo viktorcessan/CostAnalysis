@@ -1605,7 +1605,7 @@
               <div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Team Efficiency</span>
-                  <span class="font-medium">{comparisonMetrics.flowEfficiency}%</span>
+                  <span class="font-medium">{comparisonMetrics.flowEfficiency.toFixed(1)}%</span>
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
                   {#if comparisonMode === 'topology'}

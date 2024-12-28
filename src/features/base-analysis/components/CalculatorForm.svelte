@@ -330,9 +330,8 @@
 
 <div class="bg-white rounded-xl shadow-lg p-6 space-y-8">
   <!-- Header Section -->
-  <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-6 rounded-xl border border-secondary/20">
-    <h2 class="text-xl font-semibold text-secondary mb-3">Service Delivery Cost Analysis</h2>
-    <p class="text-secondary text-sm leading-relaxed">
+  <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-2 rounded-lg border border-secondary/20">
+    <p class="text-secondary text-xs leading-relaxed">
       {#if model === 'team'}
         Calculate and optimize your service delivery costs based on team composition and operational metrics. 
         This model helps you analyze costs from a workforce perspective and identify opportunities for efficiency improvements.
@@ -342,7 +341,7 @@
       {/if}
     </p>
   </div>
-
+   
   <!-- Solution Selection Section -->
   <div class="space-y-4">
     <div class="flex items-center justify-between">

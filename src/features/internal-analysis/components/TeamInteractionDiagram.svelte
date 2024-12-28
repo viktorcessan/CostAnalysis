@@ -29,6 +29,16 @@
     if (mode === 'topology') {
       return calculateIndependentTeamMetrics();
     } else if (mode === 'lazy') {
+      if (dependencyAdjustment === 0) {
+        // Return current metrics when no adjustment
+        return {
+          costs: calculateCosts(),
+          flowEfficiency: metrics.flowEfficiency,
+          leadTime: metrics.avgLeadTime,
+          utilizationRate: metrics.utilizationRate,
+          serviceEfficiency: metrics.serviceEfficiency
+        };
+      }
       // Create adjusted dependency matrix
       const adjustedMatrix = dependencyMatrix.dependencies.map(row =>
         row.map(value => Math.max(0, Math.min(5, value + dependencyAdjustment)))
@@ -341,7 +351,15 @@
   function updateTeamName(index: number, newName: string) {
     teamParams.teams[index].name = newName;
     teamParams = teamParams;
-    dependencyMatrix = initializeDependencyMatrix(teamCount);
+    
+    // Update team names in dependency matrix
+    dependencyMatrix.teams[index] = newName;
+    dependencyMatrix = dependencyMatrix;
+
+    // Update team names in target dependency matrix if in advanced mode
+    if (comparisonMode === 'advanced') {
+      targetDependencyMatrix = targetDependencyMatrix;
+    }
     
     // Update node labels to match
     nodes = nodes.map((node, i) => {
@@ -1397,9 +1415,14 @@
                 }"
                 on:click={() => dependencyAdjustment = -1}
               >-1</button>
-              <div class="h-14 w-20 flex items-center justify-center rounded-xl bg-gradient-to-b from-gray-50 to-white border-2 border-gray-200">
-                <span class="font-semibold text-xl text-gray-900">{dependencyAdjustment > 0 ? '+' : ''}{dependencyAdjustment}</span>
-              </div>
+              <button 
+                class="h-14 w-20 flex items-center justify-center rounded-xl transition-all font-medium text-xl {
+                  dependencyAdjustment === 0 
+                    ? 'bg-gray-100 text-gray-900 shadow-lg shadow-gray-500/10' 
+                    : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-400'
+                }"
+                on:click={() => dependencyAdjustment = 0}
+              >0</button>
               <button 
                 class="h-12 w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
                   dependencyAdjustment === 1 

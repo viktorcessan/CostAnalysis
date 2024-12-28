@@ -70,8 +70,8 @@ export interface TeamInputs {
 export interface TicketInputs {
   monthlyTickets: number;
   hoursPerTicket: number;
-  vendorRate: number;
   peoplePerTicket: number;
+  slaCompliance: number;
 }
 
 export interface PlatformInputs {
@@ -174,7 +174,6 @@ export interface TicketTargetBasedPlanningInputs extends BaseTargetBasedPlanning
     monthlyTickets: number;
     hoursPerTicket: number;
     peoplePerTicket: number;
-    vendorRate: number;
     processingEfficiency: number;
   };
 }

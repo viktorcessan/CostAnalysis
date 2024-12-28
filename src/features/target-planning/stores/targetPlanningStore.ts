@@ -210,7 +210,7 @@ function calculateTotalCost(inputs: any): number {
     return inputs.teamSize * inputs.hourlyRate * workingHoursPerMonth * 
            inputs.serviceEfficiency * (1 + inputs.operationalOverhead);
   } else if ('monthlyTickets' in inputs) {
-    return inputs.monthlyTickets * inputs.hoursPerTicket * inputs.peoplePerTicket * inputs.vendorRate;
+    return inputs.monthlyTickets * inputs.hoursPerTicket * inputs.peoplePerTicket * 75; // Default hourly rate
   }
   return 0;
 }

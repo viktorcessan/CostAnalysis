@@ -39,7 +39,6 @@
   let monthlyTickets = 50;
   let hoursPerTicket = 4;
   let peoplePerTicket = 2;
-  let vendorRate = 75;
 
   // Results
   let results: TargetBasedPlanningResults | null = null;
@@ -53,7 +52,6 @@
     monthlyTickets: { min: 1, max: 250, step: 1 },
     hoursPerTicket: { min: 0.1, max: 100, step: 0.1 },
     peoplePerTicket: { min: 1, max: 10, step: 1 },
-    vendorRate: { min: 10, max: 150, step: 5 },
     timeframe: { min: 12, max: 60, step: 3 }, // 12-60 months
     targetTeamReduction: { min: 0, max: 75, step: 5 }, // 0-75%
     targetEfficiency: { min: 0, max: 75, step: 5 }, // 0-75%
@@ -67,7 +65,7 @@
     const workingHoursPerMonth = 160;
     const monthlyBaseCost = model === 'team'
       ? teamSize * hourlyRate * workingHoursPerMonth * (serviceEfficiency / 100) * (1 + operationalOverhead / 100)
-      : monthlyTickets * hoursPerTicket * peoplePerTicket * vendorRate;
+      : monthlyTickets * hoursPerTicket * peoplePerTicket * 75; // Default hourly rate
     
     const annualBaseCost = monthlyBaseCost * 12;
     const breakEvenMonths = targets[0].value;
@@ -583,43 +581,6 @@
               min={constraints.peoplePerTicket.min}
               max={constraints.peoplePerTicket.max}
               step={constraints.peoplePerTicket.step}
-              class="slider-input"
-            />
-          </div>
-        </div>
-
-        <!-- Vendor Rate -->
-        <div class="field-container">
-          <label class="field-label" for="vendorRate">
-            Vendor Rate
-            <button 
-              class="tooltip"
-              aria-label="Help information" 
-              data-tippy-content="Average hourly rate charged by vendors">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </label>
-          <div class="input-group">
-            <div class="relative">
-              <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
-              <input
-                type="number"
-                id="vendorRate"
-                bind:value={vendorRate}
-                min={constraints.vendorRate.min}
-                max={constraints.vendorRate.max}
-                step={constraints.vendorRate.step}
-                class="number-input pl-6"
-              />
-            </div>
-            <input
-              type="range"
-              bind:value={vendorRate}
-              min={constraints.vendorRate.min}
-              max={constraints.vendorRate.max}
-              step={constraints.vendorRate.step}
               class="slider-input"
             />
           </div>

@@ -59,14 +59,13 @@ function calculateHybridCosts(baselineCost: number, baseEfficiency: number, inpu
   // Vendor portion
   const vendorPercentage = vendorPortion / 100;
   const vendorBaseCost = baselineCost * vendorPercentage;
-  const vendorHours = vendorBaseCost / vendorRate;
-  const vendorBase = vendorHours * vendorRate;
+  const vendorHours = vendorBaseCost / 75;
   const overheadFactor = 1 + (managementOverhead / 100);
   const qualityFactor = qualityImpact >= 0 
     ? (1 - qualityImpact / 100)
     : (1 + Math.abs(qualityImpact) / 100);
   const knowledgeFactor = 1 + (knowledgeLoss / 100) * Math.log10(transitionTime + 1);
-  const vendorCost = vendorBase * overheadFactor * qualityFactor * knowledgeFactor;
+  const vendorCost = vendorHours * vendorRate * overheadFactor * qualityFactor * knowledgeFactor;
 
   return {
     platformCost,
@@ -87,7 +86,7 @@ function calculateMonthlySavings(baselineCost: number, baseEfficiency: number, i
     case 'outsource':
       if (inputs.outsource) {
         const { vendorRate, managementOverhead, qualityImpact, knowledgeLoss, transitionTime } = inputs.outsource;
-        const baseHours = baselineCost / vendorRate;
+        const baseHours = baselineCost / 75;
         const knowledgeFactor = 1 + knowledgeLoss * Math.log10(transitionTime + 1);
         const qualityFactor = qualityImpact >= 0 ? (1 - qualityImpact) : (1 + Math.abs(qualityImpact));
         const solutionCost = vendorRate * baseHours * (1 + managementOverhead) * qualityFactor * knowledgeFactor;
@@ -160,7 +159,7 @@ function calculateMonthlyData(
         case 'outsource':
           if (solutionInputs.outsource) {
             const { vendorRate, managementOverhead, qualityImpact, knowledgeLoss } = solutionInputs.outsource;
-            const baseHours = baselineCost / vendorRate;
+            const baseHours = baselineCost / 75;
             const knowledgeFactor = 1 + (knowledgeLoss / 100) * Math.log10(i - buildTime + 1);
             const monthlySolutionCost = baseHours * vendorRate * (1 + managementOverhead / 100) * (1 + Math.abs(qualityImpact) / 100) * knowledgeFactor;
             solution = setupCost + (monthlySolutionCost * (i - buildTime));

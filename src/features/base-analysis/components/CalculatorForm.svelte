@@ -25,7 +25,7 @@
   let monthlyTickets = 50;
   let hoursPerTicket = 4;
   let peoplePerTicket = 2;
-  let vendorRate = 75;
+  let slaCompliance = 95;
 
   // Platform solution inputs
   let platformInputs: PlatformInputs = {
@@ -107,7 +107,7 @@
       monthlyTickets,
       hoursPerTicket,
       peoplePerTicket,
-      vendorRate  // Use vendorRate directly
+      slaCompliance
     });
   }
 
@@ -164,7 +164,10 @@
   }
 
   // Handle linked portions in hybrid solution
-  function updateHybridPortions(source: 'platform' | 'vendor', value: number) {
+  function updateHybridPortions(source: 'platform' | 'vendor', event: Event) {
+    const target = event.target as HTMLInputElement;
+    const value = parseFloat(target.value);
+    
     if (source === 'platform') {
       hybridInputs.platformPortion = value;
       hybridInputs.vendorPortion = 100 - value;
@@ -236,88 +239,25 @@
   }
 
   // Handle numeric input with proper typing
-  function handleNumericInput(e: Event, field: string) {
-    const target = e.target as HTMLInputElement | null;
-    if (!target) return;
-    
-    const value = +target.value;
-    
-    switch (field) {
-      case 'teamSize':
-        teamSize = value;
-        handleTeamInputs();
-        break;
-      case 'hourlyRate':
-        hourlyRate = value;
-        handleTeamInputs();
-        break;
-      case 'monthlyTickets':
-        monthlyTickets = value;
-        handleTicketInputs();
-        break;
-      case 'hoursPerTicket':
-        hoursPerTicket = value;
-        handleTicketInputs();
-        break;
-      case 'peoplePerTicket':
-        peoplePerTicket = value;
-        handleTicketInputs();
-        break;
-      case 'vendorRate':
-        vendorRate = value;
-        handleTicketInputs();
-        break;
-      case 'platformCost':
-        if (solution === 'platform') {
-          platformInputs.platformCost = value;
-        } else if (solution === 'hybrid') {
-          hybridInputs.platformCost = value;
-        }
-        updateSolutionInputs();
-        break;
-      case 'platformMaintenance':
-        if (solution === 'platform') {
-          platformInputs.platformMaintenance = value;
-        } else if (solution === 'hybrid') {
-          hybridInputs.platformMaintenance = value;
-        }
-        updateSolutionInputs();
-        break;
-      case 'timeToBuild':
-        if (solution === 'platform') {
-          platformInputs.timeToBuild = value;
-        } else if (solution === 'hybrid') {
-          hybridInputs.timeToBuild = value;
-        }
-        updateSolutionInputs();
-        break;
-      case 'transitionTime':
-        if (solution === 'outsource') {
-          outsourceInputs.transitionTime = value;
-        } else if (solution === 'hybrid') {
-          hybridInputs.transitionTime = value;
-        }
-        updateSolutionInputs();
-        break;
-      case 'transitionCost':
-        if (solution === 'outsource') {
-          outsourceInputs.transitionCost = value;
-        } else if (solution === 'hybrid') {
-          hybridInputs.transitionCost = value;
-        }
-        updateSolutionInputs();
-        break;
-      case 'platformPortion':
-        if (solution === 'hybrid') {
-          updateHybridPortions('platform', value);
-        }
-        break;
-      case 'vendorPortion':
-        if (solution === 'hybrid') {
-          updateHybridPortions('vendor', value);
-        }
-        break;
+  function handleNumericInput(event: Event, field: keyof (HybridInputs & OutsourceInputs & PlatformInputs)) {
+    const value = parseFloat((event.target as HTMLInputElement).value);
+    console.log(`handleNumericInput - field: ${field}, value: ${value}`);
+
+    if (solution === 'hybrid' && field in hybridInputs) {
+      hybridInputs[field as keyof HybridInputs] = value;
+      hybridInputs = { ...hybridInputs }; // Force reactivity
+      console.log(`Updated hybrid ${field} to ${value}`);
+    } else if (solution === 'outsource' && field in outsourceInputs) {
+      outsourceInputs[field as keyof OutsourceInputs] = value;
+      outsourceInputs = { ...outsourceInputs }; // Force reactivity
+      console.log(`Updated outsource ${field} to ${value}`);
+    } else if (solution === 'platform' && field in platformInputs) {
+      platformInputs[field as keyof PlatformInputs] = value;
+      platformInputs = { ...platformInputs }; // Force reactivity
+      console.log(`Updated platform ${field} to ${value}`);
     }
+
+    updateSolutionInputs(); // Update solution calculations
   }
 
   // Watch for model changes
@@ -804,44 +744,44 @@
             </div>
           </div>
 
-          <!-- Vendor Rate -->
+          <!-- SLA Compliance -->
           <div class="field-container">
             <div class="flex items-start justify-between">
               <div>
-                <label class="field-label" for="vendorRate">
-                  Vendor Rate
+                <label class="field-label" for="slaCompliance">
+                  SLA Compliance
                   <button 
                     class="tooltip ml-1" 
-                    data-tippy-content="Hourly rate charged by external vendors (v)">
+                    data-tippy-content="Service level agreement compliance rate [0-100%]">
                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
                 <p class="input-description">
-                  Estimate the hourly rate charged by external vendors. This helps calculate the total cost of outsourcing.
+                  Current service level agreement compliance rate. This helps measure service quality.
                 </p>
               </div>
               <div class="input-group">
                 <div class="relative">
-                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                   <input
                     type="number"
-                    id="vendorRate"
-                    value={solution === 'hybrid' ? hybridInputs.vendorRate : outsourceInputs.vendorRate}
-                    on:input={(e) => handleNumericInput(e, 'vendorRate')}
-                    min={10}
-                    max={150}
+                    id="slaCompliance"
+                    bind:value={slaCompliance}
+                    on:input={handleTicketInputs}
+                    min={0}
+                    max={100}
                     step={1}
-                    class="number-input pl-6"
+                    class="number-input pr-8"
                   />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                 </div>
                 <input
                   type="range"
-                  value={solution === 'hybrid' ? hybridInputs.vendorRate : outsourceInputs.vendorRate}
-                  on:input={(e) => handleNumericInput(e, 'vendorRate')}
-                  min={10}
-                  max={150}
+                  bind:value={slaCompliance}
+                  on:input={handleTicketInputs}
+                  min={0}
+                  max={100}
                   step={1}
                   class="slider-input"
                 />
@@ -899,7 +839,7 @@
                         type="number"
                         id="platformPortion"
                         bind:value={hybridInputs.platformPortion}
-                        on:input={(e) => handleNumericInput(e, 'platformPortion')}
+                        on:input={(e) => updateHybridPortions('platform', e)}
                         min={constraints.portion.min}
                         max={constraints.portion.max}
                         step={constraints.portion.step}
@@ -910,7 +850,7 @@
                     <input
                       type="range"
                       bind:value={hybridInputs.platformPortion}
-                      on:input={(e) => handleNumericInput(e, 'platformPortion')}
+                      on:input={(e) => updateHybridPortions('platform', e)}
                       min={constraints.portion.min}
                       max={constraints.portion.max}
                       step={constraints.portion.step}
@@ -944,7 +884,7 @@
                         type="number"
                         id="vendorPortion"
                         bind:value={hybridInputs.vendorPortion}
-                        on:input={(e) => handleNumericInput(e, 'vendorPortion')}
+                        on:input={(e) => updateHybridPortions('vendor', e)}
                         min={constraints.portion.min}
                         max={constraints.portion.max}
                         step={constraints.portion.step}
@@ -955,7 +895,7 @@
                     <input
                       type="range"
                       bind:value={hybridInputs.vendorPortion}
-                      on:input={(e) => handleNumericInput(e, 'vendorPortion')}
+                      on:input={(e) => updateHybridPortions('vendor', e)}
                       min={constraints.portion.min}
                       max={constraints.portion.max}
                       step={constraints.portion.step}
@@ -1232,6 +1172,51 @@
           <div class="hybrid-section hybrid-outsource">
             <h4 class="input-section-title text-green-600">Outsourcing Parameters</h4>
             <div class="grid grid-cols-1 gap-2">
+              <!-- Vendor Rate -->
+              <div class="field-container">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <label class="field-label" for="hybridVendorRate">
+                      Vendor Rate
+                      <button 
+                        class="tooltip ml-1" 
+                        data-tippy-content="Hourly rate charged by external vendors">
+                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </label>
+                    <p class="input-description">
+                      Specify the hourly rate charged by external vendors. This is used to calculate outsourced service delivery costs.
+                    </p>
+                  </div>
+                  <div class="input-group">
+                    <div class="relative">
+                      <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                      <input
+                        type="number"
+                        id="hybridVendorRate"
+                        bind:value={hybridInputs.vendorRate}
+                        on:input={(e) => handleNumericInput(e, 'vendorRate')}
+                        min={constraints.vendorRate.min}
+                        max={constraints.vendorRate.max}
+                        step={constraints.vendorRate.step}
+                        class="number-input pl-6"
+                      />
+                    </div>
+                    <input
+                      type="range"
+                      bind:value={hybridInputs.vendorRate}
+                      on:input={(e) => handleNumericInput(e, 'vendorRate')}
+                      min={constraints.vendorRate.min}
+                      max={constraints.vendorRate.max}
+                      step={constraints.vendorRate.step}
+                      class="slider-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <!-- Management Overhead -->
               <div class="field-container">
                 <div class="flex items-start justify-between">
@@ -1459,7 +1444,7 @@
             </div>
           </div>
         </div>
-      {:else}
+      {:else if solution === 'platform'}
         <div class="grid grid-cols-1 gap-2">
           <!-- Platform Cost -->
           <div class="field-container">
@@ -1682,6 +1667,282 @@
                   min={constraints.processEfficiency.min * 100}
                   max={constraints.processEfficiency.max * 100}
                   step={constraints.processEfficiency.step * 100}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      {:else if solution === 'outsource'}
+        <div class="grid grid-cols-1 gap-2">
+          <!-- Vendor Rate -->
+          <div class="field-container">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="field-label" for="outsourceVendorRate">
+                  Vendor Rate
+                  <button 
+                    class="tooltip ml-1" 
+                    data-tippy-content="Hourly rate charged by external vendors">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  {#if model === 'team'}
+                    Specify the hourly rate charged by external vendors. This is used to calculate outsourced service delivery costs.
+                  {:else}
+                    Specify the hourly rate charged by external vendors for ticket processing.
+                  {/if}
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="relative">
+                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                  <input
+                    type="number"
+                    id="outsourceVendorRate"
+                    bind:value={outsourceInputs.vendorRate}
+                    on:input={(e) => handleNumericInput(e, 'vendorRate')}
+                    min={constraints.vendorRate.min}
+                    max={constraints.vendorRate.max}
+                    step={constraints.vendorRate.step}
+                    class="number-input pl-6"
+                  />
+                </div>
+                <input
+                  type="range"
+                  bind:value={outsourceInputs.vendorRate}
+                  on:input={(e) => handleNumericInput(e, 'vendorRate')}
+                  min={constraints.vendorRate.min}
+                  max={constraints.vendorRate.max}
+                  step={constraints.vendorRate.step}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Management Overhead -->
+          <div class="field-container">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="field-label" for="managementOverhead">
+                  Management Overhead
+                  <button 
+                    class="tooltip ml-1" 
+                    data-tippy-content="Additional overhead for managing outsourced work [0-100%]">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the additional overhead for managing outsourced work. This helps calculate the total cost of outsourcing.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="managementOverhead"
+                    value={outsourceInputs.managementOverhead * 100}
+                    on:input={(e) => handlePercentageInput(e, 'managementOverhead')}
+                    min={constraints.managementOverhead.min * 100}
+                    max={constraints.managementOverhead.max * 100}
+                    step={constraints.managementOverhead.step * 100}
+                    class="number-input pr-8"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+                </div>
+                <input
+                  type="range"
+                  value={outsourceInputs.managementOverhead * 100}
+                  on:input={(e) => handlePercentageInput(e, 'managementOverhead')}
+                  min={constraints.managementOverhead.min * 100}
+                  max={constraints.managementOverhead.max * 100}
+                  step={constraints.managementOverhead.step * 100}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Quality Impact -->
+          <div class="field-container">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="field-label" for="qualityImpact">
+                  Quality Impact
+                  <button 
+                    class="tooltip ml-1" 
+                    data-tippy-content="Expected impact on service quality [-50% to +50%]">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the expected impact on service quality. This helps calculate the potential increase or decrease in service quality.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="qualityImpact"
+                    value={outsourceInputs.qualityImpact * 100}
+                    on:input={(e) => handlePercentageInput(e, 'qualityImpact')}
+                    min={constraints.qualityImpact.min * 100}
+                    max={constraints.qualityImpact.max * 100}
+                    step={constraints.qualityImpact.step * 100}
+                    class="number-input pr-8"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+                </div>
+                <input
+                  type="range"
+                  value={outsourceInputs.qualityImpact * 100}
+                  on:input={(e) => handlePercentageInput(e, 'qualityImpact')}
+                  min={constraints.qualityImpact.min * 100}
+                  max={constraints.qualityImpact.max * 100}
+                  step={constraints.qualityImpact.step * 100}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Knowledge Loss -->
+          <div class="field-container">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="field-label" for="knowledgeLoss">
+                  Knowledge Loss
+                  <button 
+                    class="tooltip ml-1" 
+                    data-tippy-content="Expected knowledge loss during transition [0-100%]">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the expected knowledge loss during transition. This helps calculate the impact on service quality over time.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="knowledgeLoss"
+                    value={outsourceInputs.knowledgeLoss * 100}
+                    on:input={(e) => handlePercentageInput(e, 'knowledgeLoss')}
+                    min={constraints.knowledgeLoss.min * 100}
+                    max={constraints.knowledgeLoss.max * 100}
+                    step={constraints.knowledgeLoss.step * 100}
+                    class="number-input pr-8"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+                </div>
+                <input
+                  type="range"
+                  value={outsourceInputs.knowledgeLoss * 100}
+                  on:input={(e) => handlePercentageInput(e, 'knowledgeLoss')}
+                  min={constraints.knowledgeLoss.min * 100}
+                  max={constraints.knowledgeLoss.max * 100}
+                  step={constraints.knowledgeLoss.step * 100}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Transition Time -->
+          <div class="field-container">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="field-label" for="transitionTime">
+                  Transition Time
+                  <button 
+                    class="tooltip ml-1" 
+                    data-tippy-content="Time required for transition in months">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the time required for transition. This helps calculate the total transition period and associated costs.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="transitionTime"
+                    value={outsourceInputs.transitionTime}
+                    on:input={(e) => handleNumericInput(e, 'transitionTime')}
+                    min={constraints.transitionTime.min}
+                    max={constraints.transitionTime.max}
+                    step={constraints.transitionTime.step}
+                    class="number-input pr-8"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">mo</span>
+                </div>
+                <input
+                  type="range"
+                  value={outsourceInputs.transitionTime}
+                  on:input={(e) => handleNumericInput(e, 'transitionTime')}
+                  min={constraints.transitionTime.min}
+                  max={constraints.transitionTime.max}
+                  step={constraints.transitionTime.step}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Transition Cost -->
+          <div class="field-container">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="field-label" for="transitionCost">
+                  Transition Cost
+                  <button 
+                    class="tooltip ml-1" 
+                    data-tippy-content="One-time cost for transitioning to outsourced solution">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Estimate the one-time cost for transitioning. This helps calculate the total investment required.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="relative">
+                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                  <input
+                    type="number"
+                    id="transitionCost"
+                    value={outsourceInputs.transitionCost}
+                    on:input={(e) => handleNumericInput(e, 'transitionCost')}
+                    min={constraints.transitionCost.min}
+                    max={constraints.transitionCost.max}
+                    step={constraints.transitionCost.step}
+                    class="number-input pl-6"
+                  />
+                </div>
+                <input
+                  type="range"
+                  value={outsourceInputs.transitionCost}
+                  on:input={(e) => handleNumericInput(e, 'transitionCost')}
+                  min={constraints.transitionCost.min}
+                  max={constraints.transitionCost.max}
+                  step={constraints.transitionCost.step}
                   class="slider-input"
                 />
               </div>

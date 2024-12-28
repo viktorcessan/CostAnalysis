@@ -593,9 +593,6 @@
                     </svg>
                   </button>
                 </label>
-                <p class="input-description">
-                  Estimate the average number of tickets processed per month. This helps calculate the workload volume.
-                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">
@@ -638,9 +635,6 @@
                     </svg>
                   </button>
                 </label>
-                <p class="input-description">
-                  Estimate the average time spent processing each ticket. This helps calculate the total processing time.
-                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">
@@ -686,9 +680,6 @@
                     </svg>
                   </button>
                 </label>
-                <p class="input-description">
-                  Estimate the average number of people needed to handle each ticket. This helps calculate the total number of people required.
-                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">
@@ -731,9 +722,6 @@
                     </svg>
                   </button>
                 </label>
-                <p class="input-description">
-                  Current service level agreement compliance rate. This helps measure service quality.
-                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">

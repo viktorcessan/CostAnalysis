@@ -320,8 +320,8 @@
         },
         elements: {
           point: {
-            radius: 0, // Hide points
-            hitRadius: 10 // Area for hover detection
+            radius: 0,
+            hitRadius: 10
           }
         },
         scales: {

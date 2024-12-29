@@ -241,20 +241,16 @@
   // Handle numeric input with proper typing
   function handleNumericInput(event: Event, field: keyof (HybridInputs & OutsourceInputs & PlatformInputs)) {
     const value = parseFloat((event.target as HTMLInputElement).value);
-    console.log(`handleNumericInput - field: ${field}, value: ${value}`);
 
     if (solution === 'hybrid' && field in hybridInputs) {
       hybridInputs[field as keyof HybridInputs] = value;
       hybridInputs = { ...hybridInputs }; // Force reactivity
-      console.log(`Updated hybrid ${field} to ${value}`);
     } else if (solution === 'outsource' && field in outsourceInputs) {
       outsourceInputs[field as keyof OutsourceInputs] = value;
       outsourceInputs = { ...outsourceInputs }; // Force reactivity
-      console.log(`Updated outsource ${field} to ${value}`);
     } else if (solution === 'platform' && field in platformInputs) {
       platformInputs[field as keyof PlatformInputs] = value;
       platformInputs = { ...platformInputs }; // Force reactivity
-      console.log(`Updated platform ${field} to ${value}`);
     }
 
     updateSolutionInputs(); // Update solution calculations

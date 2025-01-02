@@ -123,32 +123,34 @@
       {#if !selectedGoal}
         <!-- Goal Selection -->
         <div class="bg-white rounded-xl shadow-lg p-8">
-          <div class="max-w-3xl mx-auto text-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">What would you like to analyze?</h2>
+          <div class="max-w-3xl mx-auto text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">What would you like to analyze?</h2>
             <p class="text-lg text-gray-600">
               Choose your analysis goal and we'll guide you through the process of optimizing your service delivery model.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {#each goals as goal}
               <button
-                class="relative bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 hover:border-secondary/20 
-                       transition-all duration-300 overflow-hidden group"
+                class="group relative bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-gray-200 hover:border-secondary/20 
+                       transition-all duration-300 overflow-hidden hover:scale-[1.02]"
                 on:click={() => handleGoalSelect(goal)}
               >
-                <div class="p-6">
-                  <div class="text-secondary group-hover:text-secondary/80 transition-colors mb-4">
+                <div class="p-8">
+                  <div class="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300">
                     {@html goal.icon}
                   </div>
-                  <h3 class="text-lg font-semibold text-gray-900 mb-2">{goal.name}</h3>
-                  <p class="text-sm text-gray-600 mb-4">{goal.description}</p>
-                  <div class="text-xs text-gray-500">
+                  <h3 class="text-xl font-semibold text-gray-900 mb-3">{goal.name}</h3>
+                  <p class="text-sm text-gray-600 mb-6 leading-relaxed">{goal.description}</p>
+                  <div class="space-y-3">
                     {#each goal.benefits as benefit}
-                      <div class="flex items-center mb-1">
-                        <svg class="w-4 h-4 text-secondary/60 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                      <div class="flex items-center text-sm text-gray-700">
+                        <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                          <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
                         {benefit}
                       </div>
                     {/each}
@@ -161,40 +163,38 @@
       {:else if showModelSelection}
         <!-- Model Selection -->
         <div class="bg-white rounded-xl shadow-lg p-8">
-          <div class="flex items-center gap-4 mb-6">
+          <div class="flex items-center gap-4 mb-8">
             <button
-              class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
               on:click={handleBack}
             >
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-8 h-8 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900">How do you work today?</h2>
-              <p class="text-gray-600 mt-1">Select your current service delivery model to get started.</p>
+              <h2 class="text-3xl font-bold text-gray-900">How do you work today?</h2>
+              <p class="text-lg text-gray-600 mt-2">Select your current service delivery model to get started.</p>
             </div>
           </div>
-          <div class="max-w-2xl mx-auto">
-            <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />
-          </div>
+          <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />
         </div>
       {:else}
         <!-- Analysis Section -->
         <div class="space-y-6">
           <div class="bg-white rounded-xl shadow-lg p-8">
-            <div class="flex items-center gap-4 mb-4">
+            <div class="flex items-center gap-4 mb-6">
               <button
-                class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
                 on:click={handleBack}
               >
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-8 h-8 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <div>
-                <h2 class="text-2xl font-bold text-gray-900">{selectedGoalData?.name}</h2>
-                <p class="text-gray-600 mt-1">{selectedGoalData?.longDescription}</p>
+                <h2 class="text-3xl font-bold text-gray-900">{selectedGoalData?.name}</h2>
+                <p class="text-lg text-gray-600 mt-2">{selectedGoalData?.longDescription}</p>
               </div>
             </div>
           </div>

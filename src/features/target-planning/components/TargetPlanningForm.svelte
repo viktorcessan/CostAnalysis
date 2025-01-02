@@ -316,12 +316,19 @@
           },
           legend: {
             display: false
+          },
+          datalabels: {
+            display: false
           }
         },
         elements: {
           point: {
             radius: 0,
-            hitRadius: 10
+            hitRadius: 10,
+            hoverRadius: 5
+          },
+          line: {
+            tension: 0.4
           }
         },
         scales: {

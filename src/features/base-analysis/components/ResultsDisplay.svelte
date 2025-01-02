@@ -85,14 +85,16 @@
             data: [],
             borderColor: '#6B7280',
             backgroundColor: 'rgba(107, 114, 128, 0.1)',
-            fill: true
+            fill: true,
+            pointRadius: 0 // Hide points
           },
           {
             label: 'Solution Cost',
             data: [],
             borderColor: '#dd9933',
             backgroundColor: 'rgba(221, 153, 51, 0.1)',
-            fill: true
+            fill: true,
+            pointRadius: 0 // Hide points
           }
         ]
       },
@@ -100,11 +102,13 @@
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
-          mode: 'index',
+          mode: 'index' as const,
           intersect: false
         },
         plugins: {
-          datalabels: false,
+          datalabels: {
+            display: false // Ensure data labels are off
+          },
           tooltip: {
             callbacks: {
               label: (context: any) => {
@@ -254,10 +258,6 @@
       clone.style.margin = '0';
       clone.style.padding = '24px';
       clone.style.maxWidth = 'none';
-      clone.style.overflow = 'visible';
-
-      // Wait a bit for the chart to be properly rendered in the clone
-      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Create canvas with optimal settings
       const canvas = await html2canvas(clone, {
@@ -277,9 +277,11 @@
             if (el.style.position === 'fixed') {
               el.style.position = 'absolute';
             }
-            // Remove any height constraints
-            el.style.maxHeight = 'none';
-            el.style.overflow = 'visible';
+            // Remove any height constraints but avoid overflow on canvas
+            if (!(el instanceof HTMLCanvasElement)) {
+              el.style.maxHeight = 'none';
+              el.style.overflow = 'visible';
+            }
           }
         }
       });

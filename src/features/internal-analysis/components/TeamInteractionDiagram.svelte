@@ -1,10 +1,17 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import Chart from 'chart.js/auto';
   import ChartDataLabels from 'chartjs-plugin-datalabels';
   import type { ChartConfiguration, ChartData, ChartOptions, DoughnutControllerChartOptions, Plugin } from 'chart.js';
+  import tippy from 'tippy.js';
+  import 'tippy.js/dist/tippy.css';
+  import 'tippy.js/themes/light-border.css';
   
   Chart.register(ChartDataLabels);  // Register the plugin
+
+  // Visualization state
+  let visualizationMode: 'weighted' | 'multiple' = 'weighted';
+  let showLegend = true;
 
   // Comparison mode state
   type ComparisonMode = 'topology' | 'lazy' | 'advanced';
@@ -685,6 +692,22 @@
   // Initial setup
   onMount(() => {
     generateNodes();
+    
+    // Initialize tooltips
+    const tooltipInstances = tippy('[data-tippy-content]', {
+      theme: 'light-border',
+      placement: 'right',
+      delay: [100, 200],
+      touch: 'hold',
+      maxWidth: 300,
+      hideOnClick: false,
+      trigger: 'mouseenter focus click',
+      interactive: true,
+      appendTo: () => document.body,
+      plugins: [],
+      animation: false,
+      allowHTML: false
+    });
   });
 
   $: {
@@ -860,7 +883,16 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Number of Teams -->
         <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Number of Teams</h4>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Number of Teams
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Adjust the number of teams in the organization (3-10 teams)">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
           <div class="flex items-center gap-2">
             <input
               type="range"
@@ -872,6 +904,7 @@
                 dependencyMatrix = initializeDependencyMatrix(teamCount);
                 generateNodes();
               }}
+              data-tippy-content="Drag to adjust the number of teams"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{teamCount}</span>
@@ -881,7 +914,16 @@
 
         <!-- Company Dependency Level -->
         <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Dependency Level</h4>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Dependency Level
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Set the overall dependency level between teams (1: Very Low, 5: Very High). Higher levels indicate stronger dependencies and more coordination needed.">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
           <div class="flex items-center gap-2">
             <input
               type="range"
@@ -893,23 +935,26 @@
                 dependencyMatrix = initializeDependencyMatrix(teamCount);
                 generateNodes();
               }}
+              data-tippy-content="Drag to adjust the dependency strength between teams"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
             </div>
           </div>
-          <div class="mt-1 grid grid-cols-5 gap-1 text-xs text-gray-500">
-            <span>V.Low</span>
-            <span>Low</span>
-            <span>Med</span>
-            <span>High</span>
-            <span>V.High</span>
-          </div>
         </div>
 
         <!-- Dev Rate -->
         <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Dev Rate ($/hr)</h4>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Dev Rate ($/hr)
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Set the average hourly rate for developers, including benefits and overhead costs ($20-$200/hr)">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
           <div class="flex items-center gap-2">
             <input
               type="range"
@@ -918,6 +963,7 @@
               max="200"
               step="5"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              data-tippy-content="Drag to adjust the hourly rate for developers"
             />
             <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
@@ -930,7 +976,16 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
         <!-- Weekly Meeting Hours -->
         <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Weekly Meeting Hours</h4>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Weekly Meeting Hours
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Set the average number of hours spent in meetings per week (1-20 hours). Includes team syncs, planning, and coordination meetings.">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
           <div class="flex items-center gap-2">
             <input
               type="range"
@@ -938,6 +993,7 @@
               min="1"
               max="20"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              data-tippy-content="Drag to adjust weekly meeting hours"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
@@ -947,7 +1003,16 @@
 
         <!-- Meeting Attendees -->
         <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Meeting Attendees</h4>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Meeting Attendees
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Set the average number of attendees per team in meetings (1-20 people). Consider both regular participants and occasional contributors.">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
           <div class="flex items-center gap-2">
             <input
               type="range"
@@ -955,6 +1020,7 @@
               min="1"
               max="20"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              data-tippy-content="Drag to adjust the number of meeting attendees"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
@@ -964,7 +1030,16 @@
 
         <!-- Communication Overhead -->
         <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Communication Overhead</h4>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Communication Overhead
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Set the communication overhead multiplier (1.0: No overhead, 2.0: Double overhead). Accounts for additional time spent on coordination and communication.">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
           <div class="flex items-center gap-2">
             <input
               type="range"
@@ -973,6 +1048,7 @@
               max="2"
               step="0.1"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              data-tippy-content="Drag to adjust the communication overhead multiplier"
             />
             <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
@@ -1138,8 +1214,73 @@
 
   <!-- Team Visualization -->
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Dependencies</h3>
+    <div class="flex justify-between items-start mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Team Dependencies</h3>
+      
+      <!-- Visualization Controls -->
+      <div class="flex items-center gap-4">
+        <!-- Toggle Legend -->
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600">Show Legend</span>
+          <button
+            class="w-10 h-6 rounded-full transition-colors relative {showLegend ? 'bg-secondary' : 'bg-gray-200'}"
+            on:click={() => showLegend = !showLegend}
+          >
+            <div class="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform {showLegend ? 'translate-x-5' : 'translate-x-1'}"/>
+          </button>
+        </div>
+        
+        <!-- Visualization Mode -->
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600">Visualization</span>
+          <div class="flex rounded-lg border border-gray-200 p-1">
+            <button
+              class="px-3 py-1 text-sm rounded-md transition-colors {visualizationMode === 'weighted' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+              on:click={() => visualizationMode = 'weighted'}
+            >
+              Weighted
+            </button>
+            <button
+              class="px-3 py-1 text-sm rounded-md transition-colors {visualizationMode === 'multiple' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+              on:click={() => visualizationMode = 'multiple'}
+            >
+              Multiple Lines
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="relative w-full h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+      <!-- Legend -->
+      {#if showLegend}
+        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-sm">
+          <h4 class="text-xs font-medium text-gray-900 mb-2">Dependency Strength</h4>
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-0.5 bg-green-500"/>
+              <span class="text-xs text-gray-600">Very Low (1)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-1 bg-green-500"/>
+              <span class="text-xs text-gray-600">Low (2)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-1.5 bg-yellow-500"/>
+              <span class="text-xs text-gray-600">Medium (3)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-2 bg-orange-500"/>
+              <span class="text-xs text-gray-600">High (4)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-2.5 bg-red-500"/>
+              <span class="text-xs text-gray-600">Very High (5)</span>
+            </div>
+          </div>
+        </div>
+      {/if}
+
       <svg width="100%" height="100%" viewBox="-100 -100 1200 800" preserveAspectRatio="xMidYMid meet">
         <!-- Background grid for professional look -->
         <defs>
@@ -1201,39 +1342,68 @@
           {@const x2 = 500 + radiusX * Math.cos(targetAngle) * horizontalScale}
           {@const y2 = 300 + radiusY * Math.sin(targetAngle)}
           
-          <!-- Calculate control points for curved lines -->
-          {@const midX = (x1 + x2) / 2}
-          {@const midY = (y1 + y2) / 2}
-          {@const dx = x2 - x1}
-          {@const dy = y2 - y1}
-          {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * 50}
-          {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * 50}
-          
-          <!-- Calculate arrow end point to avoid node overlap -->
-          {@const nodeRadius = 85}
-          {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
-          {@const endX = x2 - (dx * nodeRadius / totalLength)}
-          {@const endY = y2 - (dy * nodeRadius / totalLength)}
-          {@const startX = x1 + (dx * nodeRadius / totalLength)}
-          {@const startY = y1 + (dy * nodeRadius / totalLength)}
-          
-          <!-- Calculate color and thickness based on dependency strength -->
-          {@const strength = edge.data.strength}
-          {@const strokeWidth = 1 + (strength - 1) * 0.8} <!-- Scale from 1px to 4.2px -->
-          {@const color = strength <= 1 ? '#22c55e' : 
-                         strength <= 2 ? '#84cc16' :
-                         strength <= 3 ? '#eab308' :
-                         strength <= 4 ? '#f97316' : '#ef4444'}
-          {@const opacity = 0.6 + (strength - 1) * 0.1} <!-- Scale from 0.6 to 1.0 -->
-          
-          <path 
-            d="M {startX} {startY} Q {midX + normalX} {midY + normalY} {endX} {endY}"
-            fill="none"
-            stroke={color}
-            stroke-width={strokeWidth}
-            stroke-opacity={opacity}
-            marker-end="url(#arrowhead-{strength})"
-          />
+          {#if visualizationMode === 'weighted'}
+            <!-- Single weighted line -->
+            {@const midX = (x1 + x2) / 2}
+            {@const midY = (y1 + y2) / 2}
+            {@const dx = x2 - x1}
+            {@const dy = y2 - y1}
+            {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * 50}
+            {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * 50}
+            {@const nodeRadius = 85}
+            {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
+            {@const endX = x2 - (dx * nodeRadius / totalLength)}
+            {@const endY = y2 - (dy * nodeRadius / totalLength)}
+            {@const startX = x1 + (dx * nodeRadius / totalLength)}
+            {@const startY = y1 + (dy * nodeRadius / totalLength)}
+            {@const strength = edge.data.strength}
+            {@const strokeWidth = 1 + (strength - 1) * 0.8}
+            {@const color = strength <= 1 ? '#22c55e' : 
+                           strength <= 2 ? '#84cc16' :
+                           strength <= 3 ? '#eab308' :
+                           strength <= 4 ? '#f97316' : '#ef4444'}
+            {@const opacity = 0.6 + (strength - 1) * 0.1}
+            
+            <path 
+              d="M {startX} {startY} Q {midX + normalX} {midY + normalY} {endX} {endY}"
+              fill="none"
+              stroke={color}
+              stroke-width={strokeWidth}
+              stroke-opacity={opacity}
+              marker-end="url(#arrowhead-{strength})"
+            />
+          {:else}
+            <!-- Multiple lines based on dependency strength -->
+            {#each Array(edge.data.strength) as _, lineIndex}
+              {@const offset = (lineIndex - (edge.data.strength - 1) / 2) * 40}
+              {@const midX = (x1 + x2) / 2}
+              {@const midY = (y1 + y2) / 2}
+              {@const dx = x2 - x1}
+              {@const dy = y2 - y1}
+              {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * (100 + offset)}
+              {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * (100 + offset)}
+              {@const nodeRadius = 85}
+              {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
+              {@const endX = x2 - (dx * nodeRadius / totalLength)}
+              {@const endY = y2 - (dy * nodeRadius / totalLength)}
+              {@const startX = x1 + (dx * nodeRadius / totalLength)}
+              {@const startY = y1 + (dy * nodeRadius / totalLength)}
+              {@const strength = edge.data.strength}
+              {@const color = strength <= 1 ? '#22c55e' : 
+                             strength <= 2 ? '#84cc16' :
+                             strength <= 3 ? '#eab308' :
+                             strength <= 4 ? '#f97316' : '#ef4444'}
+              
+              <path 
+                d="M {startX} {startY} Q {midX + normalX} {midY + normalY} {endX} {endY}"
+                fill="none"
+                stroke={color}
+                stroke-width="2"
+                stroke-opacity="0.7"
+                marker-end="url(#arrowhead-{strength})"
+              />
+            {/each}
+          {/if}
         {/each}
 
         <!-- Draw nodes on top of edges -->
@@ -1674,6 +1844,311 @@
                     Based on custom configuration
                   {/if}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Before and After Visualization -->
+        <div class="mt-6">
+          <!-- Visualization Controls -->
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-sm font-medium text-gray-900">Team Structure Comparison</h4>
+            <div class="flex items-center gap-4">
+              <div class="flex rounded-lg border border-gray-200 p-1">
+                <button
+                  class="px-3 py-1 text-xs rounded-md transition-colors {visualizationMode === 'weighted' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+                  on:click={() => visualizationMode = 'weighted'}
+                >
+                  Weighted
+                </button>
+                <button
+                  class="px-3 py-1 text-xs rounded-md transition-colors {visualizationMode === 'multiple' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+                  on:click={() => visualizationMode = 'multiple'}
+                >
+                  Multiple Lines
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Current Structure -->
+            <div class="bg-white rounded-lg p-4 border border-gray-200">
+              <h5 class="text-sm font-medium text-gray-900 mb-4">Current Team Structure</h5>
+              <div class="relative w-full h-[300px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
+                <svg width="100%" height="100%" viewBox="-50 -50 600 400" preserveAspectRatio="xMidYMid meet">
+                  <!-- Background grid -->
+                  <defs>
+                    <pattern id="smallGrid2" width="10" height="10" patternUnits="userSpaceOnUse">
+                      <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#f1f5f9" stroke-width="0.5"/>
+                    </pattern>
+                    <pattern id="grid2" width="100" height="100" patternUnits="userSpaceOnUse">
+                      <rect width="100" height="100" fill="url(#smallGrid2)"/>
+                      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+                    </pattern>
+                    <!-- Node gradient -->
+                    <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:1" />
+                    </linearGradient>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid2)" />
+
+                  <!-- Draw current edges -->
+                  {#each edges as edge}
+                    {@const sourceNode = nodes.find(n => n.id === edge.source)}
+                    {@const targetNode = nodes.find(n => n.id === edge.target)}
+                    {@const sourceIndex = nodes.findIndex(n => n.id === edge.source)}
+                    {@const targetIndex = nodes.findIndex(n => n.id === edge.target)}
+                    {@const angleStep = (2 * Math.PI) / nodes.length}
+                    {@const sourceAngle = angleStep * sourceIndex - Math.PI / 2}
+                    {@const targetAngle = angleStep * targetIndex - Math.PI / 2}
+                    {@const radiusX = 200}
+                    {@const radiusY = 150}
+                    {@const x1 = 250 + radiusX * Math.cos(sourceAngle)}
+                    {@const y1 = 150 + radiusY * Math.sin(sourceAngle)}
+                    {@const x2 = 250 + radiusX * Math.cos(targetAngle)}
+                    {@const y2 = 150 + radiusY * Math.sin(targetAngle)}
+                    {@const strength = edge.data.strength}
+                    {@const color = strength <= 1 ? '#22c55e' : 
+                                 strength <= 2 ? '#84cc16' :
+                                 strength <= 3 ? '#eab308' :
+                                 strength <= 4 ? '#f97316' : '#ef4444'}
+                    
+                    {#if visualizationMode === 'weighted'}
+                      <!-- Single weighted line -->
+                      <path 
+                        d="M {x1} {y1} L {x2} {y2}"
+                        stroke={color}
+                        stroke-width={1 + strength * 0.5}
+                        stroke-opacity="0.6"
+                      />
+                    {:else}
+                      <!-- Multiple lines -->
+                      {#each Array(strength) as _, lineIndex}
+                        {@const offset = (lineIndex - (strength - 1) / 2) * 15}
+                        {@const midX = (x1 + x2) / 2}
+                        {@const midY = (y1 + y2) / 2}
+                        {@const dx = x2 - x1}
+                        {@const dy = y2 - y1}
+                        {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * offset}
+                        {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * offset}
+                        
+                        <path 
+                          d="M {x1} {y1} Q {midX + normalX} {midY + normalY} {x2} {y2}"
+                          stroke={color}
+                          stroke-width="2"
+                          stroke-opacity="0.7"
+                          fill="none"
+                        />
+                      {/each}
+                    {/if}
+                  {/each}
+
+                  <!-- Draw current nodes -->
+                  {#each nodes as node, i}
+                    {@const angleStep = (2 * Math.PI) / nodes.length}
+                    {@const angle = angleStep * i - Math.PI / 2}
+                    {@const radiusX = 200}
+                    {@const radiusY = 150}
+                    {@const x = 250 + radiusX * Math.cos(angle)}
+                    {@const y = 150 + radiusY * Math.sin(angle)}
+                    
+                    <!-- Node background with shadow -->
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r="25"
+                      fill="url(#nodeGradient)"
+                      stroke="#e2e8f0"
+                      stroke-width="2"
+                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                    />
+                    <!-- Node label background -->
+                    <rect
+                      x={x - 30}
+                      y={y - 8}
+                      width="60"
+                      height="16"
+                      rx="4"
+                      fill="#f8fafc"
+                      stroke="#e2e8f0"
+                      stroke-width="1"
+                    />
+                    <!-- Node label -->
+                    <text
+                      x={x}
+                      y={y}
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                      class="text-xs font-medium fill-gray-700"
+                    >{node.data.label}</text>
+                  {/each}
+                </svg>
+              </div>
+            </div>
+
+            <!-- Target Structure -->
+            <div class="bg-white rounded-lg p-4 border border-gray-200">
+              <h5 class="text-sm font-medium text-gray-900 mb-4">
+                {#if comparisonMode === 'topology'}
+                  Independent Teams
+                {:else if comparisonMode === 'lazy'}
+                  Adjusted Dependencies
+                {:else}
+                  Target Structure
+                {/if}
+              </h5>
+              <div class="relative w-full h-[300px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
+                <svg width="100%" height="100%" viewBox="-50 -50 600 400" preserveAspectRatio="xMidYMid meet">
+                  <rect width="100%" height="100%" fill="url(#grid2)" />
+
+                  <!-- Draw target edges based on comparison mode -->
+                  {#if comparisonMode === 'topology'}
+                    <!-- No edges for independent teams -->
+                  {:else if comparisonMode === 'lazy'}
+                    {#each edges as edge}
+                      {@const sourceNode = nodes.find(n => n.id === edge.source)}
+                      {@const targetNode = nodes.find(n => n.id === edge.target)}
+                      {@const sourceIndex = nodes.findIndex(n => n.id === edge.source)}
+                      {@const targetIndex = nodes.findIndex(n => n.id === edge.target)}
+                      {@const angleStep = (2 * Math.PI) / nodes.length}
+                      {@const sourceAngle = angleStep * sourceIndex - Math.PI / 2}
+                      {@const targetAngle = angleStep * targetIndex - Math.PI / 2}
+                      {@const radiusX = 200}
+                      {@const radiusY = 150}
+                      {@const x1 = 250 + radiusX * Math.cos(sourceAngle)}
+                      {@const y1 = 150 + radiusY * Math.sin(sourceAngle)}
+                      {@const x2 = 250 + radiusX * Math.cos(targetAngle)}
+                      {@const y2 = 150 + radiusY * Math.sin(targetAngle)}
+                      {@const adjustedStrength = Math.max(0, Math.min(5, edge.data.strength + dependencyAdjustment))}
+                      {@const color = adjustedStrength <= 1 ? '#22c55e' : 
+                                   adjustedStrength <= 2 ? '#84cc16' :
+                                   adjustedStrength <= 3 ? '#eab308' :
+                                   adjustedStrength <= 4 ? '#f97316' : '#ef4444'}
+                      
+                      {#if visualizationMode === 'weighted'}
+                        <!-- Single weighted line -->
+                        <path 
+                          d="M {x1} {y1} L {x2} {y2}"
+                          stroke={color}
+                          stroke-width={1 + adjustedStrength * 0.5}
+                          stroke-opacity="0.6"
+                        />
+                      {:else}
+                        <!-- Multiple lines -->
+                        {#each Array(adjustedStrength) as _, lineIndex}
+                          {@const offset = (lineIndex - (adjustedStrength - 1) / 2) * 15}
+                          {@const midX = (x1 + x2) / 2}
+                          {@const midY = (y1 + y2) / 2}
+                          {@const dx = x2 - x1}
+                          {@const dy = y2 - y1}
+                          {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * offset}
+                          {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * offset}
+                          
+                          <path 
+                            d="M {x1} {y1} Q {midX + normalX} {midY + normalY} {x2} {y2}"
+                            stroke={color}
+                            stroke-width="2"
+                            stroke-opacity="0.7"
+                            fill="none"
+                          />
+                        {/each}
+                      {/if}
+                    {/each}
+                  {:else}
+                    {#each dependencyMatrix.teams as fromTeam, fromIndex}
+                      {#each dependencyMatrix.teams as toTeam, toIndex}
+                        {#if fromIndex !== toIndex && targetDependencyMatrix[fromIndex][toIndex] > 0}
+                          {@const angleStep = (2 * Math.PI) / nodes.length}
+                          {@const sourceAngle = angleStep * fromIndex - Math.PI / 2}
+                          {@const targetAngle = angleStep * toIndex - Math.PI / 2}
+                          {@const radiusX = 200}
+                          {@const radiusY = 150}
+                          {@const x1 = 250 + radiusX * Math.cos(sourceAngle)}
+                          {@const y1 = 150 + radiusY * Math.sin(sourceAngle)}
+                          {@const x2 = 250 + radiusX * Math.cos(targetAngle)}
+                          {@const y2 = 150 + radiusY * Math.sin(targetAngle)}
+                          {@const strength = targetDependencyMatrix[fromIndex][toIndex]}
+                          {@const color = strength <= 1 ? '#22c55e' : 
+                                       strength <= 2 ? '#84cc16' :
+                                       strength <= 3 ? '#eab308' :
+                                       strength <= 4 ? '#f97316' : '#ef4444'}
+                          
+                          {#if visualizationMode === 'weighted'}
+                            <!-- Single weighted line -->
+                            <path 
+                              d="M {x1} {y1} L {x2} {y2}"
+                              stroke={color}
+                              stroke-width={1 + strength * 0.5}
+                              stroke-opacity="0.6"
+                            />
+                          {:else}
+                            <!-- Multiple lines -->
+                            {#each Array(strength) as _, lineIndex}
+                              {@const offset = (lineIndex - (strength - 1) / 2) * 15}
+                              {@const midX = (x1 + x2) / 2}
+                              {@const midY = (y1 + y2) / 2}
+                              {@const dx = x2 - x1}
+                              {@const dy = y2 - y1}
+                              {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * offset}
+                              {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * offset}
+                              
+                              <path 
+                                d="M {x1} {y1} Q {midX + normalX} {midY + normalY} {x2} {y2}"
+                                stroke={color}
+                                stroke-width="2"
+                                stroke-opacity="0.7"
+                                fill="none"
+                              />
+                            {/each}
+                          {/if}
+                        {/if}
+                      {/each}
+                    {/each}
+                  {/if}
+
+                  <!-- Draw nodes -->
+                  {#each nodes as node, i}
+                    {@const angleStep = (2 * Math.PI) / nodes.length}
+                    {@const angle = angleStep * i - Math.PI / 2}
+                    {@const radiusX = 200}
+                    {@const radiusY = 150}
+                    {@const x = 250 + radiusX * Math.cos(angle)}
+                    {@const y = 150 + radiusY * Math.sin(angle)}
+                    
+                    <!-- Node background with shadow -->
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r="25"
+                      fill="url(#nodeGradient)"
+                      stroke="#e2e8f0"
+                      stroke-width="2"
+                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                    />
+                    <!-- Node label background -->
+                    <rect
+                      x={x - 30}
+                      y={y - 8}
+                      width="60"
+                      height="16"
+                      rx="4"
+                      fill="#f8fafc"
+                      stroke="#e2e8f0"
+                      stroke-width="1"
+                    />
+                    <!-- Node label -->
+                    <text
+                      x={x}
+                      y={y}
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                      class="text-xs font-medium fill-gray-700"
+                    >{node.data.label}</text>
+                  {/each}
+                </svg>
               </div>
             </div>
           </div>

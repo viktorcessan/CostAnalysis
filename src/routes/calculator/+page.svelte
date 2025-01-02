@@ -201,11 +201,28 @@
 
           {#if selectedGoal === 'team-analysis'}
             <TeamInteractionDiagram />
+            <div class="mt-6">
+              <FormulaAccordion model="team" mode="internal" />
+            </div>
           {:else if selectedGoal === 'breakeven'}
-            <CalculatorForm />
-            <ResultsDisplay />
+            <div class="space-y-6">
+              <div>
+                <CalculatorForm />
+              </div>
+
+              <div>
+                <ResultsDisplay />
+              </div>
+              
+              <div class="bg-white rounded-xl shadow-lg p-6">
+                <FormulaAccordion model={activeModel} mode="base" />
+              </div>
+            </div>
           {:else if selectedGoal === 'target'}
             <TargetPlanningForm />
+            <div class="mt-6">
+              <FormulaAccordion model={activeModel} mode="solutions" />
+            </div>
           {/if}
         </div>
       {/if}

@@ -1214,11 +1214,11 @@
 
   <!-- Team Visualization -->
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <div class="flex justify-between items-start mb-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
       <h3 class="text-lg font-semibold text-gray-900">Team Dependencies</h3>
       
       <!-- Visualization Controls -->
-      <div class="flex items-center gap-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
         <!-- Toggle Legend -->
         <div class="flex items-center gap-2">
           <span class="text-sm text-gray-600">Show Legend</span>
@@ -1231,17 +1231,17 @@
         </div>
         
         <!-- Visualization Mode -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 w-full sm:w-auto">
           <span class="text-sm text-gray-600">Visualization</span>
-          <div class="flex rounded-lg border border-gray-200 p-1">
+          <div class="flex rounded-lg border border-gray-200 p-1 flex-1 sm:flex-initial">
             <button
-              class="px-3 py-1 text-sm rounded-md transition-colors {visualizationMode === 'weighted' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+              class="flex-1 sm:flex-initial px-3 py-1 text-sm rounded-md transition-colors {visualizationMode === 'weighted' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
               on:click={() => visualizationMode = 'weighted'}
             >
               Weighted
             </button>
             <button
-              class="px-3 py-1 text-sm rounded-md transition-colors {visualizationMode === 'multiple' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+              class="flex-1 sm:flex-initial px-3 py-1 text-sm rounded-md transition-colors {visualizationMode === 'multiple' ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
               on:click={() => visualizationMode = 'multiple'}
             >
               Multiple Lines

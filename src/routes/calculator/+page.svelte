@@ -5,6 +5,7 @@
   import TargetPlanningForm from '../../features/target-planning/components/TargetPlanningForm.svelte';
   import TeamInteractionDiagram from '../../features/internal-analysis/components/TeamInteractionDiagram.svelte';
   import ModelSelector from '../../features/base-analysis/components/ModelSelector.svelte';
+  import FormulaAccordion from '$lib/components/ui/FormulaAccordion.svelte';
   import type { CalculatorModel } from '$lib/types/calculator';
   import { calculatorStore } from '$lib/stores/calculatorStore';
 
@@ -136,6 +137,11 @@
             <TeamInteractionDiagram />
           </div>
         {/if}
+
+        <!-- Formula Accordion -->
+        <div class="mt-8">
+          <FormulaAccordion model={activeModel} mode={activeMode} />
+        </div>
       </div>
     </div>
   </div>

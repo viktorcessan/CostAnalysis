@@ -5,7 +5,6 @@
   import { Chart } from 'chart.js';
   import '$lib/utils/chartSetup';
   import html2canvas from 'html2canvas';
-  import { jsPDF } from 'jspdf';
   import { exportToExcel } from '$lib/utils/exportUtils';
 
   // Chart reference
@@ -189,88 +188,113 @@
 
   async function handleExportPDF() {
     try {
-      // Get the entire results container
-      const element = document.querySelector('.bg-white.rounded-lg.shadow-md.p-6.space-y-6');
+      // Get the main content area
+      const element = document.querySelector('#app') || document.querySelector('main');
       if (!element || !(element instanceof HTMLElement)) {
-        throw new Error('Could not find results container');
+        throw new Error('Could not find main content container');
       }
 
-      // Create canvas from the element
-      const canvas = await html2canvas(element, {
-        scale: 2, // Higher resolution
-        logging: false,
-        backgroundColor: '#ffffff',
+      // Create a temporary container for the snapshot
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.background = '#ffffff';
+      document.body.appendChild(tempContainer);
+
+      // Clone the element
+      const clone = element.cloneNode(true) as HTMLElement;
+      tempContainer.appendChild(clone);
+
+      // Replace input sections with static values display
+      const inputSections = clone.querySelectorAll('input, select, .slider-container');
+      inputSections.forEach(section => {
+        const container = section.closest('.form-group, .input-group');
+        if (container) {
+          const label = container.querySelector('label')?.textContent || '';
+          const value = (section as HTMLInputElement).value;
+          const unit = container.querySelector('.unit')?.textContent || '';
+          
+          const staticValue = document.createElement('div');
+          staticValue.className = 'static-value flex justify-between items-center p-2 bg-gray-50 rounded';
+          staticValue.innerHTML = `
+            <span class="font-medium">${label}</span>
+            <span class="text-right font-bold">${value}${unit}</span>
+          `;
+          
+          container.replaceWith(staticValue);
+        }
+      });
+
+      // Handle the chart - create a new canvas and copy the content
+      const originalCanvas = chartCanvas;
+      if (originalCanvas) {
+        const chartContainer = clone.querySelector('.h-80');
+        if (chartContainer) {
+          const newCanvas = document.createElement('canvas');
+          newCanvas.width = originalCanvas.width;
+          newCanvas.height = originalCanvas.height;
+          const ctx = newCanvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(originalCanvas, 0, 0);
+          }
+          // Replace the old canvas in the clone
+          const oldCanvas = chartContainer.querySelector('canvas');
+          if (oldCanvas) {
+            oldCanvas.replaceWith(newCanvas);
+          }
+        }
+      }
+
+      // Set explicit dimensions
+      clone.style.width = `${element.offsetWidth}px`;
+      clone.style.height = 'auto';
+      clone.style.position = 'relative';
+      clone.style.transform = 'none';
+      clone.style.background = '#ffffff';
+      clone.style.margin = '0';
+      clone.style.padding = '24px';
+      clone.style.maxWidth = 'none';
+      clone.style.overflow = 'visible';
+
+      // Wait a bit for the chart to be properly rendered in the clone
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Create canvas with optimal settings
+      const canvas = await html2canvas(clone, {
+        scale: 2,
         useCORS: true,
         allowTaint: true,
-        scrollY: -window.scrollY // Handle scrolled content
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: element.offsetWidth,
+        height: clone.scrollHeight,
+        windowWidth: element.offsetWidth,
+        windowHeight: clone.scrollHeight,
+        onclone: (clonedDoc) => {
+          const allElements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < allElements.length; i++) {
+            const el = allElements[i] as HTMLElement;
+            if (el.style.position === 'fixed') {
+              el.style.position = 'absolute';
+            }
+            // Remove any height constraints
+            el.style.maxHeight = 'none';
+            el.style.overflow = 'visible';
+          }
+        }
       });
 
-      // Create PDF with A4 dimensions
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4'
-      });
+      // Clean up
+      document.body.removeChild(tempContainer);
 
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 20;
-
-      // Calculate image dimensions to fit the page
-      const imgWidth = pageWidth - (margin * 2);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      // Add title
-      pdf.setFontSize(16);
-      pdf.setTextColor(0);
-      const title = 'Service Delivery Cost Analysis';
-      const titleWidth = pdf.getStringUnitWidth(title) * 16 / pdf.internal.scaleFactor;
-      const titleX = (pageWidth - titleWidth) / 2;
-      pdf.text(title, titleX, margin + 10);
-
-      // Add timestamp
-      pdf.setFontSize(10);
-      pdf.setTextColor(100);
-      const date = new Date().toLocaleString();
-      const dateWidth = pdf.getStringUnitWidth(date) * 10 / pdf.internal.scaleFactor;
-      const dateX = (pageWidth - dateWidth) / 2;
-      pdf.text(date, dateX, margin + 30);
-
-      // Add image to PDF, automatically handling page breaks
-      let heightLeft = imgHeight;
-      let position = margin + 50;
-      let pageNumber = 1;
-
-      // First page
-      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight - position;
-
-      // Add additional pages if needed
-      while (heightLeft > 0) {
-        position = margin;
-        heightLeft -= pageHeight - margin;
-        pdf.addPage();
-        pageNumber++;
-        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-      }
-
-      // Add page numbers
-      for (let i = 1; i <= pageNumber; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(10);
-        pdf.setTextColor(100);
-        const pageText = `Page ${i} of ${pageNumber}`;
-        const pageTextWidth = pdf.getStringUnitWidth(pageText) * 10 / pdf.internal.scaleFactor;
-        const pageTextX = (pageWidth - pageTextWidth) / 2;
-        pdf.text(pageText, pageTextX, pageHeight - 10);
-      }
-
-      // Save the PDF
-      pdf.save('service-delivery-analysis.pdf');
+      // Convert to high-quality PNG and download
+      const link = document.createElement('a');
+      link.download = `service-delivery-analysis-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
     } catch (error) {
-      console.error('PDF Export Error:', error);
-      alert('There was an error generating the PDF. Please try again.');
+      console.error('PNG Export Error:', error);
+      alert('There was an error generating the PNG. Please try again.');
     }
   }
 
@@ -600,13 +624,13 @@
     </button>
     <button
       on:click={handleExportPDF}
-      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center gap-2"
+      class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
-      Export PDF
+      Export PNG
     </button>
   </div>
 </div> 

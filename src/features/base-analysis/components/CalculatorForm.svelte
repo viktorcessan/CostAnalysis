@@ -493,7 +493,6 @@
               </div>
               <div class="input-group">
                 <div class="relative">
-                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                   <input
                     type="number"
                     id="hourlyRate"
@@ -502,8 +501,9 @@
                     min={constraints.hourlyRate.min}
                     max={constraints.hourlyRate.max}
                     step={constraints.hourlyRate.step}
-                    class="number-input pl-6"
+                    class="number-input"
                   />
+                  <span class="unit-suffix">$</span>
                 </div>
                 <input
                   type="range"
@@ -954,7 +954,6 @@
                   </div>
                   <div class="input-group">
                     <div class="relative">
-                      <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                       <input
                         type="number"
                         id="platformCost"
@@ -963,8 +962,9 @@
                         min={50000}
                         max={500000}
                         step={1000}
-                        class="number-input pl-6"
+                        class="number-input"
                       />
+                      <span class="unit-suffix">$</span>
                     </div>
                     <input
                       type="range"
@@ -999,7 +999,6 @@
                   </div>
                   <div class="input-group">
                     <div class="relative">
-                      <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                       <input
                         type="number"
                         id="platformMaintenance"
@@ -1008,8 +1007,9 @@
                         min={1000}
                         max={10000}
                         step={100}
-                        class="number-input pl-6"
+                        class="number-input"
                       />
+                      <span class="unit-suffix">$</span>
                     </div>
                     <input
                       type="range"
@@ -1187,7 +1187,6 @@
                   </div>
                   <div class="input-group">
                     <div class="relative">
-                      <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                       <input
                         type="number"
                         id="hybridVendorRate"
@@ -1196,8 +1195,9 @@
                         min={constraints.vendorRate.min}
                         max={constraints.vendorRate.max}
                         step={constraints.vendorRate.step}
-                        class="number-input pl-6"
+                        class="number-input"
                       />
+                      <span class="unit-suffix">$</span>
                     </div>
                     <input
                       type="range"
@@ -1412,7 +1412,6 @@
                   </div>
                   <div class="input-group">
                     <div class="relative">
-                      <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                       <input
                         type="number"
                         id="transitionCost"
@@ -1421,8 +1420,9 @@
                         min={0}
                         max={100000}
                         step={1000}
-                        class="number-input pl-6"
+                        class="number-input"
                       />
+                      <span class="unit-suffix">$</span>
                     </div>
                     <input
                       type="range"
@@ -1461,7 +1461,6 @@
               </div>
               <div class="input-group">
                 <div class="relative">
-                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                   <input
                     type="number"
                     id="platformCost"
@@ -1470,8 +1469,9 @@
                     min={50000}
                     max={500000}
                     step={1000}
-                    class="number-input pl-6"
+                    class="number-input"
                   />
+                  <span class="unit-suffix">$</span>
                 </div>
                 <input
                   type="range"
@@ -1506,7 +1506,6 @@
               </div>
               <div class="input-group">
                 <div class="relative">
-                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                   <input
                     type="number"
                     id="platformMaintenance"
@@ -1515,8 +1514,9 @@
                     min={1000}
                     max={10000}
                     step={100}
-                    class="number-input pl-6"
+                    class="number-input"
                   />
+                  <span class="unit-suffix">$</span>
                 </div>
                 <input
                   type="range"
@@ -1703,8 +1703,9 @@
                     min={constraints.vendorRate.min}
                     max={constraints.vendorRate.max}
                     step={constraints.vendorRate.step}
-                    class="number-input pl-6"
+                    class="number-input"
                   />
+                  <span class="unit-suffix">$</span>
                 </div>
                 <input
                   type="range"
@@ -1928,8 +1929,9 @@
                     min={constraints.transitionCost.min}
                     max={constraints.transitionCost.max}
                     step={constraints.transitionCost.step}
-                    class="number-input pl-6"
+                    class="number-input"
                   />
+                  <span class="unit-suffix">$</span>
                 </div>
                 <input
                   type="range"
@@ -1983,14 +1985,14 @@
 
   /* Value container */
   .value-container {
-    @apply flex justify-end w-[80px] lg:w-[100px] flex-shrink-0;
+    @apply flex justify-end w-[120px] flex-shrink-0;
   }
 
   /* Compact number input styles */
   .number-input {
-    @apply w-[80px] px-2 py-1 text-right text-gray-700 bg-gray-50 border border-gray-200 
+    @apply w-[120px] px-3 py-1 text-left text-gray-700 bg-white border border-gray-200 
            rounded-md focus:outline-none focus:ring-1 focus:ring-secondary/50 focus:border-transparent
-           transition-all duration-200 text-xs font-medium tracking-wide flex-shrink-0;
+           transition-all duration-200 text-sm font-medium tracking-wide flex-shrink-0;
   }
 
   /* Compact slider styles */
@@ -2064,5 +2066,14 @@
 
   .distribution-labels {
     @apply flex flex-wrap justify-between mt-1 text-[10px] font-medium gap-1;
+  }
+
+  /* Unit styles */
+  .unit-prefix {
+    @apply absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm;
+  }
+
+  .unit-suffix {
+    @apply absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none;
   }
 </style> 

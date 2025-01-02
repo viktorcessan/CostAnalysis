@@ -10,70 +10,108 @@
   import { calculatorStore } from '$lib/stores/calculatorStore';
 
   type Mode = 'base' | 'solutions' | 'internal';
-  let activeModel: CalculatorModel = 'team';
-  let activeMode: Mode = 'base';
 
-  function handleModelSelect(event: CustomEvent<CalculatorModel>) {
-    activeModel = event.detail;
-    calculatorStore.updateModel(activeModel);
+  interface Goal {
+    id: string;
+    name: string;
+    description: string;
+    longDescription: string;
+    benefits: string[];
+    mode: Mode;
+    requiresModel: boolean;
+    defaultModel?: CalculatorModel;
+    icon: string;
   }
 
-  const teamModes = [
+  let activeModel: CalculatorModel = 'team';
+  let activeMode: Mode = 'base';
+  let selectedGoal: string | null = null;
+  let showModelSelection = false;
+
+  const goals: Goal[] = [
     {
-      id: 'base',
-      name: 'Base Analysis',
-      description: 'Establish current state baseline and costs',
-      icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>`
-    },
-    {
-      id: 'solutions',
-      name: 'Target Planning',
-      description: 'Plan and optimize solution targets',
-      icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      id: 'breakeven',
+      name: 'Find Break-Even Point',
+      description: 'Calculate the break-even point for a given solution',
+      longDescription: 'Determine how long it will take to recover your investment in a new service delivery model. Compare different approaches and understand the financial implications of each option.',
+      benefits: [
+        'Compare different service delivery models',
+        'Calculate ROI and payback period',
+        'Understand monthly cost implications',
+        'Make data-driven investment decisions'
+      ],
+      mode: 'base',
+      requiresModel: true,
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>`
     },
     {
-      id: 'internal',
-      name: 'Internal Analysis',
-      description: 'Analyze team dependencies and interactions',
-      icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      id: 'target',
+      name: 'Plan Target Solution',
+      description: 'Determine optimal investment and resource allocation',
+      longDescription: 'Set your desired targets for ROI, team reduction, or process efficiency, and we will help you determine the optimal investment parameters to achieve these goals.',
+      benefits: [
+        'Set clear efficiency targets',
+        'Optimize resource allocation',
+        'Plan phased transitions',
+        'Balance cost and performance'
+      ],
+      mode: 'solutions',
+      requiresModel: true,
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>`
+    },
+    {
+      id: 'team-analysis',
+      name: 'Analyze Team Dependencies',
+      description: 'Explore team interactions and optimize collaboration',
+      longDescription: 'Visualize and analyze how your teams interact, identify bottlenecks, and discover opportunities to optimize collaboration and knowledge sharing.',
+      benefits: [
+        'Map team interactions',
+        'Identify collaboration bottlenecks',
+        'Optimize knowledge sharing',
+        'Improve team efficiency'
+      ],
+      mode: 'internal',
+      requiresModel: false,
+      defaultModel: 'team',
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
             </svg>`
     }
   ];
 
-  const ticketModes = [
-    {
-      id: 'base',
-      name: 'Base Analysis',
-      description: 'Establish current state baseline and costs',
-      icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>`
-    },
-    {
-      id: 'solutions',
-      name: 'Target Planning',
-      description: 'Plan and optimize solution targets',
-      icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>`
-    }
-  ];
-
-  $: modes = activeModel === 'team' ? teamModes : ticketModes;
-
-  $: {
-    if (activeModel === 'ticket' && activeMode === 'internal') {
-      activeMode = 'base';
+  function handleGoalSelect(goal: Goal) {
+    selectedGoal = goal.id;
+    activeMode = goal.mode;
+    
+    if (!goal.requiresModel) {
+      activeModel = goal.defaultModel!;
+      showModelSelection = false;
+      calculatorStore.updateModel(activeModel);
+    } else {
+      showModelSelection = true;
     }
   }
 
-  // Add logic to toggle active class if needed
-  let isActive = false;
+  function handleModelSelect(event: CustomEvent<CalculatorModel>) {
+    activeModel = event.detail;
+    showModelSelection = false;
+    calculatorStore.updateModel(activeModel);
+  }
+
+  function handleBack() {
+    if (showModelSelection) {
+      showModelSelection = false;
+      selectedGoal = null;
+    } else if (selectedGoal) {
+      selectedGoal = null;
+    }
+  }
+
+  $: selectedGoalData = selectedGoal ? goals.find(g => g.id === selectedGoal) : null;
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -82,89 +120,101 @@
   
   <div class="container mx-auto px-4 py-6">
     <div class="max-w-7xl mx-auto space-y-6">
-      <!-- Model Selection and Analysis Mode -->
-      <div class="bg-white rounded-lg shadow-sm p-4 space-y-6">
-        <!-- Model Selection -->
-        <div>
-          <h3 class="text-base font-medium text-gray-900 mb-3">Model Selection</h3>
-          <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />
-        </div>
+      {#if !selectedGoal}
+        <!-- Goal Selection -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+          <div class="max-w-3xl mx-auto text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">What would you like to analyze?</h2>
+            <p class="text-lg text-gray-600">
+              Choose your analysis goal and we'll guide you through the process of optimizing your service delivery model.
+            </p>
+          </div>
 
-        <!-- Mode Selection -->
-        <div>
-          <h3 class="text-base font-medium text-gray-900 mb-3">Analysis Mode</h3>
-          <div class="grid grid-cols-1 {activeModel === 'team' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-3">
-            {#each modes as mode}
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {#each goals as goal}
               <button
-                class="relative p-3 rounded-lg border transition-all {
-                  activeMode === mode.id
-                    ? 'bg-gradient-to-br from-secondary to-secondary/90 text-white border-transparent shadow-sm'
-                    : 'bg-white hover:bg-gray-50 text-gray-900 border-gray-200'
-                }"
-                on:click={() => activeMode = mode.id as Mode}
+                class="relative bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 hover:border-secondary/20 
+                       transition-all duration-300 overflow-hidden group"
+                on:click={() => handleGoalSelect(goal)}
               >
-                <div class="flex items-center gap-2">
-                  {@html mode.icon}
-                  <div class="text-left">
-                    <div class="text-sm font-medium">{mode.name}</div>
-                    <div class="text-xs opacity-90">{mode.description}</div>
+                <div class="p-6">
+                  <div class="text-secondary group-hover:text-secondary/80 transition-colors mb-4">
+                    {@html goal.icon}
+                  </div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">{goal.name}</h3>
+                  <p class="text-sm text-gray-600 mb-4">{goal.description}</p>
+                  <div class="text-xs text-gray-500">
+                    {#each goal.benefits as benefit}
+                      <div class="flex items-center mb-1">
+                        <svg class="w-4 h-4 text-secondary/60 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {benefit}
+                      </div>
+                    {/each}
                   </div>
                 </div>
               </button>
             {/each}
           </div>
         </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="space-y-6">
-        {#if activeMode === 'base'}
-          <!-- Base Analysis -->
-          <div>
-            <CalculatorForm />
+      {:else if showModelSelection}
+        <!-- Model Selection -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+          <div class="flex items-center gap-4 mb-6">
+            <button
+              class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              on:click={handleBack}
+            >
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">How do you work today?</h2>
+              <p class="text-gray-600 mt-1">Select your current service delivery model to get started.</p>
+            </div>
           </div>
-          <div>
-            <ResultsDisplay />
+          <div class="max-w-2xl mx-auto">
+            <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />
           </div>
-        {:else if activeMode === 'solutions'}
-          <!-- Target-Based Planning -->
-          <div>
-            <TargetPlanningForm />
-          </div>
-        {:else if activeMode === 'internal'}
-          <!-- Internal Analysis -->
-          <div>
-            <TeamInteractionDiagram />
-          </div>
-        {/if}
-
-        <!-- Formula Accordion -->
-        <div class="mt-8">
-          <FormulaAccordion model={activeModel} mode={activeMode} />
         </div>
-      </div>
+      {:else}
+        <!-- Analysis Section -->
+        <div class="space-y-6">
+          <div class="bg-white rounded-xl shadow-lg p-8">
+            <div class="flex items-center gap-4 mb-4">
+              <button
+                class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                on:click={handleBack}
+              >
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">{selectedGoalData?.name}</h2>
+                <p class="text-gray-600 mt-1">{selectedGoalData?.longDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {#if selectedGoal === 'team-analysis'}
+            <TeamInteractionDiagram />
+          {:else if selectedGoal === 'breakeven'}
+            <CalculatorForm />
+            <ResultsDisplay />
+          {:else if selectedGoal === 'target'}
+            <TargetPlanningForm />
+          {/if}
+        </div>
+      {/if}
     </div>
   </div>
 </div>
 
 <style>
-  /* Scale transform on hover */
-  button:hover {
-    transform: scale(1.02);
-  }
-
-  /* Active mode styling */
-  button.active {
-    transform: scale(1.05);
-  }
-
-  /* SVG color for active mode */
-  button.active svg {
-    @apply text-white;
-  }
-
-  /* SVG color for inactive mode */
-  button:not(.active) svg {
-    @apply text-secondary;
+  :global(.tippy-box[data-theme~='light-border']) {
+    @apply bg-white text-gray-900 shadow-lg border border-gray-200 text-sm;
   }
 </style> 

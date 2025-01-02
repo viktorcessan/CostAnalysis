@@ -11,10 +11,50 @@
   // Subscribe to calculator store
   let model: CalculatorModel;
   let solution: SolutionType = 'platform';
+  
+  // Initialize inputs with defaults
+  let teamSize = 5;
+  let hourlyRate = 75;
+  let serviceEfficiency = 60;
+  let operationalOverhead = 20;
+
+  let monthlyTickets = 50;
+  let hoursPerTicket = 4;
+  let peoplePerTicket = 2;
+  let slaCompliance = 95;
+
+  // Subscribe to store changes
   calculatorStore.subscribe(state => {
     model = state.model;
     solution = state.solution;
   });
+
+  // Handle team inputs
+  function handleTeamInputs() {
+    calculatorStore.updateTeamInputs({
+      teamSize,
+      hourlyRate,
+      serviceEfficiency: serviceEfficiency / 100,
+      operationalOverhead: operationalOverhead / 100
+    });
+  }
+
+  // Handle ticket inputs
+  function handleTicketInputs() {
+    calculatorStore.updateTicketInputs({
+      monthlyTickets,
+      hoursPerTicket,
+      peoplePerTicket,
+      slaCompliance
+    });
+  }
+
+  // Watch for model changes
+  $: if (model === 'team') {
+    handleTeamInputs();
+  } else if (model === 'ticket') {
+    handleTicketInputs();
+  }
 
   // Target inputs without enabled flag
   interface Target {
@@ -29,22 +69,10 @@
     { type: 'implementation', value: 6 } // Implementation time in months
   ];
 
-  // Base configuration (matching base analysis)
-  let teamSize = 5;
-  let hourlyRate = 75;
-  let serviceEfficiency = 60;
-  let operationalOverhead = 20;
-
-  // Ticket-based inputs
-  let monthlyTickets = 50;
-  let hoursPerTicket = 4;
-  let peoplePerTicket = 2;
-  let slaCompliance = 95;
-
   // Results
   let results: TargetBasedPlanningResults | null = null;
 
-  // Input constraints (matching base analysis)
+  // Input constraints
   const constraints = {
     teamSize: { min: 1, max: 15, step: 1 },
     hourlyRate: { min: 10, max: 150, step: 5 },
@@ -475,7 +503,7 @@
                       min={constraints.hourlyRate.min}
                       max={constraints.hourlyRate.max}
                       step={constraints.hourlyRate.step}
-                      class="number-input"
+                      class="number-input pr-8"
                     />
                     <span class="unit-suffix">$</span>
                   </div>
@@ -590,18 +618,21 @@
           <!-- Monthly Tickets -->
           <div class="field-container">
             <div>
-              <div class="field-info">
+              <div>
                 <label class="field-label" for="monthlyTickets">
                   Monthly Tickets
                   <button 
                     class="tooltip ml-1"
                     aria-label="Help information" 
-                    data-tippy-content="Estimate the average number of tickets processed per month">
-                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    data-tippy-content="Average number of tickets processed per month">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
+                <p class="input-description">
+                  Define the average number of tickets your team processes monthly. This helps calculate workload and capacity requirements.
+                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">
@@ -632,18 +663,21 @@
           <!-- Hours per Ticket -->
           <div class="field-container">
             <div>
-              <div class="field-info">
+              <div>
                 <label class="field-label" for="hoursPerTicket">
                   Hours per Ticket
                   <button 
                     class="tooltip ml-1"
                     aria-label="Help information" 
-                    data-tippy-content="Estimate the average time spent processing each ticket">
-                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    data-tippy-content="Average time required to process each ticket">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
+                <p class="input-description">
+                  Estimate the average time spent processing each ticket. This helps calculate total resource requirements and costs.
+                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">
@@ -677,18 +711,21 @@
           <!-- People per Ticket -->
           <div class="field-container">
             <div>
-              <div class="field-info">
+              <div>
                 <label class="field-label" for="peoplePerTicket">
                   People per Ticket
                   <button 
                     class="tooltip ml-1"
                     aria-label="Help information" 
-                    data-tippy-content="Estimate the average number of people needed to handle each ticket">
-                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    data-tippy-content="Average number of people involved in processing each ticket">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
+                <p class="input-description">
+                  Define how many people typically work on each ticket. This helps calculate staffing needs and collaboration overhead.
+                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">
@@ -719,18 +756,21 @@
           <!-- SLA Compliance -->
           <div class="field-container">
             <div>
-              <div class="field-info">
+              <div>
                 <label class="field-label" for="slaCompliance">
                   SLA Compliance
                   <button 
                     class="tooltip ml-1"
                     aria-label="Help information" 
-                    data-tippy-content="Service level agreement compliance rate [0-100%]">
-                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    data-tippy-content="Current service level agreement compliance rate">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
+                <p class="input-description">
+                  Current percentage of tickets meeting SLA targets. This helps measure service quality and identify improvement opportunities.
+                </p>
               </div>
               <div class="input-group">
                 <div class="value-container">
@@ -817,101 +857,199 @@
         </div>
       </div>
 
-      <!-- Team Reduction Target -->
-      <div class="field-container">
-        <div>
-          <div class="field-info">
-            <label class="field-label" for="teamReductionTarget">
-              Team Reduction
-              <button 
-                class="tooltip ml-1"
-                aria-label="Help information" 
-                data-tippy-content="Target percentage reduction in team size">
-                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </label>
-            <p class="input-description">
-              Target percentage reduction in team size after platform implementation.
-            </p>
-          </div>
-          <div class="input-group">
-            <div class="value-container">
-              <div class="relative">
+      {#if model === 'team'}
+        <!-- Team Reduction Target -->
+        <div class="field-container">
+          <div>
+            <div class="field-info">
+              <label class="field-label" for="teamReductionTarget">
+                Team Reduction
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Target percentage reduction in team size">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Target percentage reduction in team size after platform implementation.
+              </p>
+            </div>
+            <div class="input-group">
+              <div class="value-container">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="teamReductionTarget"
+                    bind:value={targets[1].value}
+                    min={constraints.targetTeamReduction.min}
+                    max={constraints.targetTeamReduction.max}
+                    step={constraints.targetTeamReduction.step}
+                    class="number-input pr-8"
+                  />
+                  <span class="unit-suffix">%</span>
+                </div>
+              </div>
+              <div class="slider-container">
                 <input
-                  type="number"
-                  id="teamReductionTarget"
+                  type="range"
                   bind:value={targets[1].value}
                   min={constraints.targetTeamReduction.min}
                   max={constraints.targetTeamReduction.max}
                   step={constraints.targetTeamReduction.step}
-                  class="number-input pr-8"
+                  class="slider-input"
                 />
-                <span class="unit-suffix">%</span>
               </div>
-            </div>
-            <div class="slider-container">
-              <input
-                type="range"
-                bind:value={targets[1].value}
-                min={constraints.targetTeamReduction.min}
-                max={constraints.targetTeamReduction.max}
-                step={constraints.targetTeamReduction.step}
-                class="slider-input"
-              />
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Process Efficiency Target -->
-      <div class="field-container">
-        <div>
-          <div class="field-info">
-            <label class="field-label" for="efficiencyTarget">
-              Process Efficiency
-              <button 
-                class="tooltip ml-1"
-                aria-label="Help information" 
-                data-tippy-content="Target improvement in process efficiency">
-                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </label>
-            <p class="input-description">
-              Target improvement in process efficiency after platform implementation.
-            </p>
-          </div>
-          <div class="input-group">
-            <div class="value-container">
-              <div class="relative">
+        <!-- Process Efficiency Target -->
+        <div class="field-container">
+          <div>
+            <div class="field-info">
+              <label class="field-label" for="efficiencyTarget">
+                Process Efficiency
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Target improvement in process efficiency">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Target improvement in process efficiency after platform implementation.
+              </p>
+            </div>
+            <div class="input-group">
+              <div class="value-container">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="efficiencyTarget"
+                    bind:value={targets[2].value}
+                    min={constraints.targetEfficiency.min}
+                    max={constraints.targetEfficiency.max}
+                    step={constraints.targetEfficiency.step}
+                    class="number-input pr-8"
+                  />
+                  <span class="unit-suffix">%</span>
+                </div>
+              </div>
+              <div class="slider-container">
                 <input
-                  type="number"
-                  id="efficiencyTarget"
+                  type="range"
                   bind:value={targets[2].value}
                   min={constraints.targetEfficiency.min}
                   max={constraints.targetEfficiency.max}
                   step={constraints.targetEfficiency.step}
-                  class="number-input pr-8"
+                  class="slider-input"
                 />
-                <span class="unit-suffix">%</span>
               </div>
-            </div>
-            <div class="slider-container">
-              <input
-                type="range"
-                bind:value={targets[2].value}
-                min={constraints.targetEfficiency.min}
-                max={constraints.targetEfficiency.max}
-                step={constraints.targetEfficiency.step}
-                class="slider-input"
-              />
             </div>
           </div>
         </div>
-      </div>
+      {:else}
+        <!-- Automation Rate Target -->
+        <div class="field-container">
+          <div>
+            <div class="field-info">
+              <label class="field-label" for="automationTarget">
+                Automation Rate
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Target percentage of tickets to be automated">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Target percentage of tickets that will be handled automatically.
+              </p>
+            </div>
+            <div class="input-group">
+              <div class="value-container">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="automationTarget"
+                    bind:value={targets[1].value}
+                    min={0}
+                    max={75}
+                    step={5}
+                    class="number-input pr-8"
+                  />
+                  <span class="unit-suffix">%</span>
+                </div>
+              </div>
+              <div class="slider-container">
+                <input
+                  type="range"
+                  bind:value={targets[1].value}
+                  min={0}
+                  max={75}
+                  step={5}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLA Improvement Target -->
+        <div class="field-container">
+          <div>
+            <div class="field-info">
+              <label class="field-label" for="slaTarget">
+                SLA Improvement
+                <button 
+                  class="tooltip ml-1"
+                  aria-label="Help information" 
+                  data-tippy-content="Target improvement in SLA compliance">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </label>
+              <p class="input-description">
+                Target improvement in service level agreement compliance.
+              </p>
+            </div>
+            <div class="input-group">
+              <div class="value-container">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="slaTarget"
+                    bind:value={targets[2].value}
+                    min={0}
+                    max={50}
+                    step={5}
+                    class="number-input pr-8"
+                  />
+                  <span class="unit-suffix">%</span>
+                </div>
+              </div>
+              <div class="slider-container">
+                <input
+                  type="range"
+                  bind:value={targets[2].value}
+                  min={0}
+                  max={50}
+                  step={5}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      {/if}
 
       <!-- Implementation Time Target -->
       <div class="field-container">

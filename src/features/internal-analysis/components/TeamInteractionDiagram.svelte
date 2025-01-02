@@ -353,7 +353,36 @@
         team[param] = value as number;
       }
       teamParams = teamParams;
-      generateNodes();
+      
+      // Update team names in dependency matrix if the name changed
+      if (param === 'name') {
+        dependencyMatrix.teams[index] = value as string;
+        dependencyMatrix = dependencyMatrix;
+      }
+      
+      // Only regenerate nodes without resetting dependencies
+      nodes = nodes.map((node, i) => {
+        if (i === index) {
+          const metrics = calculateTeamMetrics(i, dependencyMatrix.dependencies, teamParams.teams);
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              label: teamParams.teams[i].name,
+              size: teamParams.teams[i].size,
+              efficiency: teamParams.teams[i].efficiency,
+              throughput: metrics.throughput,
+              leadTime: metrics.leadTime,
+              dependencyFactor: metrics.dependencyFactor,
+              isHub: distributionMode === 'hub-spoke' && i === 0
+            }
+          };
+        }
+        return node;
+      });
+      
+      // Update metrics without regenerating dependencies
+      metrics = updateMetrics();
     }
   }
 

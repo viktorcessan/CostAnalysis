@@ -904,7 +904,6 @@
                 dependencyMatrix = initializeDependencyMatrix(teamCount);
                 generateNodes();
               }}
-              data-tippy-content="Drag to adjust the number of teams"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{teamCount}</span>
@@ -935,7 +934,6 @@
                 dependencyMatrix = initializeDependencyMatrix(teamCount);
                 generateNodes();
               }}
-              data-tippy-content="Drag to adjust the dependency strength between teams"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
@@ -963,7 +961,6 @@
               max="200"
               step="5"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              data-tippy-content="Drag to adjust the hourly rate for developers"
             />
             <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
@@ -993,7 +990,6 @@
               min="1"
               max="20"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              data-tippy-content="Drag to adjust weekly meeting hours"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
@@ -1020,7 +1016,6 @@
               min="1"
               max="20"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              data-tippy-content="Drag to adjust the number of meeting attendees"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
@@ -1048,7 +1043,6 @@
               max="2"
               step="0.1"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              data-tippy-content="Drag to adjust the communication overhead multiplier"
             />
             <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>

@@ -6,6 +6,7 @@
   import { fade } from 'svelte/transition';
   import { browser } from '$app/environment';
   import { base } from '$app/paths';
+  import { page } from '$app/stores';
 
   export let show = false;
   export let model: CalculatorModel;
@@ -22,7 +23,7 @@
       solutionInputs
     };
     const queryString = generateShareLink(params);
-    const origin = window.location.origin;
+    const origin = $page.url.origin;
     const path = `${base}/calculator/base/${model}_model`;
     shareLink = `${origin}${path}?${queryString}`;
   }

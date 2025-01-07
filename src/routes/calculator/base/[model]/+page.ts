@@ -3,6 +3,8 @@ import { parseShareLink } from '$lib/utils/baseAnalysisShare';
 import type { CalculatorModel } from '$lib/types/calculator';
 import { redirect } from '@sveltejs/kit';
 
+export const prerender = false;
+
 export const load: PageLoad = ({ params, url }) => {
   // Remove _model suffix from the model parameter
   const model = params.model.replace('_model', '') as CalculatorModel;

@@ -26,9 +26,12 @@ export const load: PageLoad = ({ params, url }) => {
   
   const sharedConfig = actualParams.size > 0 ? parseShareLink(actualParams) : null;
   
-  console.log('URL:', url.toString());
-  console.log('Search params:', actualParams.toString());
-  console.log('Shared config:', sharedConfig);
+  // Clear URL parameters after loading them
+  if (sharedConfig && typeof window !== 'undefined') {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.search = '';
+    window.history.replaceState({}, '', cleanUrl.toString());
+  }
   
   return {
     model,

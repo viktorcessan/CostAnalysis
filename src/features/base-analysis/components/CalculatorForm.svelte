@@ -10,9 +10,42 @@
 
   let model: CalculatorModel;
   let solution: SolutionType = 'platform';
+  
+  // Subscribe to store changes and sync local state
   calculatorStore.subscribe(state => {
     model = state.model;
     solution = state.solution;
+    
+    // Sync form state with store
+    const currentState = calculatorStore.getCurrentState();
+    if (currentState.baseInputs) {
+      if ('teamSize' in currentState.baseInputs) {
+        teamSize = currentState.baseInputs.teamSize;
+        hourlyRate = currentState.baseInputs.hourlyRate;
+        serviceEfficiency = currentState.baseInputs.serviceEfficiency;
+        operationalOverhead = currentState.baseInputs.operationalOverhead;
+      } else {
+        monthlyTickets = currentState.baseInputs.monthlyTickets;
+        hoursPerTicket = currentState.baseInputs.hoursPerTicket;
+        peoplePerTicket = currentState.baseInputs.peoplePerTicket;
+        slaCompliance = currentState.baseInputs.slaCompliance;
+      }
+    }
+    
+    if (currentState.solutionInputs) {
+      const { type, platform, outsource, hybrid } = currentState.solutionInputs;
+      solution = type;
+      
+      if (platform) {
+        platformInputs = { ...platformInputs, ...platform };
+      }
+      if (outsource) {
+        outsourceInputs = { ...outsourceInputs, ...outsource };
+      }
+      if (hybrid) {
+        hybridInputs = { ...hybridInputs, ...hybrid };
+      }
+    }
   });
 
   // Team model inputs

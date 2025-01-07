@@ -10,10 +10,19 @@
   import LLMTemplateModal from '$lib/components/ui/LLMTemplateModal.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
   import { base } from '$app/paths';
+  import ShareModal from '$lib/components/ui/ShareModal.svelte';
+  import LoadingConfirmationModal from '$lib/components/ui/LoadingConfirmationModal.svelte';
+  import { parseShareLink, validateShareParams } from '$lib/utils/shareLink';
+  import type { TargetPlanningParams } from '$lib/utils/shareLink';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   // Modal state
   let showLLMTemplate = false;
   let showExpertModal = false;
+  let showShareModal = false;
+  let showLoadingModal = false;
+  let sharedParams: TargetPlanningParams | null = null;
 
   // Subscribe to calculator store
   let model: CalculatorModel;
@@ -417,6 +426,85 @@
       cumulativeChart.destroy();
     }
   });
+
+  // Handle URL parameters on mount
+  onMount(() => {
+    const searchParams = $page.url.searchParams;
+    if (searchParams.size > 0) {
+      const params = parseShareLink(searchParams);
+      if (params && validateShareParams(params)) {
+        sharedParams = params;
+        showLoadingModal = true;
+      }
+    }
+  });
+
+  // Function to apply shared parameters
+  function applySharedParams() {
+    if (!sharedParams) return;
+    
+    // Update model type
+    model = sharedParams.model;
+    
+    // Update model-specific inputs
+    if (sharedParams.model === 'team') {
+      teamSize = sharedParams.teamSize!;
+      hourlyRate = sharedParams.hourlyRate!;
+      serviceEfficiency = sharedParams.serviceEfficiency! * 100;
+      operationalOverhead = sharedParams.operationalOverhead! * 100;
+    } else {
+      monthlyTickets = sharedParams.monthlyTickets!;
+      hoursPerTicket = sharedParams.hoursPerTicket!;
+      peoplePerTicket = sharedParams.peoplePerTicket!;
+      slaCompliance = sharedParams.slaCompliance!;
+    }
+    
+    // Update target inputs
+    targets = [
+      { type: 'roi', value: sharedParams.breakEvenTarget },
+      { type: 'team', value: sharedParams.reductionTarget },
+      { type: 'efficiency', value: sharedParams.efficiencyTarget },
+      { type: 'implementation', value: sharedParams.implementationTarget }
+    ];
+    
+    // Clear URL parameters
+    goto($page.url.pathname, { replaceState: true });
+    showLoadingModal = false;
+  }
+
+  // Function to get current parameters for sharing
+  function getCurrentParams(): TargetPlanningParams {
+    return {
+      model,
+      ...(model === 'team' ? {
+        teamSize,
+        hourlyRate,
+        serviceEfficiency: serviceEfficiency / 100,
+        operationalOverhead: operationalOverhead / 100
+      } : {
+        monthlyTickets,
+        hoursPerTicket,
+        peoplePerTicket,
+        slaCompliance
+      }),
+      breakEvenTarget: targets[0].value,
+      reductionTarget: targets[1].value,
+      efficiencyTarget: targets[2].value,
+      implementationTarget: targets[3].value
+    };
+  }
+
+  // Function to handle share button click
+  function handleShare() {
+    showShareModal = true;
+  }
+
+  // Function to handle loading modal cancel
+  function handleLoadingCancel() {
+    showLoadingModal = false;
+    sharedParams = null;
+    goto($page.url.pathname, { replaceState: true });
+  }
 </script>
 
 <!-- Input Container -->
@@ -1289,25 +1377,49 @@
 
     <!-- Analysis Options Card -->
     <div class="bg-white rounded-xl p-6 border border-gray-200">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
-      <p class="text-gray-600 mb-4">Get instant AI insights about your target goals and implementation strategy.</p>
-      <button
-        on:click={() => showLLMTemplate = true}
-        class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
-      >
-        <div class="flex items-center justify-center gap-2">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-          </svg>
-          Analyze with ChatGPT
-        </div>
-      </button>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Analysis Options</h3>
+      <div class="space-y-3">
+        <button
+          on:click={() => showLLMTemplate = true}
+          class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            Analyze with ChatGPT
+          </div>
+        </button>
+
+        <button
+          on:click={handleShare}
+          class="w-full px-4 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+            Share Analysis
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
-<LLMTemplateModal bind:show={showLLMTemplate} bind:targets={targets} />
+<!-- Add Modals -->
+<LLMTemplateModal bind:show={showLLMTemplate} bind:targets />
 <ExpertModal bind:show={showExpertModal} />
+<ShareModal
+  bind:show={showShareModal}
+  params={getCurrentParams()}
+/>
+<LoadingConfirmationModal
+  bind:show={showLoadingModal}
+  params={sharedParams}
+  onConfirm={applySharedParams}
+  onCancel={handleLoadingCancel}
+/>
 
 <style>
   /* Compact container styles */

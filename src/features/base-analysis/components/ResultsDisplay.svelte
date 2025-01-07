@@ -8,12 +8,16 @@
   import { exportToExcel } from '$lib/utils/exportUtils';
   import LLMTemplateModal from '$lib/components/ui/LLMTemplateModal.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
+  import BaseAnalysisShareModal from '$lib/components/ui/BaseAnalysisShareModal.svelte';
   import { base } from '$app/paths';
 
   // Chart reference
   let chart: Chart | null = null;
   let chartCanvas: HTMLCanvasElement;
   let activeChart: 'cumulative' | 'monthly' | 'savings' = 'cumulative';
+
+  // Share state
+  let showShareModal = false;
 
   // Chart data types
   type ChartDataPoint = number;
@@ -26,6 +30,14 @@
     results = value;
     currentState = calculatorStore.getCurrentState();
   });
+
+  // Handle share button click
+  function handleShare() {
+    const currentState = calculatorStore.getCurrentState();
+    if (currentState.baseInputs) {
+      showShareModal = true;
+    }
+  }
 
   // Watch for changes in results and chart
   $: if (chart && results?.monthlyData?.length > 0) {
@@ -723,6 +735,17 @@
           <p class="text-gray-600 mb-4">Download your analysis for offline review or sharing.</p>
           <div class="flex gap-3">
             <button
+              on:click={handleShare}
+              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
+            >
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+                Share
+              </div>
+            </button>
+            <button
               on:click={handleExportExcel}
               class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow hover:shadow-lg transition-all duration-200"
             >
@@ -749,4 +772,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Share Modal -->
+  {#if showShareModal}
+    <BaseAnalysisShareModal
+      bind:show={showShareModal}
+      model={$calculatorStore.model}
+      baseInputs={currentState.baseInputs}
+      solutionInputs={currentState.solutionInputs}
+    />
+  {/if}
 </div> 

@@ -6,6 +6,8 @@
   import '$lib/utils/chartSetup';
   import html2canvas from 'html2canvas';
   import { exportToExcel } from '$lib/utils/exportUtils';
+  import LLMTemplateModal from '$lib/components/ui/LLMTemplateModal.svelte';
+  import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
 
   // Chart reference
   let chart: Chart | null = null;
@@ -355,6 +357,10 @@
     return baselineTotal - solutionTotal;
   }
 
+  // Add modal state
+  let showLLMTemplate = false;
+  let showExpertModal = false;
+
   onMount(() => {
     initChart();
     if (results?.monthlyData?.length > 0) {
@@ -368,6 +374,9 @@
     }
   });
 </script>
+
+<LLMTemplateModal bind:show={showLLMTemplate} />
+<ExpertModal bind:show={showExpertModal} />
 
 <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
   <h3 class="text-xl font-semibold text-gray-900">Calculation Results</h3>
@@ -613,26 +622,130 @@
   </div>
 
   <!-- Export Buttons -->
-  <div class="flex justify-end gap-4 pt-4 border-t">
-    <button
-      on:click={handleExportExcel}
-      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center gap-2"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      Export Excel
-    </button>
-    <button
-      on:click={handleExportPDF}
-      class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-      Export PNG
-    </button>
+  <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-8 mt-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Expert Consultation Card -->
+      <div class="lg:col-span-2 bg-white rounded-xl p-6 border border-secondary/20 relative overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-[0.02] pointer-events-none">
+          <svg class="w-full h-full" viewBox="0 0 100 100">
+            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5"/>
+            </pattern>
+            <rect width="100" height="100" fill="url(#grid)"/>
+          </svg>
+        </div>
+        
+        <!-- Content -->
+        <div class="flex flex-col relative">
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-2">Get Expert Guidance</h3>
+            <p class="text-gray-600">Schedule a consultation with our service delivery expert to dive deeper into your analysis and develop a tailored optimization strategy.</p>
+          </div>
+
+          <div class="flex flex-col md:flex-row items-center gap-8">
+            <!-- Expert Image -->
+            <div class="flex-shrink-0 order-1 md:order-2">
+              <div class="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-secondary/10 shadow-xl">
+                <img src="/viktor2.jpeg" alt="Viktor Cessan" class="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            <!-- Features List -->
+            <div class="flex-grow order-2 md:order-1">
+              <ul class="space-y-3">
+                <li class="flex items-center text-gray-700 gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <span>Personalized optimization strategy</span>
+                </li>
+                <li class="flex items-center text-gray-700 gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <span>Implementation roadmap</span>
+                </li>
+                <li class="flex items-center text-gray-700 gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <span>Risk assessment and mitigation</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- CTA Button -->
+          <div class="mt-8 text-center">
+            <button
+              on:click={() => showExpertModal = true}
+              class="inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Schedule Free Consultation
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis Options Card -->
+      <div class="space-y-4">
+        <!-- ChatGPT Analysis -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
+          <p class="text-gray-600 mb-4">Get instant AI insights about your service delivery model and potential optimizations.</p>
+          <button
+            on:click={() => showLLMTemplate = true}
+            class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
+          >
+            <div class="flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              Analyze with ChatGPT
+            </div>
+          </button>
+        </div>
+
+        <!-- Export Options -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Export Analysis</h3>
+          <p class="text-gray-600 mb-4">Download your analysis for offline review or sharing.</p>
+          <div class="flex gap-3">
+            <button
+              on:click={handleExportExcel}
+              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow hover:shadow-lg transition-all duration-200"
+            >
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Excel
+              </div>
+            </button>
+            <button
+              on:click={handleExportPDF}
+              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow hover:shadow-lg transition-all duration-200"
+            >
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                PNG
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div> 

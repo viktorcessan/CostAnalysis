@@ -1,11 +1,8 @@
 <!-- Calculator Page -->
 <script lang="ts">
-  import CalculatorForm from '../../features/base-analysis/components/CalculatorForm.svelte';
-  import ResultsDisplay from '../../features/base-analysis/components/ResultsDisplay.svelte';
-  import TargetPlanningForm from '../../features/target-planning/components/TargetPlanningForm.svelte';
-  import TeamInteractionDiagram from '../../features/internal-analysis/components/TeamInteractionDiagram.svelte';
+  import { goto } from '$app/navigation';
+  import { base } from '$app/paths';
   import ModelSelector from '../../features/base-analysis/components/ModelSelector.svelte';
-  import FormulaAccordion from '$lib/components/ui/FormulaAccordion.svelte';
   import type { CalculatorModel } from '$lib/types/calculator';
   import { calculatorStore } from '$lib/stores/calculatorStore';
 
@@ -21,12 +18,12 @@
     requiresModel: boolean;
     defaultModel?: CalculatorModel;
     icon: string;
+    path: string;
   }
 
   let activeModel: CalculatorModel = 'team';
-  let activeMode: Mode = 'base';
-  let selectedGoal: string | null = null;
   let showModelSelection = false;
+  let selectedGoal: string | null = null;
 
   const goals: Goal[] = [
     {
@@ -42,6 +39,7 @@
       ],
       mode: 'base',
       requiresModel: true,
+      path: 'base_analysis',
       icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>`
@@ -59,6 +57,7 @@
       ],
       mode: 'solutions',
       requiresModel: true,
+      path: 'target_analysis',
       icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>`
@@ -77,6 +76,7 @@
       mode: 'internal',
       requiresModel: false,
       defaultModel: 'team',
+      path: 'team_analysis',
       icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
             </svg>`
@@ -85,12 +85,11 @@
 
   function handleGoalSelect(goal: Goal) {
     selectedGoal = goal.id;
-    activeMode = goal.mode;
     
     if (!goal.requiresModel) {
       activeModel = goal.defaultModel!;
-      showModelSelection = false;
       calculatorStore.updateModel(activeModel);
+      goto(`${base}/calculator/${goal.path}/team_model`);
     } else {
       showModelSelection = true;
     }
@@ -100,14 +99,10 @@
     activeModel = event.detail;
     showModelSelection = false;
     calculatorStore.updateModel(activeModel);
-  }
-
-  function handleBack() {
-    if (showModelSelection) {
-      showModelSelection = false;
-      selectedGoal = null;
-    } else if (selectedGoal) {
-      selectedGoal = null;
+    
+    const goal = goals.find(g => g.id === selectedGoal);
+    if (goal) {
+      goto(`${base}/calculator/${goal.path}/${activeModel}_model`);
     }
   }
 
@@ -166,7 +161,7 @@
           <div class="flex items-center gap-4 mb-8">
             <button
               class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
-              on:click={handleBack}
+              on:click={() => selectedGoal = null}
             >
               <svg class="w-8 h-8 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -178,52 +173,6 @@
             </div>
           </div>
           <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />
-        </div>
-      {:else}
-        <!-- Analysis Section -->
-        <div class="space-y-6">
-          <div class="bg-white rounded-xl shadow-lg p-8">
-            <div class="flex items-center gap-4 mb-6">
-              <button
-                class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
-                on:click={handleBack}
-              >
-                <svg class="w-8 h-8 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <div>
-                <h2 class="text-3xl font-bold text-gray-900">{selectedGoalData?.name}</h2>
-                <p class="text-lg text-gray-600 mt-2">{selectedGoalData?.longDescription}</p>
-              </div>
-            </div>
-          </div>
-
-          {#if selectedGoal === 'team-analysis'}
-            <TeamInteractionDiagram />
-            <div class="mt-6">
-              <FormulaAccordion model="team" mode="internal" />
-            </div>
-          {:else if selectedGoal === 'breakeven'}
-            <div class="space-y-6">
-              <div>
-                <CalculatorForm />
-              </div>
-
-              <div>
-                <ResultsDisplay />
-              </div>
-              
-              <div class="bg-white rounded-xl shadow-lg p-6">
-                <FormulaAccordion model={activeModel} mode="base" />
-              </div>
-            </div>
-          {:else if selectedGoal === 'target'}
-            <TargetPlanningForm />
-            <div class="mt-6">
-              <FormulaAccordion model={activeModel} mode="solutions" />
-            </div>
-          {/if}
         </div>
       {/if}
     </div>

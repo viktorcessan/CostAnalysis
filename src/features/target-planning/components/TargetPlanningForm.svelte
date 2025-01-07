@@ -9,6 +9,7 @@
   import type { ChartConfiguration } from 'chart.js';
   import LLMTemplateModal from '$lib/components/ui/LLMTemplateModal.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
+  import { base } from '$app/paths';
 
   // Modal state
   let showLLMTemplate = false;
@@ -1236,7 +1237,7 @@
           <!-- Expert Image -->
           <div class="flex-shrink-0 order-1 md:order-2">
             <div class="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-secondary/10 shadow-xl">
-              <img src="/viktor2.jpeg" alt="Viktor Cessan" class="w-full h-full object-cover" />
+              <img src="{base}/viktor2.jpeg" alt="Viktor Cessan" class="w-full h-full object-cover" />
             </div>
           </div>
 

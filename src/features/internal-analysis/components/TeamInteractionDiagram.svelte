@@ -10,6 +10,7 @@
   import { teamDependencyTemplateStore } from '$lib/stores/teamDependencyTemplateStore';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
   import LLMTemplateModal from '$lib/components/ui/LLMTemplateModal.svelte';
+  import { base } from '$app/paths';
 
   Chart.register(ChartDataLabels);  // Register the plugin
 
@@ -2341,7 +2342,7 @@
           <!-- Expert Image -->
           <div class="flex-shrink-0 order-1 md:order-2">
             <div class="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-secondary/10 shadow-xl">
-              <img src="/viktor2.jpeg" alt="Viktor Cessan" class="w-full h-full object-cover" />
+              <img src="{base}/viktor2.jpeg" alt="Viktor Cessan" class="w-full h-full object-cover" />
             </div>
           </div>
 

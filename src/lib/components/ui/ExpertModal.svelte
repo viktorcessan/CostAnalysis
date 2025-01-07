@@ -3,6 +3,7 @@
   import { fade } from 'svelte/transition';
   import { clickOutside } from '$lib/actions/clickOutside';
   import { onMount, onDestroy } from 'svelte';
+  import { base } from '$app/paths';
 
   export let show = false;
 
@@ -76,7 +77,7 @@
             <div class="flex items-center gap-6 mb-6">
               <div class="relative w-32 h-32 flex-shrink-0 rounded-full overflow-hidden">
                 <img
-                  src="/viktor2.jpeg"
+                  src="{base}/viktor2.jpeg"
                   alt="Viktor Cessan"
                   class="absolute w-[150%] h-[150%] object-cover left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
                 />

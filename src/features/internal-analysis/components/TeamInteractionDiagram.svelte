@@ -1,18 +1,24 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import Chart from 'chart.js/auto';
+  import { Chart, type Plugin } from 'chart.js/auto';
+  import type { ChartConfiguration, ChartData, ChartOptions, DoughnutControllerChartOptions } from 'chart.js';
   import ChartDataLabels from 'chartjs-plugin-datalabels';
-  import type { ChartConfiguration, ChartData, ChartOptions, DoughnutControllerChartOptions, Plugin } from 'chart.js';
   import tippy from 'tippy.js';
   import 'tippy.js/dist/tippy.css';
   import 'tippy.js/themes/light-border.css';
   import TeamDependencyModal from '$lib/components/ui/TeamDependencyModal.svelte';
-  import { teamDependencyTemplateStore } from '$lib/stores/teamDependencyTemplateStore';
+  import TeamDependencyShareModal from '$lib/components/ui/TeamDependencyShareModal.svelte';
+  import TeamDependencyLoadingModal from '$lib/components/ui/TeamDependencyLoadingModal.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
-  import LLMTemplateModal from '$lib/components/ui/LLMTemplateModal.svelte';
+  import { teamDependencyTemplateStore } from '$lib/stores/teamDependencyTemplateStore';
+  import { page } from '$app/stores';
   import { base } from '$app/paths';
+  import { validateShareParams, parseShareLink } from '$lib/utils/teamDependencyShare';
+  import type { TeamDependencyParams } from '$lib/utils/teamDependencyShare';
 
-  Chart.register(ChartDataLabels);  // Register the plugin
+  Chart.register(ChartDataLabels as unknown as Plugin);  // Register the plugin
+
+  export let sharedConfig: TeamDependencyParams | null = null;
 
   // Visualization state
   let visualizationMode: 'weighted' | 'multiple' = 'weighted';
@@ -166,6 +172,32 @@
   let teamCount = 5;
   let companyDependencyLevel = 3; // Scale of 1-5 for overall company dependency level
   let dependencyMatrix = initializeDependencyMatrix(teamCount);
+
+  function initializeDependencyMatrix(size: number): DependencyMatrix {
+    // Create teams array using current team names if available
+    const teams = teamParams.teams.slice(0, size).map(team => team.name);
+    
+    // Initialize dependencies array with zeros
+    const dependencies = Array.from({ length: size }, () => Array(size).fill(0));
+    
+    // Initialize dependencies based on mode and company dependency level
+    if (distributionMode === 'even') {
+      // For even distribution, create circular dependencies with strength based on company dependency level
+      for (let i = 0; i < size; i++) {
+        const nextIndex = (i + 1) % size;
+        dependencies[i][nextIndex] = Math.max(1, Math.min(5, companyDependencyLevel));
+        dependencies[nextIndex][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+      }
+    } else { // hub and spoke
+      // First team (hub) has dependencies with all other teams
+      for (let i = 1; i < size; i++) {
+        dependencies[0][i] = Math.max(1, Math.min(5, companyDependencyLevel)); // Hub to spoke
+        dependencies[i][0] = Math.max(1, Math.min(5, companyDependencyLevel)); // Spoke to hub
+      }
+    }
+
+    return { teams, dependencies };
+  }
 
   interface Metrics {
     avgThroughput: number;
@@ -333,29 +365,6 @@
     }
   }
 
-  function initializeDependencyMatrix(size: number) {
-    const teams = Array.from({ length: size }, (_, i) => `Team ${i + 1}`);
-    const dependencies = Array.from({ length: size }, () => Array(size).fill(0));
-    
-    // Initialize dependencies based on mode and company dependency level
-    if (distributionMode === 'even') {
-      // For even distribution, create circular dependencies with strength based on company dependency level
-      for (let i = 0; i < size; i++) {
-        const nextIndex = (i + 1) % size;
-        dependencies[i][nextIndex] = Math.max(1, Math.min(5, companyDependencyLevel));
-        dependencies[nextIndex][i] = Math.max(1, Math.min(5, companyDependencyLevel));
-      }
-    } else { // hub and spoke
-      // First team (hub) has dependencies with all other teams
-      for (let i = 1; i < size; i++) {
-        dependencies[0][i] = Math.max(1, Math.min(5, companyDependencyLevel)); // Hub to spoke
-        dependencies[i][0] = Math.max(1, Math.min(5, companyDependencyLevel)); // Spoke to hub
-      }
-    }
-
-    return { teams, dependencies };
-  }
-
   function updateTeamParam(index: number, param: keyof Team, value: number | string) {
     const team = teamParams.teams[index];
     if (team) {
@@ -410,11 +419,6 @@
     // Update team names in dependency matrix
     dependencyMatrix.teams[index] = newName;
     dependencyMatrix = dependencyMatrix;
-
-    // Update team names in target dependency matrix if in advanced mode
-    if (comparisonMode === 'advanced') {
-      targetDependencyMatrix = targetDependencyMatrix;
-    }
     
     // Update node labels to match
     nodes = nodes.map((node, i) => {
@@ -429,6 +433,9 @@
       }
       return node;
     });
+    
+    // Trigger a re-render of the dependency matrix
+    applyMatrix();
   }
 
   function applyMatrix() {
@@ -718,13 +725,15 @@
   $: {
     distributionMode;
     teamCount;
-    generateNodes();
+    if (!sharedConfig) {  // Only regenerate if not loading a shared config
+      generateNodes();
+    }
   }
 
-  // Add new reactive statement for company dependency level
+  // Update the reactive statement for dependency level
   $: {
     companyDependencyLevel;
-    if (distributionMode !== 'hub-spoke') {
+    if (!sharedConfig && distributionMode !== 'hub-spoke') {  // Only regenerate if not loading a shared config
       generateNodes();
     }
   }
@@ -754,6 +763,8 @@
 
   let showLLMTemplate = false;
   let showExpertModal = false;
+  let showShareModal = false;
+  let showLoadingModal = false;
 
   function openLLMTemplate() {
     showLLMTemplate = true;
@@ -762,9 +773,107 @@
   function openExpertModal() {
     showExpertModal = true;
   }
+
+  // Handle share button click
+  function handleShare() {
+    showShareModal = true;
+  }
+
+  // Handle loading shared configuration
+  function handleLoadConfig() {
+    if (!sharedConfig || !validateShareParams(sharedConfig)) {
+      return;
+    }
+
+    console.log('Loading shared config:', sharedConfig);
+    
+    // First, update team parameters
+    teamParams = {
+      ...teamParams,
+      teams: Array(10).fill(null).map((_, i) => {
+        if (i < sharedConfig.teams.length) {
+          return {
+            name: sharedConfig.teams[i].name,
+            size: sharedConfig.teams[i].size || 5,
+            baseCapacity: sharedConfig.teams[i].baseCapacity || 8,
+            efficiency: sharedConfig.teams[i].efficiency || 1.0
+          };
+        } else {
+          return {
+            name: `Team ${i + 1}`,
+            size: 5,
+            baseCapacity: 8,
+            efficiency: 1.0
+          };
+        }
+      })
+    };
+
+    // Update team count
+    teamCount = sharedConfig.teams.length;
+
+    // Update dependency matrix with shared values
+    dependencyMatrix = {
+      teams: sharedConfig.dependencyMatrix.teams.slice(),
+      dependencies: sharedConfig.dependencyMatrix.dependencies.map(row => [...row])
+    };
+
+    // Update cost parameters
+    costParams = {
+      hourlyRate: {
+        ...costParams.hourlyRate,
+        developer: sharedConfig.costParams.hourlyRate.developer
+      },
+      meetings: {
+        ...costParams.meetings,
+        weeklyDuration: sharedConfig.costParams.meetings.weeklyDuration,
+        attendeesPerTeam: sharedConfig.costParams.meetings.attendeesPerTeam
+      },
+      overhead: {
+        ...costParams.overhead,
+        communicationOverhead: sharedConfig.costParams.overhead.communicationOverhead
+      }
+    };
+
+    // Update mode and level last (to prevent matrix regeneration)
+    distributionMode = sharedConfig.distributionMode;
+    companyDependencyLevel = sharedConfig.companyDependencyLevel;
+
+    // Generate nodes without reinitializing the matrix
+    nodes = [];
+    edges = [];
+    for (let i = 0; i < teamCount; i++) {
+      const metrics = calculateTeamMetrics(i, dependencyMatrix.dependencies, teamParams.teams);
+      const node = {
+        id: `node-${i + 1}`,
+        data: {
+          label: teamParams.teams[i].name,
+          size: teamParams.teams[i].size,
+          efficiency: teamParams.teams[i].efficiency,
+          throughput: metrics.throughput,
+          leadTime: metrics.leadTime,
+          dependencyFactor: metrics.dependencyFactor,
+          isHub: distributionMode === 'hub-spoke' && i === 0
+        }
+      };
+      nodes = [...nodes, node];
+    }
+
+    // Apply the matrix to generate edges
+    applyMatrix();
+    
+    showLoadingModal = false;
+  }
+
+  // Show loading modal if shared config is present
+  onMount(() => {
+    if (sharedConfig && validateShareParams(sharedConfig)) {
+      showLoadingModal = true;
+    }
+  });
 </script>
 
-  <div class="space-y-6">
+<div class="space-y-6">
   <!-- Mode Selection Controls -->
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Structure Configuration</h3>
@@ -2394,19 +2503,32 @@
 
     <!-- Analysis Options Card -->
     <div class="bg-white rounded-xl p-6 border border-gray-200">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
-      <p class="text-gray-600 mb-4">Get instant AI insights about your team dependencies and collaboration patterns.</p>
-      <button
-        on:click={() => showLLMTemplate = true}
-        class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
-      >
-        <div class="flex items-center justify-center gap-2">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Analysis & Sharing</h3>
+      <p class="text-gray-600 mb-4">Get instant AI insights and share your team dependency analysis with others.</p>
+      <div class="flex gap-3">
+        <button
+          on:click={() => showLLMTemplate = true}
+          class="flex-1 px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
           </svg>
           Analyze with ChatGPT
         </div>
-      </button>
+        </button>
+        <button
+          on:click={handleShare}
+          class="flex-1 px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
+        >
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+            Share Analysis
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -2424,6 +2546,29 @@
     metrics
   )}
 />
+
+<TeamDependencyShareModal
+  bind:show={showShareModal}
+  {distributionMode}
+  {teamCount}
+  {companyDependencyLevel}
+  teams={teamParams.teams}
+  {dependencyMatrix}
+  {costParams}
+/>
+
+<TeamDependencyLoadingModal
+  bind:show={showLoadingModal}
+  distributionMode={sharedConfig?.distributionMode || 'even'}
+  teamCount={sharedConfig?.teamCount || teamCount}
+  companyDependencyLevel={sharedConfig?.companyDependencyLevel || companyDependencyLevel}
+  teams={sharedConfig?.teams || teamParams.teams}
+  dependencyMatrix={sharedConfig?.dependencyMatrix || dependencyMatrix}
+  costParams={sharedConfig?.costParams || costParams}
+  onConfirm={handleLoadConfig}
+  onCancel={() => showLoadingModal = false}
+/>
+
 <ExpertModal bind:show={showExpertModal} />
 
 <style>

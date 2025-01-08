@@ -40,6 +40,10 @@ interface CostAnalysis {
   communicationCost: number;
   processOverhead: number;
   totalCost: number;
+  hourlyRate: number;
+  weeklyDuration: number;
+  attendeesPerTeam: number;
+  communicationOverhead: number;
 }
 
 interface Metrics {
@@ -70,7 +74,11 @@ function generateTemplate(
 
 Distribution Mode: ${distributionMode === 'even' ? 'Even Distribution (teams work together with balanced dependencies)' : 'Hub and Spoke (central team coordinates with satellite teams)'}
 Number of Teams: ${teamCount}
-Company Dependency Level: ${companyDependencyLevel} (Scale 1-5, where 1 is Very Low and 5 is Very High)
+Dependency Level: ${companyDependencyLevel} (Scale 1-5, where 1 is Very Low and 5 is Very High)
+Dev Rate ($/hr): $${costs.hourlyRate}
+Weekly Meeting Hours: ${costs.weeklyDuration}
+Meeting Attendees: ${costs.attendeesPerTeam}
+Communication Overhead: ${costs.communicationOverhead}x
 
 Team Configuration:
 ${teams.map((team, i) => `- ${team.name}:
@@ -159,7 +167,11 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[]): CostAnalys
     weeklyMeetingCost,
     communicationCost,
     processOverhead,
-    totalCost: weeklyMeetingCost + communicationCost + processOverhead
+    totalCost: weeklyMeetingCost + communicationCost + processOverhead,
+    hourlyRate,
+    weeklyDuration,
+    attendeesPerTeam,
+    communicationOverhead
   };
 }
 

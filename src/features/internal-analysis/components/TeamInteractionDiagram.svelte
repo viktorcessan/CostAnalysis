@@ -2444,7 +2444,7 @@
       <div class="flex flex-col relative">
         <div class="text-center mb-6">
           <h3 class="text-2xl font-semibold text-gray-900 mb-2">Get Expert Guidance</h3>
-          <p class="text-gray-600">Optimize your team structure and collaboration patterns with insights from our service delivery expert.</p>
+          <p class="text-gray-600">Optimize your team structure and collaboration patterns with our team dependency expert.</p>
         </div>
 
         <div class="flex flex-col md:flex-row items-center gap-8">
@@ -2502,13 +2502,14 @@
     </div>
 
     <!-- Analysis Options Card -->
-    <div class="bg-white rounded-xl p-6 border border-gray-200">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Analysis & Sharing</h3>
-      <p class="text-gray-600 mb-4">Get instant AI insights and share your team dependency analysis with others.</p>
-      <div class="flex gap-3">
+    <div class="space-y-4">
+      <!-- ChatGPT Analysis -->
+      <div class="bg-white rounded-xl p-6 border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
+        <p class="text-gray-600 mb-4">Get instant AI insights about your team dependencies and collaboration patterns.</p>
         <button
           on:click={() => showLLMTemplate = true}
-          class="flex-1 px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
+          class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
         >
           <div class="flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2517,12 +2518,18 @@
           Analyze with ChatGPT
         </div>
         </button>
+      </div>
+
+      <!-- Share Options -->
+      <div class="bg-white rounded-xl p-6 border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Share Analysis</h3>
+        <p class="text-gray-600 mb-4">Share your team dependency analysis with stakeholders.</p>
         <button
           on:click={handleShare}
-          class="flex-1 px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
+          class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
         >
           <div class="flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
             </svg>
             Share Analysis

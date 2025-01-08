@@ -118,12 +118,13 @@ Cost Analysis:
 Formulas Used:
 1. Dependency Factor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))
 2. Throughput = baseCapacity * dependencyFactor
-3. Lead Time = waitTime + processingTime
+3. Weekly Meeting Cost = weeklyDuration * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
+4. Lead Time = waitTime + processingTime
    where:
    - waitTime = incomingDependencies.length * baseLeadTime * 0.5
    - processingTime = baseLeadTime * (1 + (outgoingDependencies.length * 0.3))
-4. Flow Efficiency = (processTime / (processTime + waitTime)) * 100
-5. Dependency Impact Score = (totalDependencies / maxPossibleDependencies) * 100
+5. Flow Efficiency = (processTime / (processTime + waitTime)) * 100
+6. Dependency Impact Score = (totalDependencies / maxPossibleDependencies) * 100
 
 Based on this data, please provide:
 1. Analysis of the current team structure and dependency patterns

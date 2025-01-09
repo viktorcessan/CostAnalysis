@@ -15,6 +15,9 @@
   import { base } from '$app/paths';
   import { validateShareParams, parseShareLink } from '$lib/utils/teamDependencyShare';
   import type { TeamDependencyParams } from '$lib/utils/teamDependencyShare';
+  import { exportToExcel } from '$lib/utils/exportUtils';
+  import html2canvas from 'html2canvas';
+  import { exportTeamDependencyToExcel, exportTeamDependencyToPNG } from '$lib/utils/teamDependencyExport';
 
   Chart.register(ChartDataLabels as unknown as Plugin);  // Register the plugin
 
@@ -255,102 +258,70 @@
       costDistributionChart.destroy();
     }
 
+    const data = [
+      costs.weeklyMeetingCost,
+      costs.communicationCost,
+      costs.processOverhead
+    ];
+
+    const total = data.reduce((sum, value) => sum + value, 0);
+
     const chartConfig: ChartConfiguration<'doughnut'> = {
       type: 'doughnut',
       plugins: [ChartDataLabels as Plugin],
       data: {
-        labels: ['Meetings', 'Communication', 'Process'],
+        labels: ['Weekly Meetings', 'Communication', 'Process Overhead'],
         datasets: [{
-          data: [
-            costs.weeklyMeetingCost,
-            costs.communicationCost,
-            costs.processOverhead
-          ],
+          data: data,
           backgroundColor: [
-            '#dd9933',  // secondary (was blue)
-            '#f59e0b',  // amber
-            '#ec4899'   // pink
+            '#0EA5E9',  // sky-500 for meetings
+            '#F59E0B',  // amber-500 for communication
+            '#10B981'   // emerald-500 for process
           ],
-          borderWidth: 2,
-          borderColor: '#ffffff',
-          spacing: 2,
-          borderRadius: 4,
-          hoverOffset: 8
+          borderWidth: 0
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '60%',
         layout: {
-          padding: {
-            top: 30,
-            right: 30,
-            bottom: 30,
-            left: 30
-          }
+          padding: 20
         },
         plugins: {
           legend: {
-            display: false
+            display: true,
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              font: {
+                size: 12,
+                weight: 'bold'
+              },
+              color: '#374151'
+            }
           },
           tooltip: {
-            callbacks: {
-              label: function(context: any) {
-                const dataset = context.chart.data.datasets[0];
-                if (!dataset?.data) return '';
-                
-                const value = context.raw as number;
-                const total = dataset.data.reduce((sum: number, val: number) => sum + (val || 0), 0);
-                const percentage = ((value / total) * 100).toFixed(1);
-                
-                // Add detailed info in tooltip
-                const details = [
-                  ['Weekly sync meetings', 'Sprint planning', 'Retrospectives'],
-                  ['Inter-team coordination', 'Documentation', 'Knowledge sharing'],
-                  ['Process maintenance', 'Quality assurance', 'Workflow optimization']
-                ][context.dataIndex];
-                
-                return [
-                  `$${value.toFixed(2)} (${percentage}%)`,
-                  `Includes:`,
-                  ...details.map(d => `• ${d}`)
-                ];
-              }
-            },
-            padding: 12,
-            bodySpacing: 4,
-            bodyFont: {
-              size: 12
-            }
+            enabled: false
           },
           datalabels: {
             color: '#ffffff',
             font: {
-              size: 13,
-              family: 'system-ui, sans-serif'
+              size: 16,
+              weight: 'bold',
+              family: 'system-ui, -apple-system, sans-serif'
             },
-            formatter: (value: number, context: any) => {
-              const total = context.dataset.data.reduce((sum: number, val: number) => sum + (val || 0), 0);
-              const percentage = ((value / total) * 100).toFixed(1);
-              return [
-                context.chart.data.labels[context.dataIndex],
-                `${percentage}%`
-              ].join('\n');
+            formatter: (value: number) => {
+              return ((value / total) * 100).toFixed(1) + '%';
             },
-            textAlign: 'center',
-            offset: 8,
-            display: 'auto',
-            textStrokeColor: 'rgba(0,0,0,0.3)',
-            textStrokeWidth: 3,
-            textShadowBlur: 6,
-            textShadowColor: 'rgba(0,0,0,0.2)',
-            padding: 4,
-            borderRadius: 4,
-            backgroundColor: function(context: any) {
-              const color = context.dataset.backgroundColor[context.dataIndex];
-              return color + '99';  // Add 60% opacity
-            }
+            textStrokeColor: 'rgba(0,0,0,0.2)',
+            textStrokeWidth: 2,
+            textShadowBlur: 5,
+            textShadowColor: 'rgba(0,0,0,0.2)'
           }
+        },
+        animation: {
+          duration: 0
         }
       }
     };
@@ -358,8 +329,17 @@
     costDistributionChart = new Chart(costChartCanvas, chartConfig);
   }
 
+  // Add onMount initialization
+  onMount(() => {
+    if (costChartCanvas) {
+      const costs = calculateCosts();
+      createCostDistributionChart(costs);
+    }
+  });
+
+  // Update reactive statement
   $: {
-    if (nodes.length > 0 && costChartCanvas) {
+    if (costChartCanvas && nodes.length > 0) {
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
@@ -413,14 +393,11 @@
   }
 
   function updateTeamName(index: number, newName: string) {
+    // Update both teamParams and dependencyMatrix
     teamParams.teams[index].name = newName;
-    teamParams = teamParams;
-    
-    // Update team names in dependency matrix
     dependencyMatrix.teams[index] = newName;
-    dependencyMatrix = dependencyMatrix;
     
-    // Update node labels to match
+    // Update node labels
     nodes = nodes.map((node, i) => {
       if (i === index) {
         return {
@@ -434,8 +411,10 @@
       return node;
     });
     
-    // Trigger a re-render of the dependency matrix
-    applyMatrix();
+    // Force update of reactive variables
+    teamParams = teamParams;
+    dependencyMatrix = dependencyMatrix;
+    nodes = nodes;
   }
 
   function applyMatrix() {
@@ -487,28 +466,41 @@
   }
 
   function generateNodes() {
+    const currentTeams = dependencyMatrix?.teams || [];
+    const currentTeamParams = teamParams.teams;
+    
     nodes = [];
     edges = [];
-    dependencyMatrix = initializeDependencyMatrix(teamCount);
     
-    // Ensure we have enough team sizes
+    // Initialize dependency matrix while preserving team names
+    if (!dependencyMatrix || dependencyMatrix.teams.length !== teamCount) {
+    dependencyMatrix = initializeDependencyMatrix(teamCount);
+      // Restore existing team names
+      for (let i = 0; i < teamCount; i++) {
+        if (currentTeams[i]) {
+          dependencyMatrix.teams[i] = currentTeams[i];
+        }
+      }
+    }
+    
+    // Ensure team params are in sync
     while (teamParams.teams.length < teamCount) {
+      const index = teamParams.teams.length;
       teamParams.teams.push({
-        name: `Team ${teamParams.teams.length + 1}`,
-        size: teamParams.teams[0].size,
+        name: dependencyMatrix.teams[index],
+        size: currentTeamParams[0]?.size || 5,
         baseCapacity: 8,
         efficiency: 1.0
       });
     }
     
-    // Create nodes with calculated metrics
+    // Create nodes with current team names
     for (let i = 0; i < teamCount; i++) {
       const metrics = calculateTeamMetrics(i, dependencyMatrix.dependencies, teamParams.teams);
-      
       const node = {
         id: `node-${i + 1}`,
         data: {
-          label: `Team ${i + 1}`,
+          label: dependencyMatrix.teams[i],
           size: teamParams.teams[i].size,
           efficiency: teamParams.teams[i].efficiency,
           throughput: metrics.throughput,
@@ -871,8 +863,37 @@
       showLoadingModal = true;
     }
   });
+
+  // Export functions
+  async function handleExportExcel() {
+    const costs = calculateCosts();
+    await exportTeamDependencyToExcel({
+      teams: teamParams.teams,
+      dependencyMatrix,
+      metrics,
+      costs
+    });
+  }
+
+  async function handleExportPNG() {
+    // Ensure the chart is rendered before export
+    if (costChartCanvas && nodes.length > 0) {
+      const costs = calculateCosts();
+      // Destroy existing chart
+      if (costDistributionChart) {
+        costDistributionChart.destroy();
+      }
+      // Create new chart and wait for it to render
+      createCostDistributionChart(costs);
+      // Add a longer delay to ensure the chart is fully rendered
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    await exportTeamDependencyToPNG();
+  }
 </script>
 
+<!-- Add id to main container for PNG export -->
+<div id="team-dependencies-container" class="space-y-6">
 <div class="space-y-6">
   <!-- Mode Selection Controls -->
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
@@ -891,7 +912,12 @@
           }"
           on:click={() => {
             distributionMode = 'even';
+              // Keep existing team names when changing distribution mode
+              const currentTeams = [...dependencyMatrix.teams];
+              const currentTeamParams = [...teamParams.teams];
             dependencyMatrix = initializeDependencyMatrix(teamCount);
+              dependencyMatrix.teams = currentTeams;
+              teamParams.teams = currentTeamParams;
             generateNodes();
           }}
         >
@@ -950,7 +976,12 @@
           }"
           on:click={() => {
             distributionMode = 'hub-spoke';
+              // Keep existing team names when changing distribution mode
+              const currentTeams = [...dependencyMatrix.teams];
+              const currentTeamParams = [...teamParams.teams];
             dependencyMatrix = initializeDependencyMatrix(teamCount);
+              dependencyMatrix.teams = currentTeams;
+              teamParams.teams = currentTeamParams;
             generateNodes();
           }}
         >
@@ -1195,12 +1226,20 @@
                 {#each teamParams.teams.slice(0, teamCount) as team, i}
                   <tr class="hover:bg-gray-50">
                     <td class="px-2 py-2">
+                        <div class="relative group">
                       <input
                         type="text"
                         value={team.name}
-                        class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs"
+                            class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs truncate"
                         on:change={(e) => updateTeamName(i, e.currentTarget.value)}
-                      />
+                            data-tippy-content={team.name}
+                          />
+                          {#if team.name.length > 12}
+                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap">
+                              {team.name}
+                            </div>
+                          {/if}
+                        </div>
                     </td>
                     <td class="px-2 py-2">
                       <input
@@ -1277,17 +1316,33 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                  <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                    <th class="w-12 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
                   {#each dependencyMatrix.teams as team}
-                    <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{team}</th>
+                      <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div class="relative group w-12">
+                          <div class="truncate w-12">{team}</div>
+                          {#if team.length > 8}
+                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
+                              {team}
+                            </div>
+                          {/if}
+                        </div>
+                      </th>
                   {/each}
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
                 {#each dependencyMatrix.teams as fromTeam, fromIndex}
                   <tr class="hover:bg-gray-50">
-                    <th class="px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th class="w-12 px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div class="relative group w-12">
+                          <div class="truncate w-12">{fromTeam}</div>
+                          {#if fromTeam.length > 8}
+                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
                       {fromTeam}
+                            </div>
+                          {/if}
+                        </div>
                     </th>
                     {#each dependencyMatrix.teams as toTeam, toIndex}
                       <td class="px-2 py-2">
@@ -1331,7 +1386,7 @@
     </div>
   </div>
 
-  <!-- Team Visualization -->
+    <!-- Team Dependencies Visualization -->
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
     <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
       <h3 class="text-lg font-semibold text-gray-900">Team Dependencies</h3>
@@ -1370,7 +1425,7 @@
       </div>
     </div>
 
-    <div class="relative w-full h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+      <div class="relative w-full h-[660px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
       <!-- Legend -->
       {#if showLegend}
         <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-sm">
@@ -1400,7 +1455,7 @@
         </div>
       {/if}
 
-      <svg width="100%" height="100%" viewBox="-100 -100 1200 800" preserveAspectRatio="xMidYMid meet">
+        <svg width="100%" height="100%" viewBox="-100 -100 1200 880" preserveAspectRatio="xMidYMid meet">
         <!-- Background grid for professional look -->
         <defs>
           <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
@@ -1453,13 +1508,13 @@
           {@const angleStep = (2 * Math.PI) / nodes.length}
           {@const sourceAngle = angleStep * sourceIndex - Math.PI / 2}
           {@const targetAngle = angleStep * targetIndex - Math.PI / 2}
-          {@const horizontalScale = 1.6}
-          {@const radiusX = Math.min(550, Math.max(400, 1100 / (nodes.length)))}
-          {@const radiusY = Math.min(350, Math.max(250, 700 / (nodes.length)))}
+            {@const horizontalScale = 1.4}
+            {@const radiusX = Math.min(450, Math.max(350, 1000 / (nodes.length)))}
+            {@const radiusY = Math.min(350, Math.max(300, 800 / (nodes.length)))}
           {@const x1 = 500 + radiusX * Math.cos(sourceAngle) * horizontalScale}
-          {@const y1 = 300 + radiusY * Math.sin(sourceAngle)}
+            {@const y1 = 400 + radiusY * Math.sin(sourceAngle)}
           {@const x2 = 500 + radiusX * Math.cos(targetAngle) * horizontalScale}
-          {@const y2 = 300 + radiusY * Math.sin(targetAngle)}
+            {@const y2 = 400 + radiusY * Math.sin(targetAngle)}
           
           {#if visualizationMode === 'weighted'}
             <!-- Single weighted line -->
@@ -1467,9 +1522,9 @@
             {@const midY = (y1 + y2) / 2}
             {@const dx = x2 - x1}
             {@const dy = y2 - y1}
-            {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * 50}
-            {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * 50}
-            {@const nodeRadius = 85}
+              {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * 40}
+              {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * 40}
+              {@const nodeRadius = 75}
             {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
             {@const endX = x2 - (dx * nodeRadius / totalLength)}
             {@const endY = y2 - (dy * nodeRadius / totalLength)}
@@ -1494,14 +1549,14 @@
           {:else}
             <!-- Multiple lines based on dependency strength -->
             {#each Array(edge.data.strength) as _, lineIndex}
-              {@const offset = (lineIndex - (edge.data.strength - 1) / 2) * 40}
+                {@const offset = (lineIndex - (edge.data.strength - 1) / 2) * 30}
               {@const midX = (x1 + x2) / 2}
               {@const midY = (y1 + y2) / 2}
               {@const dx = x2 - x1}
               {@const dy = y2 - y1}
-              {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * (100 + offset)}
-              {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * (100 + offset)}
-              {@const nodeRadius = 85}
+                {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * (80 + offset)}
+                {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * (80 + offset)}
+                {@const nodeRadius = 75}
               {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
               {@const endX = x2 - (dx * nodeRadius / totalLength)}
               {@const endY = y2 - (dy * nodeRadius / totalLength)}
@@ -1529,42 +1584,42 @@
         {#each nodes as node, i}
           {@const angleStep = (2 * Math.PI) / nodes.length}
           {@const angle = angleStep * i - Math.PI / 2}
-          {@const horizontalScale = 1.6}
-          {@const radiusX = Math.min(550, Math.max(400, 1100 / (nodes.length)))}
-          {@const radiusY = Math.min(350, Math.max(250, 700 / (nodes.length)))}
+            {@const horizontalScale = 1.4}
+            {@const radiusX = Math.min(450, Math.max(350, 1000 / (nodes.length)))}
+            {@const radiusY = Math.min(350, Math.max(300, 800 / (nodes.length)))}
           {@const x = 500 + radiusX * Math.cos(angle) * horizontalScale}
-          {@const y = 300 + radiusY * Math.sin(angle)}
+            {@const y = 400 + radiusY * Math.sin(angle)}
           
           <!-- Team Node -->
           <g transform="translate({x}, {y})">
             <!-- Enhanced node shadow -->
             <rect
-              x="-80"
-              y="-64"
-              width="160"
-              height="128"
-              rx="12"
+                x="-70"
+                y="-56"
+                width="140"
+                height="112"
+                rx="8"
               fill="#ffffff"
               filter="url(#shadow)"
             />
             <!-- Node background with gradient -->
             <rect
-              x="-80"
-              y="-64"
-              width="160"
-              height="128"
-              rx="12"
+                x="-70"
+                y="-56"
+                width="140"
+                height="112"
+                rx="8"
               fill="url(#bodyGradient)"
               stroke="#e2e8f0"
               stroke-width="2"
             />
             <!-- Node header with gradient -->
             <rect
-              x="-80"
-              y="-64"
-              width="160"
-              height="40"
-              rx="12"
+                x="-70"
+                y="-56"
+                width="140"
+                height="35"
+                rx="8"
               fill="url(#headerGradient)"
               stroke="#e2e8f0"
               stroke-width="2"
@@ -1572,55 +1627,60 @@
             <!-- Team name with better styling -->
             <text 
               text-anchor="middle"
-              y="-38"
-              class="text-base font-semibold fill-gray-700"
-            >{node.data.label}</text>
+                y="-32"
+                class="text-sm font-semibold fill-gray-700"
+              >
+                <tspan>{node.data.label.length > 12 ? node.data.label.slice(0, 12) + '...' : node.data.label}</tspan>
+              </text>
+              {#if node.data.label.length > 12}
+                <title>{node.data.label}</title>
+              {/if}
             <!-- Metrics with improved layout -->
             <g class="text-xs fill-gray-700">
               <!-- Team Size and Efficiency -->
-              <g transform="translate(-70, -10)">
+                <g transform="translate(-60, -10)">
                 <text 
                   text-anchor="start"
                   class="font-medium"
                 >Size</text>
                 <text 
                   text-anchor="start"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
+                    y="18"
+                    class="text-sm font-semibold fill-gray-900"
                 >{node.data.size}</text>
               </g>
-              <g transform="translate(70, -10)">
+                <g transform="translate(60, -10)">
                 <text 
                   text-anchor="end"
                   class="font-medium"
                 >⚡ Eff</text>
                 <text 
                   text-anchor="end"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
+                    y="18"
+                    class="text-sm font-semibold fill-gray-900"
                 >{node.data.efficiency.toFixed(1)}x</text>
               </g>
               <!-- Throughput and Lead Time -->
-              <g transform="translate(-70, 35)">
+                <g transform="translate(-60, 32)">
                 <text 
                   text-anchor="start"
                   class="font-medium"
                 >📈 Items/d</text>
                 <text 
                   text-anchor="start"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
+                    y="18"
+                    class="text-sm font-semibold fill-gray-900"
                 >{node.data.throughput.toFixed(1)}</text>
               </g>
-              <g transform="translate(70, 35)">
+                <g transform="translate(60, 32)">
                 <text 
                   text-anchor="end"
                   class="font-medium"
                 >⏱️ Days</text>
                 <text 
                   text-anchor="end"
-                  y="20"
-                  class="text-base font-semibold fill-gray-900"
+                    y="18"
+                    class="text-sm font-semibold fill-gray-900"
                 >{node.data.leadTime.toFixed(1)}</text>
               </g>
             </g>
@@ -1630,9 +1690,140 @@
     </div>
   </div>
 
-  <!-- Analysis Summary -->
-  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Impact Analysis</h3>
+    <!-- Cost Analysis of Current Dependencies -->
+  <div class="cost-analysis-section bg-white p-6 rounded-lg shadow border border-gray-200">
+      {#if nodes.length > 0}
+        {@const costs = calculateCosts()}
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">Cost Analysis of Current Team Dependencies</h3>
+        <div class="flex items-center gap-2 px-4 py-2 bg-secondary/5 rounded-lg border border-secondary/20">
+          <span class="text-sm text-gray-600">Total Weekly Cost:</span>
+          <span class="text-xl font-bold text-secondary">${costs.totalCost.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Cost Distribution Chart -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+          <h4 class="text-sm font-medium text-gray-700 mb-4">Cost Distribution</h4>
+          <div class="relative h-[400px] w-full">
+            <canvas
+              bind:this={costChartCanvas}
+              class="w-full h-full"
+            ></canvas>
+          </div>
+        </div>
+
+        <!-- Cost Impact Analysis -->
+        <div class="space-y-6">
+          <!-- Weekly Cost Summary -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
+              <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
+              <div class="text-xl font-bold text-sky-500 mt-1">
+                ${costs.weeklyMeetingCost.toFixed(2)}
+              </div>
+              <div class="text-xs text-gray-500 mt-1">
+                {((costs.weeklyMeetingCost / costs.totalCost) * 100).toFixed(2)}% of total
+              </div>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
+              <div class="text-sm font-medium text-gray-600">Communication</div>
+              <div class="text-xl font-bold text-amber-500 mt-1">
+                ${costs.communicationCost.toFixed(2)}
+              </div>
+              <div class="text-xs text-gray-500 mt-1">
+                {((costs.communicationCost / costs.totalCost) * 100).toFixed(2)}% of total
+              </div>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
+              <div class="text-sm font-medium text-gray-600">Process Overhead</div>
+              <div class="text-xl font-bold text-emerald-500 mt-1">
+                ${costs.processOverhead.toFixed(2)}
+              </div>
+              <div class="text-xs text-gray-500 mt-1">
+                {((costs.processOverhead / costs.totalCost) * 100).toFixed(2)}% of total
+              </div>
+            </div>
+          </div>
+
+          <!-- Impact Summary -->
+          <div class="p-4 bg-gray-50 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">Dependency Impact Summary</h4>
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <h5 class="text-sm font-medium text-sky-500">Meeting Impact</h5>
+                  <span class="text-xs text-gray-500">Per Team Member: ${(costs.weeklyMeetingCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week</span>
+                </div>
+                <p class="text-xs text-gray-600">
+                  Based on {costParams.meetings.weeklyDuration}hr/week × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
+                </p>
+              </div>
+              
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <h5 class="text-sm font-medium text-amber-500">Communication Overhead</h5>
+                  <span class="text-xs text-gray-500">Overhead Factor: {costParams.overhead.communicationOverhead}x</span>
+                </div>
+                <p class="text-xs text-gray-600">
+                  Includes async communication, documentation, and cross-team coordination costs
+                </p>
+              </div>
+              
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <h5 class="text-sm font-medium text-emerald-500">Process Efficiency</h5>
+                  <span class="text-xs text-gray-500">Annual Cost: ${(costs.totalCost * 52).toFixed(2)}</span>
+                </div>
+                <p class="text-xs text-gray-600">
+                  Total coordination cost per team member: ${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Optimization Suggestions -->
+          <div class="p-4 bg-secondary/5 rounded-lg border border-secondary/20">
+            <h4 class="text-sm font-medium text-gray-900 mb-2">Cost Optimization Opportunities</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              {#if (costs.weeklyMeetingCost / costs.totalCost) > 0.4}
+                <li class="flex items-start gap-2">
+                  <span class="text-secondary">•</span>
+                  Consider reducing meeting frequency or attendee count
+                </li>
+              {/if}
+              {#if (costs.communicationCost / costs.totalCost) > 0.4}
+                <li class="flex items-start gap-2">
+                  <span class="text-secondary">•</span>
+                  Look for ways to streamline team communication channels
+                </li>
+              {/if}
+              {#if (costs.processOverhead / costs.totalCost) > 0.3}
+                <li class="flex items-start gap-2">
+                  <span class="text-secondary">•</span>
+                  Review and optimize coordination processes
+                </li>
+              {/if}
+              {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 10)}
+                <li class="flex items-start gap-2">
+                  <span class="text-secondary">•</span>
+                  Total coordination costs are high relative to team size
+                </li>
+              {/if}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {/if}
+    </div>
+
+    <!-- Impact Analysis Comparison -->
+    <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Impact Analysis</h3>
+        <p class="text-gray-600">Analyze potential cost savings and efficiency gains by optimizing your team dependencies through different organizational models.</p>
+      </div>
     
     <!-- Comparison Mode Selection -->
     <div class="mb-6">
@@ -1828,7 +2019,16 @@
               <tr>
                 <th class="w-24 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
                 {#each dependencyMatrix.teams as team}
-                  <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{team}</th>
+                    <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="relative group w-12">
+                        <div class="truncate w-12">{team}</div>
+                        {#if team.length > 8}
+                          <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
+                            {team}
+                          </div>
+                        {/if}
+                      </div>
+                    </th>
                 {/each}
               </tr>
             </thead>
@@ -1875,12 +2075,16 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Current Model -->
           <div class="bg-white rounded-lg p-4 border-2 border-secondary">
-            <div class="text-sm font-medium text-secondary mb-2">Current Model</div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-sm font-medium text-secondary">Current Dependency Costs</div>
+              </div>
             <div class="space-y-3">
               <div>
-                <div class="flex justify-between text-sm">
+                  <div class="flex justify-between text-sm items-center">
                   <span class="text-gray-600">Weekly Cost</span>
-                  <span class="font-medium">${currentCosts.totalCost.toFixed(2)}</span>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium">${currentCosts.totalCost.toFixed(0)}</span>
+                    </div>
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
                   Including dependencies and coordination
@@ -1909,20 +2113,21 @@
 
           <!-- Comparison Model -->
           <div class="bg-white rounded-lg p-4 border border-gray-200">
-            <div class="text-sm font-medium text-gray-600 mb-2">
-              {#if comparisonMode === 'topology'}
-                If Teams Were Independent
-              {:else if comparisonMode === 'lazy'}
-                With Adjusted Dependencies
-              {:else}
-                With Custom Dependencies
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-sm font-medium text-gray-600">Future Dependency Costs</div>
+                {#if costDifference > 0}
+                  <span class="text-sm font-medium text-green-600">(-${costDifference.toFixed(0)})</span>
+                {:else if costDifference < 0}
+                  <span class="text-sm font-medium text-red-600">(+${(-costDifference).toFixed(0)})</span>
               {/if}
             </div>
             <div class="space-y-3">
               <div>
-                <div class="flex justify-between text-sm">
+                  <div class="flex justify-between text-sm items-center">
                   <span class="text-gray-600">Weekly Cost</span>
-                  <span class="font-medium">${comparisonMetrics.costs.totalCost.toFixed(2)}</span>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium">${comparisonMetrics.costs.totalCost.toFixed(0)}</span>
+                    </div>
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
                   {#if comparisonMode === 'topology'}
@@ -2294,135 +2499,6 @@
       </div>
     {/if}
   </div>
-
-  <!-- Cost Analysis Section -->
-  <div class="space-y-8">
-    <!-- Cost Summary and Distribution -->
-    {#if nodes.length > 0}
-      {@const costs = calculateCosts()}
-      {@const totalCost = costs.totalCost}
-
-      <!-- Cost Distribution Section -->
-      <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">Cost Analysis</h3>
-        
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <!-- Chart -->
-          <div>
-            <div class="relative h-[400px]">
-              <canvas
-                bind:this={costChartCanvas}
-                class="w-full h-full"
-              ></canvas>
-            </div>
-          </div>
-
-          <!-- Cost Breakdown -->
-          <div class="space-y-6">
-            <!-- Weekly Cost Summary -->
-            <div class="grid grid-cols-3 gap-4">
-              <div class="bg-gradient-to-br from-secondary/10 to-white p-4 rounded-lg border border-secondary/20">
-                <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
-                <div class="text-xl font-bold text-secondary mt-1">
-                  ${costs.weeklyMeetingCost.toFixed(2)}
-                </div>
-                <div class="text-xs text-gray-500 mt-1">
-                  {((costs.weeklyMeetingCost / costs.totalCost) * 100).toFixed(2)}% of total
-                </div>
-              </div>
-              <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
-                <div class="text-sm font-medium text-gray-600">Communication</div>
-                <div class="text-xl font-bold text-amber-600 mt-1">
-                  ${costs.communicationCost.toFixed(2)}
-                </div>
-                <div class="text-xs text-gray-500 mt-1">
-                  {((costs.communicationCost / costs.totalCost) * 100).toFixed(2)}% of total
-                </div>
-              </div>
-              <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
-                <div class="text-sm font-medium text-gray-600">Process Overhead</div>
-                <div class="text-xl font-bold text-emerald-600 mt-1">
-                  ${costs.processOverhead.toFixed(2)}
-                </div>
-                <div class="text-xs text-gray-500 mt-1">
-                  {((costs.processOverhead / costs.totalCost) * 100).toFixed(2)}% of total
-                </div>
-              </div>
-            </div>
-
-            <!-- Cost Analysis Details -->
-            <div class="space-y-4">
-              <div class="p-4 bg-gray-50 rounded-lg">
-                <h4 class="text-sm font-medium text-gray-900 mb-3">Cost Breakdown & Impact</h4>
-                <div class="space-y-4">
-                  <div>
-                    <div class="flex justify-between items-center mb-1">
-                      <h5 class="text-sm font-medium text-secondary">Meeting Costs</h5>
-                      <span class="text-xs text-gray-500">Per Team Member: ${(costs.weeklyMeetingCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week</span>
-                    </div>
-                    <p class="text-xs text-gray-600">
-                      Based on {costParams.meetings.weeklyDuration}hr/week × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <div class="flex justify-between items-center mb-1">
-                      <h5 class="text-sm font-medium text-amber-600">Communication Impact</h5>
-                      <span class="text-xs text-gray-500">Overhead Factor: {costParams.overhead.communicationOverhead}x</span>
-                    </div>
-                    <p class="text-xs text-gray-600">
-                      Includes async communication, documentation, and cross-team coordination costs
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <div class="flex justify-between items-center mb-1">
-                      <h5 class="text-sm font-medium text-emerald-600">Process Efficiency</h5>
-                      <span class="text-xs text-gray-500">Annual Cost: ${(costs.totalCost * 52).toFixed(2)}</span>
-                    </div>
-                    <p class="text-xs text-gray-600">
-                      Total coordination cost per team member: ${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Optimization Suggestions -->
-              <div class="p-4 bg-secondary/5 rounded-lg border border-secondary/20">
-                <h4 class="text-sm font-medium text-gray-900 mb-2">Cost Optimization Opportunities</h4>
-                <ul class="space-y-2 text-sm text-gray-600">
-                  {#if (costs.weeklyMeetingCost / costs.totalCost) > 0.4}
-                    <li class="flex items-start gap-2">
-                      <span class="text-secondary">•</span>
-                      Consider reducing meeting frequency or attendee count
-                    </li>
-                  {/if}
-                  {#if (costs.communicationCost / costs.totalCost) > 0.4}
-                    <li class="flex items-start gap-2">
-                      <span class="text-secondary">•</span>
-                      Look for ways to streamline team communication channels
-                    </li>
-                  {/if}
-                  {#if (costs.processOverhead / costs.totalCost) > 0.3}
-                    <li class="flex items-start gap-2">
-                      <span class="text-secondary">•</span>
-                      Review and optimize coordination processes
-                    </li>
-                  {/if}
-                  {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 10)}
-                    <li class="flex items-start gap-2">
-                      <span class="text-secondary">•</span>
-                      Total coordination costs are high relative to team size
-                    </li>
-                  {/if}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    {/if}
-  </div>
 </div>
 
 <!-- Add this at the very end of the file, right before the closing style tag -->
@@ -2520,10 +2596,11 @@
         </button>
       </div>
 
-      <!-- Share Options -->
+        <!-- Export Options -->
       <div class="bg-white rounded-xl p-6 border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Share Analysis</h3>
-        <p class="text-gray-600 mb-4">Share your team dependency analysis with stakeholders.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Export Analysis</h3>
+          <p class="text-gray-600 mb-4">Download your analysis for offline review or sharing.</p>
+          <div class="flex flex-col gap-3">
         <button
           on:click={handleShare}
           class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
@@ -2535,7 +2612,30 @@
             Share Analysis
           </div>
         </button>
+            <button
+              on:click={handleExportExcel}
+              class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow hover:shadow-lg transition-all duration-200"
+            >
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Export to Excel
       </div>
+            </button>
+            <button
+              on:click={handleExportPNG}
+              class="w-full px-4 py-3 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow hover:shadow-lg transition-all duration-200"
+            >
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Export as PNG
+              </div>
+            </button>
+          </div>
+        </div>
     </div>
   </div>
 </div>
@@ -2577,6 +2677,7 @@
 />
 
 <ExpertModal bind:show={showExpertModal} />
+</div>
 
 <style>
   /* ... existing styles ... */

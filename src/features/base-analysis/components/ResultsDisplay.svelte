@@ -172,7 +172,7 @@
           legend: {
             display: true,
             position: 'top' as const,
-            align: 'center' as const,
+            align: 'end' as const,
             labels: {
               padding: 20,
               usePointStyle: true,
@@ -200,7 +200,7 @@
                 label: {
                   display: true,
                   content: `Break-even Point (Month ${breakEvenPoint})`,
-                  position: 'center',
+                  position: 'start',
                   backgroundColor: '#dd9933',
                   color: 'white',
                   font: {
@@ -385,9 +385,10 @@
       const breakEvenPoint = results.breakEvenMonths || 0;
       
       if (breakEvenPoint > 0) {
-        annotations.breakEven.value = breakEvenPoint;
+        // Subtract 1 to align with 0-based month indexing
+        annotations.breakEven.value = breakEvenPoint - 1;
         annotations.breakEven.display = true;
-        annotations.breakEven.label.content = `Break-even Point (Month ${breakEvenPoint})`;
+        annotations.breakEven.label.content = `Break-even Point (Month ${Math.round(breakEvenPoint)})`;
       } else {
         annotations.breakEven.display = false;
       }

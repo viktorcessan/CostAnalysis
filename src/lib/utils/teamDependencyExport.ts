@@ -1,6 +1,6 @@
 import type { Team, DependencyMatrix } from '$lib/types/teamDependency';
 import { exportToExcel } from './exportUtils';
-import { toPng } from 'html-to-image';
+import { toPng } from 'html-to-image/es';
 import { Chart } from 'chart.js/auto';
 
 interface TeamDependencyExportData {

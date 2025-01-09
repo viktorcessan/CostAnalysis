@@ -3,6 +3,7 @@
   import type { CalculationResults, SolutionInputs, PlatformInputs, OutsourceInputs, HybridInputs } from '$lib/types/calculator';
   import { onMount, onDestroy } from 'svelte';
   import { Chart } from 'chart.js';
+  import annotationPlugin from 'chartjs-plugin-annotation';
   import '$lib/utils/chartSetup';
   import html2canvas from 'html2canvas';
   import { exportToExcel } from '$lib/utils/exportUtils';
@@ -10,6 +11,9 @@
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
   import BaseAnalysisShareModal from '$lib/components/ui/BaseAnalysisShareModal.svelte';
   import { base } from '$app/paths';
+
+  // Register the annotation plugin
+  Chart.register(annotationPlugin);
 
   // Chart reference
   let chart: Chart | null = null;
@@ -89,6 +93,8 @@
 
     const ctx = chartCanvas.getContext('2d');
     if (!ctx) return;
+
+    const breakEvenPoint = results?.breakEvenMonths || 0;
 
     const config = {
       type: 'line' as const,
@@ -177,55 +183,33 @@
             }
           },
           annotation: {
-            drawTime: 'beforeDatasetsDraw',
+            clip: false,
+            common: {
+              drawTime: 'afterDraw'
+            },
             annotations: {
-              buildPeriod: {
-                type: 'box',
-                xMin: 0,
-                xMax: 0,
-                yMin: 'min',
-                yMax: 'max',
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                borderColor: 'rgba(239, 68, 68, 0.25)',
-                borderWidth: 1,
-                label: {
-                  display: true,
-                  content: 'Build/Transition Period',
-                  position: 'start',
-                  backgroundColor: 'rgba(239, 68, 68, 0.9)',
-                  color: 'white',
-                  font: {
-                    size: 11,
-                    weight: 'bold' as const
-                  },
-                  padding: 4
-                }
-              },
               breakEven: {
                 type: 'line',
-                xMin: 0,
-                xMax: 0,
-                yMin: 'min',
-                yMax: 'max',
+                scaleID: 'x',
+                value: breakEvenPoint,
                 borderColor: '#dd9933',
                 borderWidth: 2,
                 borderDash: [6, 6],
-                drawTime: 'beforeDatasetsDraw',
+                drawTime: 'afterDraw',
+                display: breakEvenPoint > 0,
                 label: {
                   display: true,
-                  content: 'Break-even Point',
-                  position: {
-                    x: 'start',
-                    y: 'center'
-                  },
+                  content: `Break-even Point (Month ${breakEvenPoint})`,
+                  position: 'center',
                   backgroundColor: '#dd9933',
                   color: 'white',
                   font: {
-                    size: 11,
-                    weight: 'bold' as const
+                    size: 12,
+                    weight: 'bold'
                   },
-                  rotation: -90,
-                  padding: 6
+                  rotation: 0,
+                  padding: 8,
+                  yAdjust: -20
                 }
               }
             }
@@ -307,7 +291,7 @@
       }
     }
 
-    // Update chart title and data based on type
+    // Update datasets based on chart type
     switch (activeChart) {
       case 'cumulative':
         // Calculate cumulative costs correctly
@@ -395,46 +379,21 @@
         break;
     }
 
-    // Update annotations
+    // Update break-even annotation
     if (chart.options.plugins?.annotation?.annotations) {
       const annotations = chart.options.plugins.annotation.annotations as any;
+      const breakEvenPoint = results.breakEvenMonths || 0;
       
-      // Update build period annotation
-      if (buildPeriod > 0) {
-        annotations.buildPeriod.xMin = -0.5;
-        annotations.buildPeriod.xMax = buildPeriod - 0.5;
-        annotations.buildPeriod.display = true;
-        annotations.buildPeriod.label.content = `${buildPeriod}-Month ${
-          currentState.solutionInputs?.type === 'platform' ? 'Build' :
-          currentState.solutionInputs?.type === 'outsource' ? 'Transition' :
-          'Build/Transition'} Period`;
-      } else {
-        annotations.buildPeriod.display = false;
-      }
-
-      // Update break-even point annotation
       if (breakEvenPoint > 0) {
-        annotations.breakEven.xMin = breakEvenPoint - 0.5;
-        annotations.breakEven.xMax = breakEvenPoint - 0.5;
-        // Only show in cumulative view
-        annotations.breakEven.display = activeChart === 'cumulative';
-        annotations.breakEven.label.content = `Break-even at Month ${breakEvenPoint}`;
-        // Position the label in the middle of the chart height
-        if (chart.scales.y) {
-          const yScale = chart.scales.y;
-          const yMiddle = (yScale.max + yScale.min) / 2;
-          annotations.breakEven.label.yAdjust = yMiddle;
-        }
+        annotations.breakEven.value = breakEvenPoint;
+        annotations.breakEven.display = true;
+        annotations.breakEven.label.content = `Break-even Point (Month ${breakEvenPoint})`;
       } else {
         annotations.breakEven.display = false;
       }
     }
 
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = data1;
-    chart.data.datasets[1].data = data2;
-
-    // Add chart description
+    // Update chart description
     const chartDescription = document.getElementById('chart-description');
     if (chartDescription) {
       let description = '';
@@ -454,7 +413,7 @@
             buildPeriod ? `During the initial ${buildPeriod}-month ${
               solutionType === 'platform' ? 'build' :
               solutionType === 'outsource' ? 'transition' :
-              'build/transition'} period , costs are typically higher due to parallel operations and implementation expenses. ` : ''
+              'build/transition'} period, costs are typically higher due to parallel operations and implementation expenses. ` : ''
           }After this period, you'll see the full effect of the cost reduction strategy.`;
           break;
         case 'savings':
@@ -463,11 +422,15 @@
               solutionType === 'platform' ? 'build' :
               solutionType === 'outsource' ? 'transition' :
               'build/transition'} period, savings may be negative due to implementation costs. ` : ''
-          }${breakEvenPoint ? `You'll reach the break-even point at month ${breakEvenPoint} (orange dashed line), after which you'll see consistent positive savings of ${formatCurrency(results.monthlySavings)}.` : ''}`;
+          }${breakEvenPoint ? `You'll reach the break-even point at month ${breakEvenPoint}, after which you'll see consistent positive savings of ${formatCurrency(results.monthlySavings)}.` : ''}`;
           break;
       }
       chartDescription.textContent = description;
     }
+
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data1;
+    chart.data.datasets[1].data = data2;
 
     chart.update();
   }
@@ -828,7 +791,7 @@
   </div>
 
   <!-- Chart -->
-  <div class="h-80 bg-gray-50 rounded-lg p-4">
+  <div class="h-[500px] bg-gray-50 rounded-lg p-4">
     <canvas bind:this={chartCanvas}></canvas>
   </div>
 

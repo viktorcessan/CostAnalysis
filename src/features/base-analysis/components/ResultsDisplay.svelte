@@ -96,20 +96,24 @@
         labels: [],
         datasets: [
           {
-            label: 'Baseline Cost',
+            label: 'Current Cost',
             data: [],
-            borderColor: '#6B7280',
-            backgroundColor: 'rgba(107, 114, 128, 0.1)',
+            borderColor: '#6B7280', // Gray-500
+            backgroundColor: 'rgba(107, 114, 128, 0.05)',
             fill: true,
-            pointRadius: 0 // Hide points
+            pointRadius: 3,
+            borderWidth: 2,
+            tension: 0.4
           },
           {
             label: 'Solution Cost',
             data: [],
-            borderColor: '#dd9933',
-            backgroundColor: 'rgba(221, 153, 51, 0.1)',
+            borderColor: '#dd9933', // Theme orange
+            backgroundColor: 'rgba(221, 153, 51, 0.05)',
             fill: true,
-            pointRadius: 0 // Hide points
+            pointRadius: 3,
+            borderWidth: 2,
+            tension: 0.4
           }
         ]
       },
@@ -121,8 +125,27 @@
           intersect: false
         },
         plugins: {
+          title: {
+            display: true,
+            text: 'Cost Analysis Over Time',
+            font: {
+              size: 16,
+              weight: 'bold' as const
+            },
+            padding: 20
+          },
+          subtitle: {
+            display: true,
+            text: 'Compare costs between current operations and proposed solution',
+            font: {
+              size: 14
+            },
+            padding: {
+              bottom: 20
+            }
+          },
           datalabels: {
-            display: false // Ensure data labels are off
+            display: false
           },
           tooltip: {
             callbacks: {
@@ -130,26 +153,122 @@
                 const value = context.parsed.y;
                 return `${context.dataset.label}: ${formatCurrency(value)}`;
               }
-            }
+            },
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            titleColor: '#1f2937',
+            bodyColor: '#1f2937',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            padding: 10,
+            boxPadding: 4,
+            displayColors: true
           },
           legend: {
-            display: false
+            display: true,
+            position: 'top' as const,
+            align: 'center' as const,
+            labels: {
+              padding: 20,
+              usePointStyle: true,
+              pointStyle: 'circle',
+              font: {
+                size: 12
+              }
+            }
+          },
+          annotation: {
+            drawTime: 'beforeDatasetsDraw',
+            annotations: {
+              buildPeriod: {
+                type: 'box',
+                xMin: 0,
+                xMax: 0,
+                yMin: 'min',
+                yMax: 'max',
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                borderColor: 'rgba(239, 68, 68, 0.25)',
+                borderWidth: 1,
+                label: {
+                  display: true,
+                  content: 'Build/Transition Period',
+                  position: 'start',
+                  backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                  color: 'white',
+                  font: {
+                    size: 11,
+                    weight: 'bold' as const
+                  },
+                  padding: 4
+                }
+              },
+              breakEven: {
+                type: 'line',
+                xMin: 0,
+                xMax: 0,
+                yMin: 'min',
+                yMax: 'max',
+                borderColor: '#dd9933',
+                borderWidth: 2,
+                borderDash: [6, 6],
+                drawTime: 'beforeDatasetsDraw',
+                label: {
+                  display: true,
+                  content: 'Break-even Point',
+                  position: {
+                    x: 'start',
+                    y: 'center'
+                  },
+                  backgroundColor: '#dd9933',
+                  color: 'white',
+                  font: {
+                    size: 11,
+                    weight: 'bold' as const
+                  },
+                  rotation: -90,
+                  padding: 6
+                }
+              }
+            }
           }
         },
         scales: {
           x: {
             title: {
               display: true,
-              text: 'Month'
+              text: 'Month',
+              padding: 10,
+              font: {
+                size: 12,
+                weight: 'bold' as const
+              }
+            },
+            grid: {
+              display: true,
+              drawBorder: true,
+              drawOnChartArea: true,
+              drawTicks: true,
+              color: 'rgba(0, 0, 0, 0.05)'
             }
           },
           y: {
             title: {
               display: true,
-              text: 'Cost'
+              text: 'Cost',
+              padding: 10,
+              font: {
+                size: 12,
+                weight: 'bold' as const
+              }
             },
             ticks: {
               callback: (value: any) => formatCurrency(value)
+            },
+            grid: {
+              display: true,
+              drawBorder: true,
+              drawOnChartArea: true,
+              drawTicks: true,
+              color: 'rgba(0, 0, 0, 0.05)'
             }
           }
         }
@@ -166,31 +285,190 @@
     const labels = results.monthlyData.map(d => `Month ${d.month}`);
     let data1: ChartDataArray = [];
     let data2: ChartDataArray = [];
+    let buildPeriod = 0;
+    let breakEvenPoint = results.breakEvenMonths || 0;
 
+    // Get build/transition period based on solution type
+    const currentState = calculatorStore.getCurrentState();
+    if (currentState.solutionInputs) {
+      switch (currentState.solutionInputs.type) {
+        case 'platform':
+          buildPeriod = currentState.solutionInputs.platform?.timeToBuild || 0;
+          break;
+        case 'outsource':
+          buildPeriod = currentState.solutionInputs.outsource?.transitionTime || 0;
+          break;
+        case 'hybrid':
+          buildPeriod = Math.max(
+            currentState.solutionInputs.hybrid?.timeToBuild || 0,
+            currentState.solutionInputs.hybrid?.transitionTime || 0
+          );
+          break;
+      }
+    }
+
+    // Update chart title and data based on type
     switch (activeChart) {
       case 'cumulative':
-        data1 = results.monthlyData.map(d => d.baseline);
-        data2 = results.monthlyData.map(d => d.solution);
-        chart.data.datasets[0].label = 'Baseline Cost';
-        chart.data.datasets[1].label = 'Solution Cost';
+        // Calculate cumulative costs correctly
+        data1 = results.monthlyData.reduce((acc, d) => {
+          const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
+          // Current cost is always the same monthly
+          acc.push(prev + results.totalCost);
+          return acc;
+        }, [] as number[]);
+        
+        data2 = results.monthlyData.reduce((acc, d) => {
+          const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
+          let monthlyCost = 0;
+          
+          if (d.month <= buildPeriod) {
+            // During build period:
+            // 1. Full current cost (as we're still operating normally)
+            // 2. Plus the implementation cost spread over the build period
+            const implementationCost = currentState.solutionInputs?.platform?.platformCost || 0;
+            monthlyCost = results.totalCost + (implementationCost / buildPeriod);
+          } else {
+            // After build period:
+            // Just the reduced monthly cost
+            monthlyCost = results.totalCost - results.monthlySavings;
+          }
+          
+          acc.push(prev + monthlyCost);
+          return acc;
+        }, [] as number[]);
+
+        chart.data.datasets[0].label = 'Cumulative Current Cost';
+        chart.data.datasets[1].label = 'Cumulative Solution Cost';
+        chart.data.datasets[0].borderColor = '#6B7280';
+        chart.data.datasets[1].borderColor = '#dd9933';
+        chart.data.datasets[0].backgroundColor = 'rgba(107, 114, 128, 0.05)';
+        chart.data.datasets[1].backgroundColor = 'rgba(221, 153, 51, 0.05)';
+        chart.data.datasets[0].hidden = false;
+        chart.data.datasets[1].hidden = false;
         break;
+
       case 'monthly':
-        data1 = results.monthlyData.map(d => d.baseline / d.month);
-        data2 = results.monthlyData.map(d => d.solution / d.month);
-        chart.data.datasets[0].label = 'Monthly Baseline';
-        chart.data.datasets[1].label = 'Monthly Solution';
+        // Use actual monthly costs
+        data1 = results.monthlyData.map(() => results.totalCost); // Current cost is always flat
+        data2 = results.monthlyData.map((d) => {
+          if (d.month <= buildPeriod) {
+            // During build period: current cost + implementation cost
+            const implementationCost = currentState.solutionInputs?.platform?.platformCost || 0;
+            return results.totalCost + (implementationCost / buildPeriod);
+          } else {
+            // After build period: just the reduced monthly cost
+            return results.totalCost - results.monthlySavings;
+          }
+        });
+        chart.data.datasets[0].label = 'Monthly Current Cost';
+        chart.data.datasets[1].label = 'Monthly Solution Cost';
+        chart.data.datasets[0].borderColor = '#6B7280';
+        chart.data.datasets[1].borderColor = '#dd9933';
+        chart.data.datasets[0].backgroundColor = 'rgba(107, 114, 128, 0.05)';
+        chart.data.datasets[1].backgroundColor = 'rgba(221, 153, 51, 0.05)';
+        chart.data.datasets[0].hidden = false;
+        chart.data.datasets[1].hidden = false;
         break;
+
       case 'savings':
-        data1 = results.monthlyData.map(d => d.savings);
-        data2 = [];
+        // Calculate actual monthly savings
+        data1 = results.monthlyData.map((d) => {
+          if (d.month <= buildPeriod) {
+            // During build period: negative savings due to implementation costs
+            const implementationCost = currentState.solutionInputs?.platform?.platformCost || 0;
+            return -(implementationCost / buildPeriod);
+          } else {
+            // After build period: constant monthly savings
+            return results.monthlySavings;
+          }
+        });
+        
         chart.data.datasets[0].label = 'Monthly Savings';
+        chart.data.datasets[0].borderColor = '#dd9933';
+        chart.data.datasets[0].backgroundColor = 'rgba(221, 153, 51, 0.05)';
+        chart.data.datasets[0].hidden = false;
+        // Completely remove second dataset for savings view
+        chart.data.datasets[1].data = [];
+        chart.data.datasets[1].hidden = true;
         chart.data.datasets[1].label = '';
         break;
+    }
+
+    // Update annotations
+    if (chart.options.plugins?.annotation?.annotations) {
+      const annotations = chart.options.plugins.annotation.annotations as any;
+      
+      // Update build period annotation
+      if (buildPeriod > 0) {
+        annotations.buildPeriod.xMin = -0.5;
+        annotations.buildPeriod.xMax = buildPeriod - 0.5;
+        annotations.buildPeriod.display = true;
+        annotations.buildPeriod.label.content = `${buildPeriod}-Month ${
+          currentState.solutionInputs?.type === 'platform' ? 'Build' :
+          currentState.solutionInputs?.type === 'outsource' ? 'Transition' :
+          'Build/Transition'} Period`;
+      } else {
+        annotations.buildPeriod.display = false;
+      }
+
+      // Update break-even point annotation
+      if (breakEvenPoint > 0) {
+        annotations.breakEven.xMin = breakEvenPoint - 0.5;
+        annotations.breakEven.xMax = breakEvenPoint - 0.5;
+        // Only show in cumulative view
+        annotations.breakEven.display = activeChart === 'cumulative';
+        annotations.breakEven.label.content = `Break-even at Month ${breakEvenPoint}`;
+        // Position the label in the middle of the chart height
+        if (chart.scales.y) {
+          const yScale = chart.scales.y;
+          const yMiddle = (yScale.max + yScale.min) / 2;
+          annotations.breakEven.label.yAdjust = yMiddle;
+        }
+      } else {
+        annotations.breakEven.display = false;
+      }
     }
 
     chart.data.labels = labels;
     chart.data.datasets[0].data = data1;
     chart.data.datasets[1].data = data2;
+
+    // Add chart description
+    const chartDescription = document.getElementById('chart-description');
+    if (chartDescription) {
+      let description = '';
+      const solutionType = currentState.solutionInputs?.type || 'solution';
+      
+      switch (activeChart) {
+        case 'cumulative':
+          description = `This chart shows the total accumulated costs over time for both your current operation and the proposed ${solutionType} solution. ${
+            buildPeriod ? `During the ${buildPeriod}-month ${
+              solutionType === 'platform' ? 'build' :
+              solutionType === 'outsource' ? 'transition' :
+              'build/transition'} period, you'll incur both current operational costs and implementation costs. ` : ''
+          }${breakEvenPoint ? `The orange dashed line indicates the break-even point at month ${breakEvenPoint}, after which the solution starts generating net savings.` : ''}`;
+          break;
+        case 'monthly':
+          description = `This chart compares the monthly operational costs between your current operation and the proposed ${solutionType} solution. ${
+            buildPeriod ? `During the initial ${buildPeriod}-month ${
+              solutionType === 'platform' ? 'build' :
+              solutionType === 'outsource' ? 'transition' :
+              'build/transition'} period , costs are typically higher due to parallel operations and implementation expenses. ` : ''
+          }After this period, you'll see the full effect of the cost reduction strategy.`;
+          break;
+        case 'savings':
+          description = `This chart illustrates your projected monthly savings after implementing the ${solutionType} solution. ${
+            buildPeriod ? `Note that during the ${buildPeriod}-month ${
+              solutionType === 'platform' ? 'build' :
+              solutionType === 'outsource' ? 'transition' :
+              'build/transition'} period, savings may be negative due to implementation costs. ` : ''
+          }${breakEvenPoint ? `You'll reach the break-even point at month ${breakEvenPoint} (orange dashed line), after which you'll see consistent positive savings of ${formatCurrency(results.monthlySavings)}.` : ''}`;
+          break;
+      }
+      chartDescription.textContent = description;
+    }
+
     chart.update();
   }
 
@@ -528,22 +806,25 @@
   </div>
 
   <!-- Chart Controls -->
-  <div class="flex justify-center gap-4">
-    {#each ['cumulative', 'monthly', 'savings'] as chartType}
-      <button
-        class="px-4 py-2 rounded-lg transition-all {
-          activeChart === chartType
-            ? 'bg-secondary text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }"
-        on:click={() => {
-          activeChart = chartType as typeof activeChart;
-          updateChart();
-        }}
-      >
-        {getChartTitle(chartType)}
-      </button>
-    {/each}
+  <div class="flex flex-col items-center gap-4">
+    <div class="flex justify-center gap-4">
+      {#each ['cumulative', 'monthly', 'savings'] as chartType}
+        <button
+          class="px-4 py-2 rounded-lg transition-all {
+            activeChart === chartType
+              ? 'bg-secondary text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }"
+          on:click={() => {
+            activeChart = chartType as typeof activeChart;
+            updateChart();
+          }}
+        >
+          {getChartTitle(chartType)}
+        </button>
+      {/each}
+    </div>
+    <p id="chart-description" class="text-sm text-gray-600 text-center max-w-2xl"></p>
   </div>
 
   <!-- Chart -->
@@ -740,7 +1021,7 @@
             >
               <div class="flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632 3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                 </svg>
                 Share Analysis
               </div>
@@ -751,7 +1032,7 @@
             >
               <div class="flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 00-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 Export to Excel
               </div>

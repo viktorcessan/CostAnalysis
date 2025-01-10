@@ -5,6 +5,44 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>Operations Costs Analysis</title>
+		<style>
+			/* Custom Shepherd.js styles */
+			.shepherd-element {
+				background: #ffffff !important;
+				border-radius: 0.5rem !important;
+				box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+				max-width: 400px !important;
+			}
+			.shepherd-text {
+				color: #374151 !important;
+				font-size: 0.875rem !important;
+				line-height: 1.5 !important;
+				padding: 1rem !important;
+			}
+			.shepherd-footer {
+				padding: 0.75rem 1rem !important;
+				border-top: 1px solid #e5e7eb !important;
+			}
+			.shepherd-button {
+				font-size: 0.875rem !important;
+				font-weight: 500 !important;
+				padding: 0.5rem 1rem !important;
+				border-radius: 0.375rem !important;
+				transition: all 150ms !important;
+			}
+			.shepherd-button-secondary {
+				background: #ffffff !important;
+				color: #4b5563 !important;
+				border: 1px solid #d1d5db !important;
+			}
+			.shepherd-button-primary {
+				background: #0ea5e9 !important;
+				color: #ffffff !important;
+			}
+			.shepherd-arrow:before {
+				background: #f8fafc !important;
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

@@ -18,6 +18,10 @@
   import { exportToExcel } from '$lib/utils/exportUtils';
   import html2canvas from 'html2canvas';
   import { exportTeamDependencyToExcel, exportTeamDependencyToPNG } from '$lib/utils/teamDependencyExport';
+  import { initTutorial } from '$lib/utils/tutorial';
+  import type { Tour } from 'shepherd.js';
+
+  let tour: Tour | null = null;
 
   Chart.register(ChartDataLabels as unknown as Plugin);  // Register the plugin
 
@@ -335,6 +339,25 @@
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
+
+    // Initialize tooltips
+    const tooltipInstances = tippy('[data-tippy-content]', {
+      theme: 'light-border',
+      placement: 'right',
+      delay: [100, 200],
+      touch: 'hold',
+      maxWidth: 300,
+      hideOnClick: false,
+      trigger: 'mouseenter focus click',
+      interactive: true,
+      appendTo: () => document.body,
+      plugins: [],
+      animation: false,
+      allowHTML: false
+    });
+
+    // Initialize tour
+    tour = initTutorial();
   });
 
   // Update reactive statement
@@ -712,6 +735,9 @@
       animation: false,
       allowHTML: false
     });
+
+    // Initialize tour
+    tour = initTutorial();
   });
 
   $: {
@@ -892,12 +918,29 @@
   }
 </script>
 
-<!-- Add id to main container for PNG export -->
+<!-- Add Tour Button -->
 <div id="team-dependencies-container" class="space-y-6">
 <div class="space-y-6">
   <!-- Mode Selection Controls -->
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Structure Configuration</h3>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Team Structure Configuration</h3>
+      <!-- Add Tutorial Button -->
+       <!--
+      <button
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-all flex items-center gap-2 shadow hover:shadow-lg"
+        on:click={() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setTimeout(() => tour?.start(), 300);
+        }}
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Tutorial
+      </button>
+      -->
+    </div>
     
     <!-- Distribution Mode Selection -->
     <div class="mb-8">
@@ -1717,7 +1760,7 @@
         <!-- Cost Impact Analysis -->
         <div class="space-y-6">
           <!-- Weekly Cost Summary -->
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
               <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
               <div class="text-xl font-bold text-sky-500 mt-1">
@@ -1738,7 +1781,7 @@
             </div>
             <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
               <div class="text-sm font-medium text-gray-600">Process Overhead</div>
-              <div class="text-xl font-bold text-emerald-500 mt-1">
+              <div class="text-xl font-bold text-emerald-500 mt-1 whitespace-nowrap">
                 ${costs.processOverhead.toFixed(2)}
               </div>
               <div class="text-xs text-gray-500 mt-1">
@@ -1819,7 +1862,7 @@
     </div>
 
     <!-- Impact Analysis Comparison -->
-    <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+    <div class="impact-analysis-section bg-white p-6 rounded-lg shadow border border-gray-200">
       <div class="mb-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Impact Analysis</h3>
         <p class="text-gray-600">Analyze potential cost savings and efficiency gains by optimizing your team dependencies through different organizational models.</p>

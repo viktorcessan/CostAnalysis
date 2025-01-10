@@ -18,7 +18,9 @@
       attendeesPerTeam: 5
     },
     overhead: {
-      communicationOverhead: 1.2
+      communicationOverhead: 1.2,
+      baselineCommunicationHours: 10,
+      dependencyHoursRate: 4
     }
   };
   export let onConfirm: () => void;
@@ -88,6 +90,14 @@
             <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
               <span class="text-sm text-gray-600">Communication Overhead</span>
               <span class="text-sm font-medium text-gray-900">{formatValue(costParams.overhead.communicationOverhead)}</span>
+            </div>
+            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+              <span class="text-sm text-gray-600">Baseline Communication Hours</span>
+              <span class="text-sm font-medium text-gray-900">{costParams.overhead.baselineCommunicationHours}</span>
+            </div>
+            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+              <span class="text-sm text-gray-600">Dependency Hours Rate</span>
+              <span class="text-sm font-medium text-gray-900">{costParams.overhead.dependencyHoursRate}</span>
             </div>
           </div>
         </div>

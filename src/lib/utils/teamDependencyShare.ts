@@ -16,6 +16,8 @@ export interface TeamDependencyParams {
     };
     overhead: {
       communicationOverhead: number;
+      baselineCommunicationHours: number;
+      dependencyHoursRate: number;
     };
   };
 }
@@ -85,6 +87,8 @@ export function validateShareParams(params: TeamDependencyParams): boolean {
     params.costParams?.hourlyRate?.developer &&
     params.costParams?.meetings?.weeklyDuration &&
     params.costParams?.meetings?.attendeesPerTeam &&
-    params.costParams?.overhead?.communicationOverhead
+    params.costParams?.overhead?.communicationOverhead &&
+    params.costParams?.overhead?.baselineCommunicationHours &&
+    params.costParams?.overhead?.dependencyHoursRate
   );
 } 

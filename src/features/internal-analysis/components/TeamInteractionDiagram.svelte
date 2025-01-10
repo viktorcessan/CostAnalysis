@@ -243,7 +243,9 @@
     },
     overhead: {
       communicationOverhead: 1.2,
-      waitTimeMultiplier: 1.5
+      waitTimeMultiplier: 1.5,
+      baselineCommunicationHours: 2,
+      dependencyHoursRate: 2
     }
   };
 
@@ -648,8 +650,8 @@
     // Communication costs (including async communication and coordination)
     const communicationCost =
       totalConnections * costParams.overhead.communicationOverhead *
-      costParams.hourlyRate.developer * 10 + // 10 hours baseline communication
-      edges.reduce((sum, edge) => sum + (edge.data.strength * 4 * costParams.hourlyRate.developer), 0); // Additional cost based on dependency strength
+      costParams.hourlyRate.developer * costParams.overhead.baselineCommunicationHours + // Baseline communication
+      edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * costParams.hourlyRate.developer), 0); // Additional cost based on dependency strength
 
     // Process and coordination overhead
     const processOverhead = 
@@ -854,14 +856,13 @@
     // Update team count
     teamCount = sharedConfig.teams.length;
 
-    // Update dependency matrix with shared values
-    dependencyMatrix = {
-      teams: sharedConfig.dependencyMatrix.teams.slice(),
-      dependencies: sharedConfig.dependencyMatrix.dependencies.map(row => [...row])
-    };
+    // Update distribution mode and dependency level
+    distributionMode = sharedConfig.distributionMode;
+    companyDependencyLevel = sharedConfig.companyDependencyLevel;
 
     // Update cost parameters
     costParams = {
+      ...costParams,
       hourlyRate: {
         ...costParams.hourlyRate,
         developer: sharedConfig.costParams.hourlyRate.developer
@@ -873,17 +874,23 @@
       },
       overhead: {
         ...costParams.overhead,
-        communicationOverhead: sharedConfig.costParams.overhead.communicationOverhead
+        communicationOverhead: sharedConfig.costParams.overhead.communicationOverhead,
+        baselineCommunicationHours: sharedConfig.costParams.overhead.baselineCommunicationHours,
+        dependencyHoursRate: sharedConfig.costParams.overhead.dependencyHoursRate
       }
     };
 
-    // Update mode and level last (to prevent matrix regeneration)
-    distributionMode = sharedConfig.distributionMode;
-    companyDependencyLevel = sharedConfig.companyDependencyLevel;
+    // Update dependency matrix
+    dependencyMatrix = {
+      teams: sharedConfig.dependencyMatrix.teams,
+      dependencies: sharedConfig.dependencyMatrix.dependencies
+    };
 
-    // Generate nodes without reinitializing the matrix
+    // Clear existing nodes and edges
     nodes = [];
     edges = [];
+
+    // Generate new nodes
     for (let i = 0; i < teamCount; i++) {
       const metrics = calculateTeamMetrics(i, dependencyMatrix.dependencies, teamParams.teams);
       const node = {
@@ -1269,6 +1276,58 @@
             />
             <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
               <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Baseline Communication Hours -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Baseline Communication Hours
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Set the baseline communication hours per week (1-20 hours). This represents the minimum time spent on asynchronous communication and coordination.">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={costParams.overhead.baselineCommunicationHours}
+              min="1"
+              max="10"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{costParams.overhead.baselineCommunicationHours}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dependency Hours Rate -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Dependency Hours Rate
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Set the hours rate per dependency level (1-10 hours). This represents the additional time spent on coordination and communication due to dependencies.">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={costParams.overhead.dependencyHoursRate}
+              min="1"
+              max="10"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{costParams.overhead.dependencyHoursRate}</span>
             </div>
           </div>
         </div>
@@ -2186,7 +2245,7 @@
                   <span class="text-sm font-medium text-green-600">(-${costDifference.toFixed(0)})</span>
                 {:else if costDifference < 0}
                   <span class="text-sm font-medium text-red-600">(+${(-costDifference).toFixed(0)})</span>
-              {/if}
+                {/if}
             </div>
             <div class="space-y-3">
               <div>

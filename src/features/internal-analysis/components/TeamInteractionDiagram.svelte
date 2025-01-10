@@ -268,7 +268,8 @@
       costs.processOverhead
     ];
 
-    const total = data.reduce((sum, value) => sum + value, 0);
+    const total = costs.totalCost;
+    const percentages = data.map(value => ((value / total) * 100).toFixed(1));
 
     const chartConfig: ChartConfiguration<'doughnut'> = {
       type: 'doughnut',
@@ -306,7 +307,13 @@
             }
           },
           tooltip: {
-            enabled: false
+            callbacks: {
+              label: (context) => {
+                const value = context.raw as number;
+                const percentage = (value / total * 100).toFixed(1);
+                return `${context.label}: $${value.toFixed(2)} (${percentage}%)`;
+              }
+            }
           },
           datalabels: {
             color: '#ffffff',
@@ -325,7 +332,7 @@
           }
         },
         animation: {
-          duration: 0
+          duration: 500
         }
       }
     };
@@ -753,6 +760,23 @@
     companyDependencyLevel;
     if (!sharedConfig && distributionMode !== 'hub-spoke') {  // Only regenerate if not loading a shared config
       generateNodes();
+    }
+  }
+
+  $: {
+    // Watch all variables that affect costs
+    nodes;
+    edges;
+    teamCount;
+    distributionMode;
+    companyDependencyLevel;
+    costParams.hourlyRate;
+    costParams.meetings;
+    costParams.overhead;
+    
+    if (costChartCanvas && nodes.length > 0) {
+      const costs = calculateCosts();
+      createCostDistributionChart(costs);
     }
   }
 

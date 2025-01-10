@@ -1,4 +1,10 @@
 <!-- CalculatorForm.svelte -->
+<script context="module">
+  function roundToStep(value: number, step: number): number {
+    return Math.round(value / step) * step;
+  }
+</script>
+
 <script lang="ts">
   import { calculatorStore } from '$lib/stores/calculatorStore';
   import type { CalculatorModel, SolutionType, PlatformInputs, OutsourceInputs, HybridInputs } from '$lib/types/calculator';
@@ -105,8 +111,8 @@
   const constraints = {
     teamSize: { min: 1, max: 15, step: 1 },
     hourlyRate: { min: 10, max: 150, step: 5 },
-    serviceEfficiency: { min: 0, max: 1, step: 0.01 },
-    operationalOverhead: { min: 0, max: 1, step: 0.01 },
+    serviceEfficiency: { min: 0, max: 100, step: 1 },  // Changed to work with percentages directly
+    operationalOverhead: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
     monthlyTickets: { min: 1, max: 250, step: 1 },
     hoursPerTicket: { min: 0.1, max: 100, step: 0.1 },
     peoplePerTicket: { min: 1, max: 10, step: 1 },
@@ -114,11 +120,11 @@
     platformCost: { min: 50000, max: 500000, step: 10000 },
     platformMaintenance: { min: 1000, max: 10000, step: 100 },
     timeToBuild: { min: 1, max: 12, step: 1 },
-    teamReduction: { min: 0, max: 1, step: 0.01 },
-    processEfficiency: { min: 0, max: 1, step: 0.01 },
-    managementOverhead: { min: 0, max: 1, step: 0.01 },
-    qualityImpact: { min: -0.5, max: 0.5, step: 0.01 },
-    knowledgeLoss: { min: 0, max: 1, step: 0.01 },
+    teamReduction: { min: 0, max: 100, step: 1 },  // Changed to work with percentages directly
+    processEfficiency: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
+    managementOverhead: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
+    qualityImpact: { min: -50, max: 50, step: 1 }, // Changed to work with percentages directly
+    knowledgeLoss: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
     transitionTime: { min: 1, max: 12, step: 1 },
     transitionCost: { min: 0, max: 100000, step: 1000 },
     portion: { min: 0, max: 100, step: 5 }
@@ -212,59 +218,77 @@
     updateSolutionInputs();
   }
 
-  // Handle input changes with proper typing
-  function handlePercentageInput(e: Event, field: string, isDecimal = true) {
-    const target = e.target as HTMLInputElement | null;
+  // Add these at the top of the script section
+  // Local state for percentage values (0-100 integers)
+  let serviceEfficiencyPercent = Math.round(serviceEfficiency * 100);
+  let operationalOverheadPercent = Math.round(operationalOverhead * 100);
+  let teamReductionPercent = Math.round(platformInputs.teamReduction * 100);
+  let processEfficiencyPercent = Math.round(platformInputs.processEfficiency * 100);
+  let managementOverheadPercent = Math.round(outsourceInputs.managementOverhead * 100);
+  let qualityImpactPercent = Math.round(outsourceInputs.qualityImpact * 100);
+  let knowledgeLossPercent = Math.round(outsourceInputs.knowledgeLoss * 100);
+
+  // Simple function to handle percentage inputs
+  function handlePercentageChange(e: Event, field: string) {
+    const target = e.target as HTMLInputElement;
     if (!target) return;
-    
-    const value = isDecimal ? +target.value / 100 : +target.value;
-    
+
+    const value = Math.max(0, Math.min(100, Math.round(+target.value)));
+    target.value = value.toString();
+
     switch (field) {
       case 'serviceEfficiency':
-        serviceEfficiency = value;
+        serviceEfficiencyPercent = value;
+        serviceEfficiency = value / 100;
         handleTeamInputs();
         break;
       case 'operationalOverhead':
-        operationalOverhead = value;
+        operationalOverheadPercent = value;
+        operationalOverhead = value / 100;
         handleTeamInputs();
         break;
       case 'teamReduction':
+        teamReductionPercent = value;
         if (solution === 'platform') {
-          platformInputs.teamReduction = value;
+          platformInputs.teamReduction = value / 100;
         } else if (solution === 'hybrid') {
-          hybridInputs.teamReduction = value;
+          hybridInputs.teamReduction = value / 100;
         }
         updateSolutionInputs();
         break;
       case 'processEfficiency':
+        processEfficiencyPercent = value;
         if (solution === 'platform') {
-          platformInputs.processEfficiency = value;
+          platformInputs.processEfficiency = value / 100;
         } else if (solution === 'hybrid') {
-          hybridInputs.processEfficiency = value;
+          hybridInputs.processEfficiency = value / 100;
         }
         updateSolutionInputs();
         break;
       case 'managementOverhead':
+        managementOverheadPercent = value;
         if (solution === 'outsource') {
-          outsourceInputs.managementOverhead = value;
+          outsourceInputs.managementOverhead = value / 100;
         } else if (solution === 'hybrid') {
-          hybridInputs.managementOverhead = value;
+          hybridInputs.managementOverhead = value / 100;
         }
         updateSolutionInputs();
         break;
       case 'qualityImpact':
+        qualityImpactPercent = value;
         if (solution === 'outsource') {
-          outsourceInputs.qualityImpact = value;
+          outsourceInputs.qualityImpact = value / 100;
         } else if (solution === 'hybrid') {
-          hybridInputs.qualityImpact = value;
+          hybridInputs.qualityImpact = value / 100;
         }
         updateSolutionInputs();
         break;
       case 'knowledgeLoss':
+        knowledgeLossPercent = value;
         if (solution === 'outsource') {
-          outsourceInputs.knowledgeLoss = value;
+          outsourceInputs.knowledgeLoss = value / 100;
         } else if (solution === 'hybrid') {
-          hybridInputs.knowledgeLoss = value;
+          hybridInputs.knowledgeLoss = value / 100;
         }
         updateSolutionInputs();
         break;
@@ -574,22 +598,22 @@
                   <input
                     type="number"
                     id="serviceEfficiency"
-                    value={serviceEfficiency * 100}
-                    on:input={(e) => handlePercentageInput(e, 'serviceEfficiency')}
-                    min={constraints.serviceEfficiency.min * 100}
-                    max={constraints.serviceEfficiency.max * 100}
-                    step={constraints.serviceEfficiency.step * 100}
+                    value={serviceEfficiencyPercent}
+                    on:input={(e) => handlePercentageChange(e, 'serviceEfficiency')}
+                    min="0"
+                    max="100"
+                    step="1"
                     class="number-input pr-8"
                   />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                 </div>
                 <input
                   type="range"
-                  value={serviceEfficiency * 100}
-                  on:input={(e) => handlePercentageInput(e, 'serviceEfficiency')}
-                  min={constraints.serviceEfficiency.min * 100}
-                  max={constraints.serviceEfficiency.max * 100}
-                  step={constraints.serviceEfficiency.step * 100}
+                  value={serviceEfficiencyPercent}
+                  on:input={(e) => handlePercentageChange(e, 'serviceEfficiency')}
+                  min="0"
+                  max="100"
+                  step="1"
                   class="slider-input"
                 />
               </div>
@@ -619,22 +643,22 @@
                   <input
                     type="number"
                     id="operationalOverhead"
-                    value={operationalOverhead * 100}
-                    on:input={(e) => handlePercentageInput(e, 'operationalOverhead')}
-                    min={constraints.operationalOverhead.min * 100}
-                    max={constraints.operationalOverhead.max * 100}
-                    step={constraints.operationalOverhead.step * 100}
+                    value={operationalOverheadPercent}
+                    on:input={(e) => handlePercentageChange(e, 'operationalOverhead')}
+                    min={constraints.operationalOverhead.min}
+                    max={constraints.operationalOverhead.max}
+                    step={constraints.operationalOverhead.step}
                     class="number-input pr-8"
                   />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                 </div>
                 <input
                   type="range"
-                  value={operationalOverhead * 100}
-                  on:input={(e) => handlePercentageInput(e, 'operationalOverhead')}
-                  min={constraints.operationalOverhead.min * 100}
-                  max={constraints.operationalOverhead.max * 100}
-                  step={constraints.operationalOverhead.step * 100}
+                  value={operationalOverheadPercent}
+                  on:input={(e) => handlePercentageChange(e, 'operationalOverhead')}
+                  min={constraints.operationalOverhead.min}
+                  max={constraints.operationalOverhead.max}
+                  step={constraints.operationalOverhead.step}
                   class="slider-input"
                 />
               </div>
@@ -1126,22 +1150,22 @@
                         <input
                           type="number"
                           id="teamReduction"
-                          value={platformInputs.teamReduction * 100}
-                          on:input={(e) => handlePercentageInput(e, 'teamReduction')}
-                          min={constraints.teamReduction.min * 100}
-                          max={constraints.teamReduction.max * 100}
-                          step={constraints.teamReduction.step * 100}
+                          value={teamReductionPercent}
+                          on:input={(e) => handlePercentageChange(e, 'teamReduction')}
+                          min="0"
+                          max="100"
+                          step="1"
                           class="number-input pr-8"
                         />
                         <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                       </div>
                       <input
                         type="range"
-                        value={platformInputs.teamReduction * 100}
-                        on:input={(e) => handlePercentageInput(e, 'teamReduction')}
-                        min={constraints.teamReduction.min * 100}
-                        max={constraints.teamReduction.max * 100}
-                        step={constraints.teamReduction.step * 100}
+                        value={teamReductionPercent}
+                        on:input={(e) => handlePercentageChange(e, 'teamReduction')}
+                        min="0"
+                        max="100"
+                        step="1"
                         class="slider-input"
                       />
                     </div>
@@ -1172,22 +1196,22 @@
                       <input
                         type="number"
                         id="processEfficiency"
-                        value={isHybridSolution(solution) ? hybridInputs.processEfficiency * 100 : platformInputs.processEfficiency * 100}
-                        on:input={(e) => handlePercentageInput(e, 'processEfficiency')}
-                        min={constraints.processEfficiency.min * 100}
-                        max={constraints.processEfficiency.max * 100}
-                        step={constraints.processEfficiency.step * 100}
+                        value={processEfficiencyPercent}
+                        on:input={(e) => handlePercentageChange(e, 'processEfficiency')}
+                        min={constraints.processEfficiency.min}
+                        max={constraints.processEfficiency.max}
+                        step={constraints.processEfficiency.step}
                         class="number-input pr-8"
                       />
                       <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                     </div>
                     <input
                       type="range"
-                      value={isHybridSolution(solution) ? hybridInputs.processEfficiency * 100 : platformInputs.processEfficiency * 100}
-                      on:input={(e) => handlePercentageInput(e, 'processEfficiency')}
-                      min={constraints.processEfficiency.min * 100}
-                      max={constraints.processEfficiency.max * 100}
-                      step={constraints.processEfficiency.step * 100}
+                      value={processEfficiencyPercent}
+                      on:input={(e) => handlePercentageChange(e, 'processEfficiency')}
+                      min={constraints.processEfficiency.min}
+                      max={constraints.processEfficiency.max}
+                      step={constraints.processEfficiency.step}
                       class="slider-input"
                     />
                   </div>
@@ -1268,22 +1292,22 @@
                       <input
                         type="number"
                         id="managementOverhead"
-                        value={isHybridSolution(solution) ? hybridInputs.managementOverhead * 100 : outsourceInputs.managementOverhead * 100}
-                        on:input={(e) => handlePercentageInput(e, 'managementOverhead')}
-                        min={constraints.managementOverhead.min * 100}
-                        max={constraints.managementOverhead.max * 100}
-                        step={constraints.managementOverhead.step * 100}
+                        value={managementOverheadPercent}
+                        on:input={(e) => handlePercentageChange(e, 'managementOverhead')}
+                        min={constraints.managementOverhead.min}
+                        max={constraints.managementOverhead.max}
+                        step={constraints.managementOverhead.step}
                         class="number-input pr-8"
                       />
                       <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                     </div>
                     <input
                       type="range"
-                      value={isHybridSolution(solution) ? hybridInputs.managementOverhead * 100 : outsourceInputs.managementOverhead * 100}
-                      on:input={(e) => handlePercentageInput(e, 'managementOverhead')}
-                      min={constraints.managementOverhead.min * 100}
-                      max={constraints.managementOverhead.max * 100}
-                      step={constraints.managementOverhead.step * 100}
+                      value={managementOverheadPercent}
+                      on:input={(e) => handlePercentageChange(e, 'managementOverhead')}
+                      min={constraints.managementOverhead.min}
+                      max={constraints.managementOverhead.max}
+                      step={constraints.managementOverhead.step}
                       class="slider-input"
                     />
                   </div>
@@ -1313,22 +1337,22 @@
                       <input
                         type="number"
                         id="qualityImpact"
-                        value={isHybridSolution(solution) ? hybridInputs.qualityImpact * 100 : outsourceInputs.qualityImpact * 100}
-                        on:input={(e) => handlePercentageInput(e, 'qualityImpact')}
-                        min={constraints.qualityImpact.min * 100}
-                        max={constraints.qualityImpact.max * 100}
-                        step={constraints.qualityImpact.step * 100}
+                        value={qualityImpactPercent}
+                        on:input={(e) => handlePercentageChange(e, 'qualityImpact')}
+                        min={constraints.qualityImpact.min}
+                        max={constraints.qualityImpact.max}
+                        step={constraints.qualityImpact.step}
                         class="number-input pr-8"
                       />
                       <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                     </div>
                     <input
                       type="range"
-                      value={isHybridSolution(solution) ? hybridInputs.qualityImpact * 100 : outsourceInputs.qualityImpact * 100}
-                      on:input={(e) => handlePercentageInput(e, 'qualityImpact')}
-                      min={constraints.qualityImpact.min * 100}
-                      max={constraints.qualityImpact.max * 100}
-                      step={constraints.qualityImpact.step * 100}
+                      value={qualityImpactPercent}
+                      on:input={(e) => handlePercentageChange(e, 'qualityImpact')}
+                      min={constraints.qualityImpact.min}
+                      max={constraints.qualityImpact.max}
+                      step={constraints.qualityImpact.step}
                       class="slider-input"
                     />
                   </div>
@@ -1358,22 +1382,22 @@
                       <input
                         type="number"
                         id="knowledgeLoss"
-                        value={isHybridSolution(solution) ? hybridInputs.knowledgeLoss * 100 : outsourceInputs.knowledgeLoss * 100}
-                        on:input={(e) => handlePercentageInput(e, 'knowledgeLoss')}
-                        min={constraints.knowledgeLoss.min * 100}
-                        max={constraints.knowledgeLoss.max * 100}
-                        step={constraints.knowledgeLoss.step * 100}
+                        value={knowledgeLossPercent}
+                        on:input={(e) => handlePercentageChange(e, 'knowledgeLoss')}
+                        min={constraints.knowledgeLoss.min}
+                        max={constraints.knowledgeLoss.max}
+                        step={constraints.knowledgeLoss.step}
                         class="number-input pr-8"
                       />
                       <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                     </div>
                     <input
                       type="range"
-                      value={isHybridSolution(solution) ? hybridInputs.knowledgeLoss * 100 : outsourceInputs.knowledgeLoss * 100}
-                      on:input={(e) => handlePercentageInput(e, 'knowledgeLoss')}
-                      min={constraints.knowledgeLoss.min * 100}
-                      max={constraints.knowledgeLoss.max * 100}
-                      step={constraints.knowledgeLoss.step * 100}
+                      value={knowledgeLossPercent}
+                      on:input={(e) => handlePercentageChange(e, 'knowledgeLoss')}
+                      min={constraints.knowledgeLoss.min}
+                      max={constraints.knowledgeLoss.max}
+                      step={constraints.knowledgeLoss.step}
                       class="slider-input"
                     />
                   </div>
@@ -1403,7 +1427,7 @@
                       <input
                         type="number"
                         id="transitionTime"
-                        value={isHybridSolution(solution) ? hybridInputs.transitionTime : outsourceInputs.transitionTime}
+                        value={hybridInputs.transitionTime}
                         on:input={(e) => handleNumericInput(e, 'transitionTime')}
                         min={1}
                         max={12}
@@ -1414,7 +1438,7 @@
                     </div>
                     <input
                       type="range"
-                      value={isHybridSolution(solution) ? hybridInputs.transitionTime : outsourceInputs.transitionTime}
+                      value={hybridInputs.transitionTime}
                       on:input={(e) => handleNumericInput(e, 'transitionTime')}
                       min={1}
                       max={12}
@@ -1448,7 +1472,7 @@
                       <input
                         type="number"
                         id="transitionCost"
-                        value={isHybridSolution(solution) ? hybridInputs.transitionCost : outsourceInputs.transitionCost}
+                        value={hybridInputs.transitionCost}
                         on:input={(e) => handleNumericInput(e, 'transitionCost')}
                         min={0}
                         max={100000}
@@ -1459,7 +1483,7 @@
                     </div>
                     <input
                       type="range"
-                      value={isHybridSolution(solution) ? hybridInputs.transitionCost : outsourceInputs.transitionCost}
+                      value={hybridInputs.transitionCost}
                       on:input={(e) => handleNumericInput(e, 'transitionCost')}
                       min={0}
                       max={100000}
@@ -1633,22 +1657,22 @@
                     <input
                       type="number"
                       id="teamReduction"
-                      value={platformInputs.teamReduction * 100}
-                      on:input={(e) => handlePercentageInput(e, 'teamReduction')}
-                      min={constraints.teamReduction.min * 100}
-                      max={constraints.teamReduction.max * 100}
-                      step={constraints.teamReduction.step * 100}
+                      value={teamReductionPercent}
+                      on:input={(e) => handlePercentageChange(e, 'teamReduction')}
+                      min="0"
+                      max="100"
+                      step="1"
                       class="number-input pr-8"
                     />
                     <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                   </div>
                   <input
                     type="range"
-                    value={platformInputs.teamReduction * 100}
-                    on:input={(e) => handlePercentageInput(e, 'teamReduction')}
-                    min={constraints.teamReduction.min * 100}
-                    max={constraints.teamReduction.max * 100}
-                    step={constraints.teamReduction.step * 100}
+                    value={teamReductionPercent}
+                    on:input={(e) => handlePercentageChange(e, 'teamReduction')}
+                    min="0"
+                    max="100"
+                    step="1"
                     class="slider-input"
                   />
                 </div>
@@ -1679,22 +1703,22 @@
                   <input
                     type="number"
                     id="processEfficiency"
-                    value={isHybridSolution(solution) ? hybridInputs.processEfficiency * 100 : platformInputs.processEfficiency * 100}
-                    on:input={(e) => handlePercentageInput(e, 'processEfficiency')}
-                    min={constraints.processEfficiency.min * 100}
-                    max={constraints.processEfficiency.max * 100}
-                    step={constraints.processEfficiency.step * 100}
+                    value={processEfficiencyPercent}
+                    on:input={(e) => handlePercentageChange(e, 'processEfficiency')}
+                    min={constraints.processEfficiency.min}
+                    max={constraints.processEfficiency.max}
+                    step={constraints.processEfficiency.step}
                     class="number-input pr-8"
                   />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                 </div>
                 <input
                   type="range"
-                  value={isHybridSolution(solution) ? hybridInputs.processEfficiency * 100 : platformInputs.processEfficiency * 100}
-                  on:input={(e) => handlePercentageInput(e, 'processEfficiency')}
-                  min={constraints.processEfficiency.min * 100}
-                  max={constraints.processEfficiency.max * 100}
-                  step={constraints.processEfficiency.step * 100}
+                  value={processEfficiencyPercent}
+                  on:input={(e) => handlePercentageChange(e, 'processEfficiency')}
+                  min={constraints.processEfficiency.min}
+                  max={constraints.processEfficiency.max}
+                  step={constraints.processEfficiency.step}
                   class="slider-input"
                 />
               </div>
@@ -1776,22 +1800,22 @@
                   <input
                     type="number"
                     id="managementOverhead"
-                    value={outsourceInputs.managementOverhead * 100}
-                    on:input={(e) => handlePercentageInput(e, 'managementOverhead')}
-                    min={constraints.managementOverhead.min * 100}
-                    max={constraints.managementOverhead.max * 100}
-                    step={constraints.managementOverhead.step * 100}
+                    value={managementOverheadPercent}
+                    on:input={(e) => handlePercentageChange(e, 'managementOverhead')}
+                    min={constraints.managementOverhead.min}
+                    max={constraints.managementOverhead.max}
+                    step={constraints.managementOverhead.step}
                     class="number-input pr-8"
                   />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                 </div>
                 <input
                   type="range"
-                  value={outsourceInputs.managementOverhead * 100}
-                  on:input={(e) => handlePercentageInput(e, 'managementOverhead')}
-                  min={constraints.managementOverhead.min * 100}
-                  max={constraints.managementOverhead.max * 100}
-                  step={constraints.managementOverhead.step * 100}
+                  value={managementOverheadPercent}
+                  on:input={(e) => handlePercentageChange(e, 'managementOverhead')}
+                  min={constraints.managementOverhead.min}
+                  max={constraints.managementOverhead.max}
+                  step={constraints.managementOverhead.step}
                   class="slider-input"
                 />
               </div>
@@ -1821,22 +1845,22 @@
                   <input
                     type="number"
                     id="qualityImpact"
-                    value={outsourceInputs.qualityImpact * 100}
-                    on:input={(e) => handlePercentageInput(e, 'qualityImpact')}
-                    min={constraints.qualityImpact.min * 100}
-                    max={constraints.qualityImpact.max * 100}
-                    step={constraints.qualityImpact.step * 100}
+                    value={qualityImpactPercent}
+                    on:input={(e) => handlePercentageChange(e, 'qualityImpact')}
+                    min={constraints.qualityImpact.min}
+                    max={constraints.qualityImpact.max}
+                    step={constraints.qualityImpact.step}
                     class="number-input pr-8"
                   />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                 </div>
                 <input
                   type="range"
-                  value={outsourceInputs.qualityImpact * 100}
-                  on:input={(e) => handlePercentageInput(e, 'qualityImpact')}
-                  min={constraints.qualityImpact.min * 100}
-                  max={constraints.qualityImpact.max * 100}
-                  step={constraints.qualityImpact.step * 100}
+                  value={qualityImpactPercent}
+                  on:input={(e) => handlePercentageChange(e, 'qualityImpact')}
+                  min={constraints.qualityImpact.min}
+                  max={constraints.qualityImpact.max}
+                  step={constraints.qualityImpact.step}
                   class="slider-input"
                 />
               </div>
@@ -1866,22 +1890,22 @@
                   <input
                     type="number"
                     id="knowledgeLoss"
-                    value={outsourceInputs.knowledgeLoss * 100}
-                    on:input={(e) => handlePercentageInput(e, 'knowledgeLoss')}
-                    min={constraints.knowledgeLoss.min * 100}
-                    max={constraints.knowledgeLoss.max * 100}
-                    step={constraints.knowledgeLoss.step * 100}
+                    value={knowledgeLossPercent}
+                    on:input={(e) => handlePercentageChange(e, 'knowledgeLoss')}
+                    min={constraints.knowledgeLoss.min}
+                    max={constraints.knowledgeLoss.max}
+                    step={constraints.knowledgeLoss.step}
                     class="number-input pr-8"
                   />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
                 </div>
                 <input
                   type="range"
-                  value={outsourceInputs.knowledgeLoss * 100}
-                  on:input={(e) => handlePercentageInput(e, 'knowledgeLoss')}
-                  min={constraints.knowledgeLoss.min * 100}
-                  max={constraints.knowledgeLoss.max * 100}
-                  step={constraints.knowledgeLoss.step * 100}
+                  value={knowledgeLossPercent}
+                  on:input={(e) => handlePercentageChange(e, 'knowledgeLoss')}
+                  min={constraints.knowledgeLoss.min}
+                  max={constraints.knowledgeLoss.max}
+                  step={constraints.knowledgeLoss.step}
                   class="slider-input"
                 />
               </div>

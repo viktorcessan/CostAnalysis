@@ -12,7 +12,7 @@ This feature facilitates collaboration by allowing team members to share and rev
 
 The feature was developed to address several key needs:
 
-1. **Model Comparison**: Compare different base models (Team vs Ticket) for service delivery analysis
+1. **Model Comparison**: Compare different base models (Team vs Ticket) for Operations Costs analysis
 2. **Solution Comparison**: Share different solution scenarios (Platform, Outsource, Hybrid) for evaluation
 3. **Configuration Sharing**: Share complex configurations across teams for review and discussion
 4. **Decision Support**: Enable data-driven decisions through comprehensive analysis sharing

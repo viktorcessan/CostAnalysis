@@ -118,7 +118,7 @@
 % List styling
 \setlist[itemize]{leftmargin=*,label=\textbullet,itemsep=0.2em,parsep=0.2em}
 
-\title{\textbf{\LARGE Service Delivery Models:\\[0.3em] Formal Definitions and Analysis Framework}}
+\title{\textbf{\LARGE Operations Costs Models:\\[0.3em] Formal Definitions and Analysis Framework}}
 \author{\Large}
 \date{\today}
 
@@ -130,13 +130,13 @@
 \clearpage
 
 \section{Introduction}
-This document outlines a practical framework for evaluating and implementing different service delivery models. It provides concrete formulas, metrics, and decision criteria to help teams analyze costs and benefits of various delivery approaches. 
+This document outlines a practical framework for evaluating and implementing different Operations Costs models. It provides concrete formulas, metrics, and decision criteria to help teams analyze costs and benefits of various delivery approaches. 
 
 \subsection{Purpose and Scope}
 \begin{definition}{Framework Purpose}
 The framework serves several key purposes:
 \begin{itemize}
-    \item Standardize the evaluation of service delivery options
+    \item Standardize the evaluation of Operations Costs options
     \item Provide quantitative methods for cost-benefit analysis
     \item Enable data-driven decision making
     \item Account for both direct and indirect costs
@@ -161,7 +161,7 @@ The analysis framework is built around two fundamental models:
 \subsection{Model Overview}
 
 \begin{explanation}
-The analysis framework is built around two fundamental models, each representing a different approach to measuring and managing service delivery:
+The analysis framework is built around two fundamental models, each representing a different approach to measuring and managing Operations Costs:
 
 \textbf{Team-Based Model:} Focuses on the costs and efficiency of dedicated service teams, measuring productivity in terms of time and resource utilization.
 
@@ -178,7 +178,7 @@ Each model can be transformed through three strategic approaches:
 \section{Common Variables and Constants}
 \subsection{Time Variables}
 
-Time-based calculations are fundamental to service delivery analysis, as they directly impact costs, efficiency, and resource utilization. The following variables provide a standardized approach to temporal measurements.
+Time-based calculations are fundamental to Operations Costs analysis, as they directly impact costs, efficiency, and resource utilization. The following variables provide a standardized approach to temporal measurements.
 
 \begin{definition}{Time Parameters}
 \begin{align*}
@@ -231,7 +231,7 @@ Core financial metrics:
 \end{explanation}
 
 \section{Team-Based Model}
-The team-based model represents a traditional approach to service delivery, where dedicated teams handle various service requests and operational tasks.
+The team-based model represents a traditional approach to Operations Costs, where dedicated teams handle various service requests and operational tasks.
 
 \subsection{Base Case Analysis}
 The base case establishes the current state of operations, serving as a reference point for comparing different transformation options. It captures all relevant costs and efficiency metrics of the existing team-based delivery model.
@@ -251,7 +251,7 @@ Let $\mathcal{T}$ represent the team-based model:
     \item FTEs: Dedicated team members
     \item Efficiency: Productive time ratio
     \item Overhead: Management costs
-    \item Hours: Service delivery time
+    \item Hours: Operations Costs time
 \end{itemize}
 \end{explanation}
 
@@ -287,7 +287,7 @@ Monthly base cost calculation:
 \end{explanation}
 
 \subsection{Platform Solution}
-Platform automation represents a transformative approach to service delivery. This solution requires upfront investment but can deliver long-term benefits through improved efficiency and scalability.
+Platform automation represents a transformative approach to Operations Costs. This solution requires upfront investment but can deliver long-term benefits through improved efficiency and scalability.
 
 \begin{definition}{Platform Variables}
 For solution $\mathcal{P}$:
@@ -351,7 +351,7 @@ Break-even calculation considering build time:
 \end{observation}
 
 \subsection{Outsourcing Solution}
-Outsourcing presents an alternative transformation path, transferring service delivery responsibilities to external providers. While this approach can offer immediate cost benefits, it introduces various challenges and risks that must be evaluated.
+Outsourcing presents an alternative transformation path, transferring Operations Costs responsibilities to external providers. While this approach can offer immediate cost benefits, it introduces various challenges and risks that must be evaluated.
 
 \begin{definition}{Outsourcing Variables}
 For solution $\mathcal{O}$:
@@ -380,7 +380,7 @@ For solution $\mathcal{O}$:
 \end{explanation}
 
 \subsubsection{Outsourcing Cost Structure}
-The outsourcing cost structure must account for both direct vendor costs and various indirect impacts on service delivery. This view ensures all relevant factors are considered.
+The outsourcing cost structure must account for both direct vendor costs and various indirect impacts on Operations Costs. This view ensures all relevant factors are considered.
 
 \begin{definition}{Outsourcing Cost}
 Monthly cost calculation:
@@ -434,7 +434,7 @@ The hybrid approach combines platform and outsourcing benefits:
     \item Balanced workload distribution
     \item Reduced platform investment needs
     \item Potentially lower vendor rates
-    \item Flexibility in service delivery
+    \item Flexibility in Operations Costs
 \end{itemize}
 
 Key considerations include:
@@ -447,7 +447,7 @@ Key considerations include:
 \end{explanation}
 
 \section{Ticket-Based Model}
-The ticket-based model focuses on individual service requests as the primary unit of analysis. This approach is well-suited for organizations with clearly defined service requests, standardized processes, and measurable resolution times. It provides a granular view of service delivery costs and efficiency.
+The ticket-based model focuses on individual service requests as the primary unit of analysis. This approach is well-suited for organizations with clearly defined service requests, standardized processes, and measurable resolution times. It provides a granular view of Operations Costs costs and efficiency.
 
 \subsection{Base Case Analysis}
 The base case for the ticket-based model establishes current performance metrics and costs associated with handling individual service requests. This analysis provides insights into volume patterns, resource requirements, and efficiency opportunities.
@@ -477,7 +477,7 @@ This approach is particularly suitable for:
     \item Help desk operations
     \item Service request handling
     \item Incident management
-    \item Standard service delivery
+    \item Standard Operations Costs
 \end{itemize}
 \end{explanation}
 
@@ -592,7 +592,7 @@ The effective success rate $\eta_{eff}$ is:
 \end{definition}
 
 \begin{explanation}
-The hybrid ticket model optimizes service delivery through:
+The hybrid ticket model optimizes Operations Costs through:
 \begin{itemize}
     \item Automated handling of standard tickets
     \item Vendor management of medium-complexity tickets
@@ -687,7 +687,7 @@ The NPV calculation:
 For team-based model:
 \begin{align*}
     \text{Utilization Rate: } \eta_u &= \frac{\text{Productive Hours}}{\text{Total Hours}} \\[1em]
-    \text{Service Efficiency: } \eta_e &= \frac{\text{Service Delivery Time}}{\text{Total Time}} \\[1em]
+    \text{Service Efficiency: } \eta_e &= \frac{\text{Operations Costs Time}}{\text{Total Time}} \\[1em]
     \text{Cost per FTE: } C_{fte} &= \frac{\text{Total Operating Cost}}{n} \\[1em]
     \text{Overhead Ratio: } \omega_r &= \frac{\text{Management \& Support Cost}}{\text{Direct Service Cost}}
 \end{align*}
@@ -701,9 +701,9 @@ For team-based model:
             \item Excludes meetings, training, admin tasks
             \item Key indicator of team efficiency
         \end{itemize}
-    \item \textbf{Service Efficiency:} Direct service delivery effectiveness
+    \item \textbf{Service Efficiency:} Direct Operations Costs effectiveness
         \begin{itemize}
-            \item Measures actual service delivery time
+            \item Measures actual Operations Costs time
             \item Indicates process optimization needs
         \end{itemize}
     \item \textbf{Cost per FTE:} Resource cost effectiveness
@@ -883,7 +883,7 @@ Required parameters:
 \begin{itemize}
     \item \textbf{Team Size (n):} Number of FTEs [1-1000]
     \item \textbf{Hourly Rate (h):} Cost per FTE [\$1-\$1000]
-    \item \textbf{Service Delivery ($\eta_s$):} Productive time [0-100\%]
+    \item \textbf{Operations Costs ($\eta_s$):} Productive time [0-100\%]
     \item \textbf{Working Hours (w):} Monthly hours [120-200]
     \item \textbf{Overhead ($\eta_o$):} Administrative overhead [0-100\%]
 \end{itemize}
@@ -1180,7 +1180,7 @@ The cost models account for:
         \end{itemize}
     \item \textbf{Indirect Costs:}
         \begin{itemize}
-            \item Quality impact on service delivery
+            \item Quality impact on Operations Costs
             \item Knowledge retention and transfer
             \item Management and coordination
         \end{itemize}

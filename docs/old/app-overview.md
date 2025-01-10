@@ -1,7 +1,7 @@
-# Service Delivery Cost Analysis Application Overview
+# Operations Costs Cost Analysis Application Overview
 
 ## Purpose
-A web-based calculator that helps organizations analyze and compare different service delivery models. Users can evaluate costs and benefits of:
+A web-based calculator that helps organizations analyze and compare different Operations Costs models. Users can evaluate costs and benefits of:
 - Platform automation solutions
 - Outsourcing options
 - Hybrid approaches (combination of platform and outsourcing)
@@ -57,7 +57,7 @@ For request-driven service operations:
 ## Solution Types
 
 ### 1. Platform Solution
-- **Purpose**: Automate service delivery through technology investment
+- **Purpose**: Automate Operations Costs through technology investment
 - **Key Parameters**:
   - Initial platform cost ($50k-500k)
   - Monthly maintenance ($1k-10k)
@@ -66,7 +66,7 @@ For request-driven service operations:
   - Build time (1-12 months)
 
 ### 2. Outsourcing Solution
-- **Purpose**: Transfer service delivery to external providers
+- **Purpose**: Transfer Operations Costs to external providers
 - **Key Parameters**:
   - Vendor hourly rate ($10-150)
   - Management overhead (0-100%)

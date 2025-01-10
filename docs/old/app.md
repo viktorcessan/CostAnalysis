@@ -1,4 +1,4 @@
-# Service Delivery Cost Calculator Application Documentation
+# Operations Costs Cost Calculator Application Documentation
 
 ## Tech Stack
 
@@ -29,9 +29,9 @@ The application is built with modern web technologies chosen for their performan
 
 ## Overview
 
-The Service Delivery Cost Calculator is a web application built with SvelteKit that helps organizations analyze and optimize their service delivery costs. The application provides multiple analysis modes:
+The Operations Costs Cost Calculator is a web application built with SvelteKit that helps organizations analyze and optimize their Operations Costs costs. The application provides multiple analysis modes:
 
-1. Base Analysis - Calculate current service delivery costs
+1. Base Analysis - Calculate current Operations Costs costs
 2. Target-Based Planning - Plan implementation based on ROI targets
 3. Internal Analysis - Analyze process efficiency and team dependencies
 

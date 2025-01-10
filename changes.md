@@ -23,7 +23,7 @@
 
 2. **Resolution Time Metric Question**
    - Q: With ticket based model, it is supposed to extend the hours per ticket, but that field does not exist in the team based, so is it in use? Or should we add "average resolution time as a field for team based model?
-   - A: The team model already accounts for time through the serviceEfficiency metric which measures "actual service delivery time"
+   - A: The team model already accounts for time through the serviceEfficiency metric which measures "actual Operations Costs time"
    - Service efficiency is used in the base cost calculation: Team Size × Hourly Rate × 160 × Service Efficiency × (1 + Overhead)
    - The model is designed to look at team capacity as a whole rather than individual transaction times
 

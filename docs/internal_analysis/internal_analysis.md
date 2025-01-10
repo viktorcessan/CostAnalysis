@@ -174,7 +174,7 @@ Dependency Factor = Number of Dependencies × 0.15
 
 ## Overview
 
-Target-Based Planning helps organizations set realistic improvement goals and create actionable implementation plans based on their service delivery model. The planning approach differs based on whether the organization uses a team-based or ticket-based model.
+Target-Based Planning helps organizations set realistic improvement goals and create actionable implementation plans based on their Operations Costs model. The planning approach differs based on whether the organization uses a team-based or ticket-based model.
 
 ## 1. Model-Specific Analysis
 

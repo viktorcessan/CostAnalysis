@@ -19,7 +19,7 @@ export async function exportToExcel(data: ExportData) {
 
   // Summary sheet
   const summaryData = [
-    ['Service Delivery Cost Analysis'],
+    ['Operations Costs Cost Analysis'],
     [''],
     ['Summary'],
     ['Model Type', results.model === 'team' ? 'Team-based' : 'Ticket-based'],
@@ -91,7 +91,7 @@ export async function exportToPDF(data: ExportData) {
 
   // Title
   doc.setFontSize(20);
-  doc.text('Service Delivery Cost Analysis', 20, 20);
+  doc.text('Operations Costs Cost Analysis', 20, 20);
 
   // Summary section
   doc.setFontSize(16);

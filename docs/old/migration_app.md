@@ -1,4 +1,4 @@
-# Migration Plan: Service Delivery Cost Analysis Application
+# Migration Plan: Operations Costs Cost Analysis Application
 
 ## Current Architecture Analysis
 

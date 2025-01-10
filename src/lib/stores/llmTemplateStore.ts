@@ -4,7 +4,7 @@ import type { CalculatorModel, SolutionType, CalculationResults } from '$lib/typ
 
 // Template generation functions for each model and solution type
 function generateTeamPlatformTemplate(inputs: any, results: CalculationResults): string {
-  return `I am analyzing a service delivery model with the following configuration:
+  return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Team-Based Model
 - This model is used because the service is delivered by dedicated teams with defined sizes and costs
@@ -60,7 +60,7 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTeamOutsourceTemplate(inputs: any, results: CalculationResults): string {
-  return `I am analyzing a service delivery model with the following configuration:
+  return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Team-Based Model
 - This model is used because the service is delivered by dedicated teams with defined sizes and costs
@@ -68,7 +68,7 @@ Model Selection: Team-Based Model
 
 Solution Approach: Outsourcing Solution
 - An outsourcing solution is being evaluated to transfer operations to a service provider
-- The goal is to reduce operational costs and improve service delivery
+- The goal is to reduce operational costs and improve Operations Costs
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
@@ -113,7 +113,7 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTeamHybridTemplate(inputs: any, results: CalculationResults): string {
-  return `I am analyzing a service delivery model with the following configuration:
+  return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Team-Based Model
 - This model is used because the service is delivered by dedicated teams with defined sizes and costs
@@ -121,7 +121,7 @@ Model Selection: Team-Based Model
 
 Solution Approach: Hybrid Solution
 - A hybrid solution combining platform automation and outsourcing is being evaluated
-- The goal is to optimize service delivery through both automation and cost-effective staffing
+- The goal is to optimize Operations Costs through both automation and cost-effective staffing
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
@@ -162,7 +162,7 @@ Current Results:
 - Annual ROI: ${((results.monthlySavings * 12 / (results.platformCost + results.transitionCost)) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
-1. Is this hybrid approach appropriate for our service delivery needs?
+1. Is this hybrid approach appropriate for our Operations Costs needs?
 2. How should we balance automation vs. outsourcing?
 3. What are the key risks in implementing both solutions simultaneously?
 4. What implementation sequence would you recommend?
@@ -170,7 +170,7 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTicketPlatformTemplate(inputs: any, results: CalculationResults): string {
-  return `I am analyzing a service delivery model with the following configuration:
+  return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing
@@ -225,7 +225,7 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTicketOutsourceTemplate(inputs: any, results: CalculationResults): string {
-  return `I am analyzing a service delivery model with the following configuration:
+  return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing
@@ -279,7 +279,7 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTicketHybridTemplate(inputs: any, results: CalculationResults): string {
-  return `I am analyzing a service delivery model with the following configuration:
+  return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing

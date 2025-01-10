@@ -21,6 +21,7 @@ export interface TargetPlanningParams {
   reductionTarget: number;
   efficiencyTarget: number;
   implementationTarget: number;
+  platformCostTarget: number;
 }
 
 export function generateShareLink(params: TargetPlanningParams): string {
@@ -47,6 +48,7 @@ export function generateShareLink(params: TargetPlanningParams): string {
   searchParams.set('reductionTarget', params.reductionTarget.toString());
   searchParams.set('efficiencyTarget', params.efficiencyTarget.toString());
   searchParams.set('implementationTarget', params.implementationTarget.toString());
+  searchParams.set('platformCostTarget', params.platformCostTarget.toString());
   
   return searchParams.toString();
 }
@@ -60,7 +62,8 @@ export function parseShareLink(searchParams: URLSearchParams): TargetPlanningPar
     breakEvenTarget: Number(searchParams.get('breakEvenTarget')),
     reductionTarget: Number(searchParams.get('reductionTarget')),
     efficiencyTarget: Number(searchParams.get('efficiencyTarget')),
-    implementationTarget: Number(searchParams.get('implementationTarget'))
+    implementationTarget: Number(searchParams.get('implementationTarget')),
+    platformCostTarget: Number(searchParams.get('platformCostTarget'))
   };
   
   // Parse model-specific parameters
@@ -87,7 +90,8 @@ export function validateShareParams(params: TargetPlanningParams): boolean {
     isNaN(params.breakEvenTarget) ||
     isNaN(params.reductionTarget) ||
     isNaN(params.efficiencyTarget) ||
-    isNaN(params.implementationTarget)
+    isNaN(params.implementationTarget) ||
+    isNaN(params.platformCostTarget)
   ) {
     return false;
   }
@@ -131,6 +135,7 @@ export function formatShareParams(params: TargetPlanningParams): string[] {
   formatted.push(`${params.model === 'team' ? 'Team Reduction' : 'Automation'} Target: ${params.reductionTarget}%`);
   formatted.push(`${params.model === 'team' ? 'Process Efficiency' : 'SLA Improvement'} Target: ${params.efficiencyTarget}%`);
   formatted.push(`Implementation Target: ${params.implementationTarget} months`);
+  formatted.push(`Monthly Platform Cost: $${params.platformCostTarget}`);
   
   return formatted;
 } 

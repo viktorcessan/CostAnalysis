@@ -48,8 +48,7 @@
     <div
       class="fixed inset-4 sm:inset-8 md:inset-16 lg:inset-32 bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col"
       transition:fly={{ y: 20, duration: 200 }}
-      use:clickOutside
-      on:click_outside={() => show = false}
+      use:clickOutside={{ enabled: show, callback: () => show = false }}
       on:click|stopPropagation
     >
       <!-- Header -->

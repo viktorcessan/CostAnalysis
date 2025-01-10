@@ -26,42 +26,37 @@ function calculateTargetBasedPlanningResults(inputs: TargetBasedPlanningInputs):
     targetType,
     targetValue,
     timeframe,
-    baseInputs
+    baseInputs,
+    additionalTargets
   } = inputs;
 
   // Calculate baseline metrics
   const monthlyBaseCost = calculateTotalCost(baseInputs);
   const annualBaseline = monthlyBaseCost * 12;
 
-  let platformCost = 0;
-  let platformMaintenance = 0;
+  // Get platform cost from targets
+  const platformCostTarget = additionalTargets?.find(t => t.type === 'platform_cost')?.value || 5000;
+  const platformCost = platformCostTarget * 12; // Convert monthly to annual
+  const platformMaintenance = platformCostTarget; // Monthly maintenance is the same as monthly cost
+
   let teamReduction = 0;
   let processEfficiency = 0;
-  const timeToBuild = 3; // Default time to build
+  const timeToBuild = additionalTargets?.find(t => t.type === 'implementation')?.value || 6;
 
   switch (targetType) {
     case 'roi':
       const targetROI = targetValue / 100;
-      const requiredSavings = monthlyBaseCost * (targetValue / 100) * (timeframe / 12);
-      platformCost = requiredSavings / (1 + targetROI);
-      platformMaintenance = platformCost * 0.1;
       teamReduction = 0.3;
       processEfficiency = 0.2;
       break;
 
     case 'team':
       teamReduction = targetValue / 100;
-      const annualSavings = annualBaseline * (targetValue / 100);
-      platformCost = annualSavings * 1.5;
-      platformMaintenance = platformCost * 0.1;
       processEfficiency = 0.2;
       break;
 
     case 'efficiency':
       processEfficiency = targetValue / 100;
-      const efficiencySavings = annualBaseline * (targetValue / 100);
-      platformCost = efficiencySavings * 2;
-      platformMaintenance = platformCost * 0.1;
       teamReduction = 0.3;
       break;
   }

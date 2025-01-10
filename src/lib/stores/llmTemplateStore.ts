@@ -4,28 +4,27 @@ import type { CalculatorModel, SolutionType, CalculationResults } from '$lib/typ
 
 // Template generation functions for each model and solution type
 function generateTeamPlatformTemplate(inputs: any, results: CalculationResults): string {
+  const platformInputs = results.solutionInputs?.platform;
+  if (!platformInputs) return '';
+
   return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Team-Based Model
 - This model is used because the service is delivered by dedicated teams with defined sizes and costs
 - The analysis focuses on team capacity, efficiency, and operational overhead
 
-Solution Approach: Platform Solution
-- A platform solution is being evaluated to automate and streamline team operations
-- The goal is to reduce team size and improve process efficiency
-
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
 - Hourly Rate: $${inputs.hourlyRate}/hour
-- Service Efficiency: ${(inputs.serviceEfficiency * 100).toFixed(0)}%
-- Operational Overhead: ${(inputs.operationalOverhead * 100).toFixed(0)}%
+- Service Efficiency: ${Math.round(inputs.serviceEfficiency * 100)}%
+- Operational Overhead: ${Math.round(inputs.operationalOverhead * 100)}%
 
 Platform Solution Details:
-- Platform Cost: $${results.platformCost}
-- Monthly Maintenance: $${results.platformMaintenance}
-- Implementation Time: ${results.timeToBuild} months
-- Expected Team Reduction: ${(results.teamReduction * 100).toFixed(0)}%
-- Target Process Efficiency: ${(results.processEfficiency * 100).toFixed(0)}%
+- Platform Cost: $${platformInputs.platformCost.toFixed(2)}
+- Monthly Maintenance: $${platformInputs.platformMaintenance.toFixed(2)}
+- Implementation Time: ${platformInputs.timeToBuild} months
+- Expected Team Reduction: ${Math.round(platformInputs.teamReduction * 100)}%
+- Target Process Efficiency: ${Math.round(platformInputs.processEfficiency * 100)}%
 
 Key Formulas Used:
 1. Monthly Operational Cost:
@@ -46,10 +45,10 @@ Key Formulas Used:
    Break-Even Months = Platform Cost / Monthly Savings
 
 Current Results:
-- Current Monthly Cost: $${results.totalCost}
-- Expected Monthly Savings: $${results.monthlySavings}
-- Break-even Period: ${results.breakEvenMonths} months
-- Annual ROI: ${((results.monthlySavings * 12 / results.platformCost) * 100).toFixed(1)}%
+- Current Monthly Cost: $${results.totalCost.toFixed(2)}
+- Expected Monthly Savings: $${results.monthlySavings.toFixed(2)}
+- Break-even Period: ${results.breakEvenMonths?.toFixed(1) || 'N/A'} months
+- Annual ROI: ${((results.monthlySavings * 12 / platformInputs.platformCost) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
 1. Is this a realistic and achievable transformation plan?
@@ -60,15 +59,14 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTeamOutsourceTemplate(inputs: any, results: CalculationResults): string {
+  const outsourceInputs = results.solutionInputs?.outsource;
+  if (!outsourceInputs) return '';
+
   return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Team-Based Model
 - This model is used because the service is delivered by dedicated teams with defined sizes and costs
 - The analysis focuses on team capacity, efficiency, and operational overhead
-
-Solution Approach: Outsourcing Solution
-- An outsourcing solution is being evaluated to transfer operations to a service provider
-- The goal is to reduce operational costs and improve Operations Costs
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
@@ -77,10 +75,12 @@ Current Configuration:
 - Operational Overhead: ${(inputs.operationalOverhead * 100).toFixed(0)}%
 
 Outsourcing Solution Details:
-- Transition Cost: $${results.transitionCost}
-- Provider Rate: $${results.providerRate}/hour
-- Transition Time: ${results.transitionTime} months
-- Service Level: ${results.serviceLevel}%
+- Transition Cost: $${outsourceInputs.transitionCost.toFixed(2)}
+- Vendor Rate: $${outsourceInputs.vendorRate.toFixed(2)}/hour
+- Transition Time: ${outsourceInputs.transitionTime} months
+- Quality Impact: ${Math.round(outsourceInputs.qualityImpact * 100)}%
+- Knowledge Loss Risk: ${Math.round(outsourceInputs.knowledgeLoss * 100)}%
+- Management Overhead: ${Math.round(outsourceInputs.managementOverhead * 100)}%
 
 Key Formulas Used:
 1. Current Monthly Operational Cost:
@@ -91,7 +91,7 @@ Key Formulas Used:
 
 2. Outsourcing Solution Cost:
    Transition Cost = One-time cost for knowledge transfer and transition
-   Monthly Operating Cost = Provider Rate × Working Hours × Team Size
+   Monthly Operating Cost = Vendor Rate × Working Hours × Team Size × (1 + Management Overhead)
    Time to Value = Transition Time (months)
    Total Monthly Savings = Current Monthly Cost - Monthly Operating Cost
 
@@ -99,10 +99,10 @@ Key Formulas Used:
    Break-Even Months = Transition Cost / Monthly Savings
 
 Current Results:
-- Current Monthly Cost: $${results.totalCost}
-- Expected Monthly Savings: $${results.monthlySavings}
-- Break-even Period: ${results.breakEvenMonths} months
-- Annual ROI: ${((results.monthlySavings * 12 / results.transitionCost) * 100).toFixed(1)}%
+- Current Monthly Cost: $${results.totalCost.toFixed(2)}
+- Expected Monthly Savings: $${results.monthlySavings.toFixed(2)}
+- Break-even Period: ${results.breakEvenMonths?.toFixed(1) || 'N/A'} months
+- Annual ROI: ${((results.monthlySavings * 12 / outsourceInputs.transitionCost) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
 1. Is outsourcing a viable option for this service?
@@ -113,15 +113,14 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTeamHybridTemplate(inputs: any, results: CalculationResults): string {
+  const hybridInputs = results.solutionInputs?.hybrid;
+  if (!hybridInputs) return '';
+
   return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Team-Based Model
 - This model is used because the service is delivered by dedicated teams with defined sizes and costs
 - The analysis focuses on team capacity, efficiency, and operational overhead
-
-Solution Approach: Hybrid Solution
-- A hybrid solution combining platform automation and outsourcing is being evaluated
-- The goal is to optimize Operations Costs through both automation and cost-effective staffing
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
@@ -130,13 +129,15 @@ Current Configuration:
 - Operational Overhead: ${(inputs.operationalOverhead * 100).toFixed(0)}%
 
 Hybrid Solution Details:
-- Platform Cost: $${results.platformCost}
-- Platform Maintenance: $${results.platformMaintenance}/month
-- Transition Cost: $${results.transitionCost}
-- Provider Rate: $${results.providerRate}/hour
-- Implementation Time: ${results.timeToBuild} months
-- Team Reduction: ${(results.teamReduction * 100).toFixed(0)}%
-- Process Efficiency: ${(results.processEfficiency * 100).toFixed(0)}%
+- Platform Cost: $${hybridInputs.platformCost.toFixed(2)}
+- Platform Maintenance: $${hybridInputs.platformMaintenance.toFixed(2)}/month
+- Transition Cost: $${hybridInputs.transitionCost.toFixed(2)}
+- Vendor Rate: $${hybridInputs.vendorRate.toFixed(2)}/hour
+- Implementation Time: ${hybridInputs.timeToBuild} months
+- Team Reduction: ${Math.round(hybridInputs.teamReduction * 100)}%
+- Process Efficiency: ${Math.round(hybridInputs.processEfficiency * 100)}%
+- Platform Portion: ${Math.round(hybridInputs.platformPortion * 100)}%
+- Vendor Portion: ${Math.round(hybridInputs.vendorPortion * 100)}%
 
 Key Formulas Used:
 1. Current Monthly Operational Cost:
@@ -148,7 +149,7 @@ Key Formulas Used:
 2. Hybrid Solution Cost:
    Initial Investment = Platform Cost + Transition Cost
    Monthly Platform Cost = Platform Maintenance
-   Monthly Outsourcing Cost = Provider Rate × Reduced Team Size × Working Hours
+   Monthly Outsourcing Cost = Vendor Rate × Reduced Team Size × Working Hours × Vendor Portion
    Process Efficiency Savings = Monthly Cost × Process Efficiency %
    Total Monthly Savings = Current Monthly Cost - (Monthly Platform Cost + Monthly Outsourcing Cost)
 
@@ -156,10 +157,10 @@ Key Formulas Used:
    Break-Even Months = Initial Investment / Monthly Savings
 
 Current Results:
-- Current Monthly Cost: $${results.totalCost}
-- Expected Monthly Savings: $${results.monthlySavings}
-- Break-even Period: ${results.breakEvenMonths} months
-- Annual ROI: ${((results.monthlySavings * 12 / (results.platformCost + results.transitionCost)) * 100).toFixed(1)}%
+- Current Monthly Cost: $${results.totalCost.toFixed(2)}
+- Expected Monthly Savings: $${results.monthlySavings.toFixed(2)}
+- Break-even Period: ${results.breakEvenMonths?.toFixed(1) || 'N/A'} months
+- Annual ROI: ${((results.monthlySavings * 12 / (hybridInputs.platformCost + hybridInputs.transitionCost)) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
 1. Is this hybrid approach appropriate for our Operations Costs needs?
@@ -170,29 +171,27 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTicketPlatformTemplate(inputs: any, results: CalculationResults): string {
+  const platformInputs = results.solutionInputs?.platform;
+  if (!platformInputs) return '';
+
   return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing
 - The analysis focuses on ticket metrics, processing time, and resource allocation
 
-Solution Approach: Platform Solution
-- A platform solution is being evaluated to automate ticket processing
-- The goal is to reduce processing time and improve efficiency
-
 Current Configuration:
 - Monthly Tickets: ${inputs.monthlyTickets}
 - Hours per Ticket: ${inputs.hoursPerTicket}
 - People per Ticket: ${inputs.peoplePerTicket}
-- Hourly Rate: $${inputs.hourlyRate}
-- SLA Compliance: ${inputs.slaCompliance}%
+- SLA Compliance: ${Math.round(inputs.slaCompliance * 100)}%
 
 Platform Solution Details:
-- Platform Cost: $${results.platformCost}
-- Monthly Maintenance: $${results.platformMaintenance}
-- Implementation Time: ${results.timeToBuild} months
-- Expected Automation Rate: ${(results.automationRate * 100).toFixed(0)}%
-- Processing Time Reduction: ${(results.processingTimeReduction * 100).toFixed(0)}%
+- Platform Cost: $${platformInputs.platformCost.toFixed(2)}
+- Monthly Maintenance: $${platformInputs.platformMaintenance.toFixed(2)}
+- Implementation Time: ${platformInputs.timeToBuild} months
+- Expected Team Reduction: ${Math.round(platformInputs.teamReduction * 100)}%
+- Target Process Efficiency: ${Math.round(platformInputs.processEfficiency * 100)}%
 
 Key Formulas Used:
 1. Current Monthly Processing Cost:
@@ -202,19 +201,19 @@ Key Formulas Used:
 2. Platform Solution Cost:
    Implementation Cost = Platform Cost
    Monthly Operating Cost = Platform Maintenance + (Remaining Manual Tickets × Reduced Processing Cost)
-   Automation Savings = Monthly Tickets × Automation Rate × Current Cost per Ticket
-   Efficiency Savings = Remaining Manual Tickets × Current Cost per Ticket × Processing Time Reduction
-   Total Monthly Savings = Automation Savings + Efficiency Savings - Monthly Operating Cost
+   Team Cost Reduction = Monthly Cost × Team Reduction %
+   Process Efficiency Savings = Monthly Cost × Process Efficiency %
+   Total Monthly Savings = Team Cost Reduction + Process Efficiency Savings - Monthly Operating Cost
 
 3. Break-Even Analysis:
    Break-Even Months = Platform Cost / Monthly Savings
 
 Current Results:
-- Current Monthly Cost: $${results.totalCost}
-- Cost per Ticket: $${results.costPerTicket}
-- Expected Monthly Savings: $${results.monthlySavings}
-- Break-even Period: ${results.breakEvenMonths} months
-- Annual ROI: ${((results.monthlySavings * 12 / results.platformCost) * 100).toFixed(1)}%
+- Current Monthly Cost: $${results.totalCost.toFixed(2)}
+- Cost per Ticket: $${results.costPerTicket.toFixed(2)}
+- Expected Monthly Savings: $${results.monthlySavings.toFixed(2)}
+- Break-even Period: ${results.breakEvenMonths?.toFixed(1) || 'N/A'} months
+- Annual ROI: ${((results.monthlySavings * 12 / platformInputs.platformCost) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
 1. Is this automation level achievable for our ticket types?
@@ -225,29 +224,28 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTicketOutsourceTemplate(inputs: any, results: CalculationResults): string {
+  const outsourceInputs = results.solutionInputs?.outsource;
+  if (!outsourceInputs) return '';
+
   return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing
 - The analysis focuses on ticket metrics, processing time, and resource allocation
 
-Solution Approach: Outsourcing Solution
-- An outsourcing solution is being evaluated to transfer ticket processing to a service provider
-- The goal is to reduce processing costs while maintaining service quality
-
 Current Configuration:
 - Monthly Tickets: ${inputs.monthlyTickets}
 - Hours per Ticket: ${inputs.hoursPerTicket}
 - People per Ticket: ${inputs.peoplePerTicket}
-- Hourly Rate: $${inputs.hourlyRate}
-- SLA Compliance: ${inputs.slaCompliance}%
+- SLA Compliance: ${Math.round(inputs.slaCompliance * 100)}%
 
 Outsourcing Solution Details:
-- Transition Cost: $${results.transitionCost}
-- Provider Rate: $${results.providerRate}/hour
-- Transition Time: ${results.transitionTime} months
-- Target SLA: ${results.serviceLevel}%
-- Volume Commitment: ${results.volumeCommitment} tickets/month
+- Transition Cost: $${outsourceInputs.transitionCost.toFixed(2)}
+- Vendor Rate: $${outsourceInputs.vendorRate.toFixed(2)}/hour
+- Transition Time: ${outsourceInputs.transitionTime} months
+- Quality Impact: ${Math.round(outsourceInputs.qualityImpact * 100)}%
+- Knowledge Loss Risk: ${Math.round(outsourceInputs.knowledgeLoss * 100)}%
+- Management Overhead: ${Math.round(outsourceInputs.managementOverhead * 100)}%
 
 Key Formulas Used:
 1. Current Monthly Processing Cost:
@@ -256,19 +254,18 @@ Key Formulas Used:
 
 2. Outsourcing Solution Cost:
    Transition Cost = One-time cost for knowledge transfer and transition
-   Monthly Operating Cost = Monthly Tickets × Provider Rate × Hours per Ticket
-   Volume Discount = Discount Rate × (Monthly Tickets - Volume Commitment)
-   Total Monthly Cost = Monthly Operating Cost - Volume Discount
+   Monthly Operating Cost = Monthly Tickets × Vendor Rate × Hours per Ticket × (1 + Management Overhead)
+   Total Monthly Savings = Current Monthly Cost - Monthly Operating Cost
 
 3. Break-Even Analysis:
    Break-Even Months = Transition Cost / Monthly Savings
 
 Current Results:
-- Current Monthly Cost: $${results.totalCost}
-- Cost per Ticket: $${results.costPerTicket}
-- Expected Monthly Savings: $${results.monthlySavings}
-- Break-even Period: ${results.breakEvenMonths} months
-- Annual ROI: ${((results.monthlySavings * 12 / results.transitionCost) * 100).toFixed(1)}%
+- Current Monthly Cost: $${results.totalCost.toFixed(2)}
+- Cost per Ticket: $${results.costPerTicket.toFixed(2)}
+- Expected Monthly Savings: $${results.monthlySavings.toFixed(2)}
+- Break-even Period: ${results.breakEvenMonths?.toFixed(1) || 'N/A'} months
+- Annual ROI: ${((results.monthlySavings * 12 / outsourceInputs.transitionCost) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
 1. Is the provider's rate structure competitive?
@@ -279,31 +276,31 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTicketHybridTemplate(inputs: any, results: CalculationResults): string {
+  const hybridInputs = results.solutionInputs?.hybrid;
+  if (!hybridInputs) return '';
+
   return `I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing
 - The analysis focuses on ticket metrics, processing time, and resource allocation
 
-Solution Approach: Hybrid Solution
-- A hybrid solution combining platform automation and outsourcing is being evaluated
-- The goal is to optimize ticket processing through automation while outsourcing remaining manual work
-
 Current Configuration:
 - Monthly Tickets: ${inputs.monthlyTickets}
 - Hours per Ticket: ${inputs.hoursPerTicket}
 - People per Ticket: ${inputs.peoplePerTicket}
-- Hourly Rate: $${inputs.hourlyRate}
-- SLA Compliance: ${inputs.slaCompliance}%
+- SLA Compliance: ${Math.round(inputs.slaCompliance * 100)}%
 
 Hybrid Solution Details:
-- Platform Cost: $${results.platformCost}
-- Platform Maintenance: $${results.platformMaintenance}/month
-- Transition Cost: $${results.transitionCost}
-- Provider Rate: $${results.providerRate}/hour
-- Implementation Time: ${results.timeToBuild} months
-- Automation Rate: ${(results.automationRate * 100).toFixed(0)}%
-- Processing Time Reduction: ${(results.processingTimeReduction * 100).toFixed(0)}%
+- Platform Cost: $${hybridInputs.platformCost.toFixed(2)}
+- Platform Maintenance: $${hybridInputs.platformMaintenance.toFixed(2)}/month
+- Transition Cost: $${hybridInputs.transitionCost.toFixed(2)}
+- Vendor Rate: $${hybridInputs.vendorRate.toFixed(2)}/hour
+- Implementation Time: ${hybridInputs.timeToBuild} months
+- Team Reduction: ${Math.round(hybridInputs.teamReduction * 100)}%
+- Process Efficiency: ${Math.round(hybridInputs.processEfficiency * 100)}%
+- Platform Portion: ${Math.round(hybridInputs.platformPortion * 100)}%
+- Vendor Portion: ${Math.round(hybridInputs.vendorPortion * 100)}%
 
 Key Formulas Used:
 1. Current Monthly Processing Cost:
@@ -312,21 +309,20 @@ Key Formulas Used:
 
 2. Hybrid Solution Cost:
    Initial Investment = Platform Cost + Transition Cost
-   Automated Tickets = Monthly Tickets × Automation Rate
-   Manual Tickets = Monthly Tickets × (1 - Automation Rate)
-   Platform Cost = Monthly Maintenance + (Automated Tickets × Platform Cost per Ticket)
-   Outsourcing Cost = Manual Tickets × Provider Rate × Reduced Processing Time
-   Total Monthly Cost = Platform Cost + Outsourcing Cost
+   Monthly Platform Cost = Platform Maintenance
+   Monthly Outsourcing Cost = Vendor Rate × Hours per Ticket × Monthly Tickets × Vendor Portion × (1 + Management Overhead)
+   Process Efficiency Savings = Monthly Cost × Process Efficiency %
+   Total Monthly Savings = Current Monthly Cost - (Monthly Platform Cost + Monthly Outsourcing Cost)
 
 3. Break-Even Analysis:
    Break-Even Months = Initial Investment / Monthly Savings
 
 Current Results:
-- Current Monthly Cost: $${results.totalCost}
-- Cost per Ticket: $${results.costPerTicket}
-- Expected Monthly Savings: $${results.monthlySavings}
-- Break-even Period: ${results.breakEvenMonths} months
-- Annual ROI: ${((results.monthlySavings * 12 / (results.platformCost + results.transitionCost)) * 100).toFixed(1)}%
+- Current Monthly Cost: $${results.totalCost.toFixed(2)}
+- Cost per Ticket: $${results.costPerTicket.toFixed(2)}
+- Expected Monthly Savings: $${results.monthlySavings.toFixed(2)}
+- Break-even Period: ${results.breakEvenMonths?.toFixed(1) || 'N/A'} months
+- Annual ROI: ${((results.monthlySavings * 12 / (hybridInputs.platformCost + hybridInputs.transitionCost)) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
 1. How should tickets be distributed between automation and outsourcing?

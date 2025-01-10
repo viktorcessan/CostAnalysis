@@ -29,23 +29,22 @@
           },
           {
             title: 'Platform Solution Cost',
-            formula: `Implementation Cost = Platform Cost
-Monthly Operating Cost = Platform Maintenance
-Time to Value = Time to Build (months)
+            formula: `Implementation Cost = Monthly Platform Cost Target × Implementation Time
+Monthly Operating Cost = Monthly Platform Cost Target
+Time to Value = Implementation Time (months)
 Team Cost Reduction = Monthly Cost × Team Reduction %
 Process Efficiency Savings = Monthly Cost × Process Efficiency %
-Total Monthly Savings = Team Cost Reduction + Process Efficiency Savings - Monthly Operating Cost`,
-            explanation: 'Calculates the costs and savings for the platform solution based on implementation and efficiency gains.',
+Total Monthly Savings = Team Cost Reduction + Process Efficiency Savings - Monthly Platform Cost Target`,
+            explanation: 'Calculates the costs and savings for the platform solution based on implementation and efficiency gains, using the target monthly platform cost.',
             variables: [
-              { name: 'Platform Cost', description: 'One-time cost for platform setup (from platformCost input)' },
-              { name: 'Platform Maintenance', description: 'Monthly maintenance cost (from platformMaintenance input)' },
-              { name: 'Time to Build', description: 'Months until solution is operational (from timeToBuild input)' },
+              { name: 'Monthly Platform Cost Target', description: 'Target monthly cost for platform maintenance (from user input)' },
+              { name: 'Implementation Time', description: 'Months until solution is operational (from implementationTarget input)' },
               { name: 'Team Reduction', description: 'Expected team size reduction (from teamReduction input, 0-100%)' },
               { name: 'Process Efficiency', description: 'Expected efficiency improvement (from processEfficiency input, 0-100%)' }
             ],
             assumptions: [
-              'Platform costs are accurately estimated',
-              'Maintenance costs remain stable post-implementation',
+              'Monthly platform cost remains stable at target level',
+              'Implementation cost is based on monthly target cost',
               'Team reduction can be achieved as projected',
               'Process efficiency gains are realizable'
             ]
@@ -104,31 +103,31 @@ Total Monthly Cost = Monthly Platform Cost + Monthly Vendor Cost + Quality and K
         return [
           {
             title: 'Break-Even Analysis',
-            formula: 'Break-Even Months = (Implementation Cost + License Costs) / (Monthly Savings - Monthly Maintenance)',
-            explanation: 'Calculates how long it will take to recover the platform investment based on monthly savings.',
+            formula: 'Break-Even Months = Implementation Cost / (Monthly Savings - Monthly Platform Cost Target)',
+            explanation: 'Calculates how long it will take to recover the platform investment based on monthly savings and target platform cost.',
             variables: [
-              { name: 'Implementation Cost', description: 'One-time cost for platform setup and integration' },
-              { name: 'License Costs', description: 'Upfront license fees or first-year costs' },
-              { name: 'Monthly Savings', description: 'Reduction in monthly operational costs' },
-              { name: 'Monthly Maintenance', description: 'Recurring maintenance and support costs' }
+              { name: 'Implementation Cost', description: 'Total cost for platform setup and integration' },
+              { name: 'Monthly Savings', description: 'Reduction in monthly operational costs before platform cost' },
+              { name: 'Monthly Platform Cost Target', description: 'Target monthly cost for platform maintenance' }
             ],
             assumptions: [
+              'Monthly platform cost remains at target level',
               'Monthly savings remain consistent post-implementation',
-              'No significant changes in team size during break-even period',
-              'Maintenance costs are predictable'
+              'No significant changes in team size during break-even period'
             ]
           },
           {
             title: 'Future Monthly Cost',
-            formula: 'Future Cost = Current Cost × (1 - Team Reduction) × (1 - Process Efficiency) + Platform Maintenance',
-            explanation: 'Projects future monthly costs after implementing the platform solution.',
+            formula: 'Future Cost = Current Cost × (1 - Team Reduction) × (1 - Process Efficiency) + Monthly Platform Cost Target',
+            explanation: 'Projects future monthly costs after implementing the platform solution, using the target monthly platform cost.',
             variables: [
               { name: 'Current Cost', description: 'Current monthly operational cost' },
               { name: 'Team Reduction', description: 'Percentage reduction in team size (0-100%)' },
               { name: 'Process Efficiency', description: 'Percentage improvement in process efficiency (0-100%)' },
-              { name: 'Platform Maintenance', description: 'Monthly platform maintenance cost' }
+              { name: 'Monthly Platform Cost Target', description: 'Target monthly cost for platform maintenance' }
             ],
             assumptions: [
+              'Platform cost remains at target level',
               'Efficiency gains are realizable and measurable',
               'Team reduction can be achieved through natural attrition',
               'Process improvements can be maintained long-term'

@@ -184,7 +184,7 @@ export interface TargetBasedPlanningInputs {
   timeframe: number;
   baseInputs: TeamInputs | TicketInputs;
   additionalTargets?: Array<{
-    type: 'roi' | 'team' | 'efficiency';
+    type: 'roi' | 'team' | 'efficiency' | 'implementation' | 'platform_cost';
     value: number;
   }>;
 }

@@ -74,7 +74,7 @@
 
   // Target inputs without enabled flag
   interface Target {
-    type: 'roi' | 'team' | 'efficiency' | 'implementation';
+    type: 'roi' | 'team' | 'efficiency' | 'implementation' | 'platform_cost';
     value: number;
   }
 
@@ -82,7 +82,8 @@
     { type: 'roi', value: 24 }, // Break even in months
     { type: 'team', value: 30 }, // Team reduction %
     { type: 'efficiency', value: 40 }, // Process efficiency %
-    { type: 'implementation', value: 6 } // Implementation time in months
+    { type: 'implementation', value: 6 }, // Implementation time in months
+    { type: 'platform_cost', value: 5000 } // Monthly platform cost
   ];
 
   // Results
@@ -100,8 +101,7 @@
     timeframe: { min: 12, max: 60, step: 3 }, // 12-60 months
     targetTeamReduction: { min: 0, max: 75, step: 5 }, // 0-75%
     targetEfficiency: { min: 0, max: 75, step: 5 }, // 0-75%
-    platformCost: { min: 50000, max: 10000000, step: 10000 }, // $50k to $10M
-    platformMaintenance: { min: 1000, max: 1000000, step: 1000 } // $1k to $1M
+    platformCost: { min: 0, max: 50000, step: 1000 } // $0 to $50k per month
   };
 
   // Initialize tooltips
@@ -157,40 +157,35 @@
     const workingHoursPerMonth = 160;
     const monthlyBaseCost = model === 'team'
       ? teamSize * hourlyRate * workingHoursPerMonth * (serviceEfficiency / 100) * (1 + operationalOverhead / 100)
-      : monthlyTickets * hoursPerTicket * peoplePerTicket * hourlyRate; // Use actual hourly rate
+      : monthlyTickets * hoursPerTicket * peoplePerTicket * hourlyRate;
     
     const annualBaseCost = monthlyBaseCost * 12;
     const breakEvenMonths = targets[0].value;
     const teamTarget = targets[1].value / 100;
     const efficiencyTarget = targets[2].value / 100;
     const implementationMonths = targets[3].value;
+    const monthlyPlatformCost = targets[4].value;
 
     // Calculate reduced operating costs after implementation
     const monthlyOperatingCost = monthlyBaseCost * (1 - teamTarget) * (1 - efficiencyTarget);
-    const monthlySavings = monthlyBaseCost - monthlyOperatingCost;
+    const monthlySavings = monthlyBaseCost - monthlyOperatingCost - monthlyPlatformCost;
     const annualSavings = monthlySavings * 12;
 
-    // Calculate required platform cost to hit break-even target
+    // Calculate required platform investment to achieve break-even
     const totalSavingsAtTarget = monthlySavings * breakEvenMonths;
-    const platformCost = Math.min(
-      Math.max(
-        totalSavingsAtTarget,
-        constraints.platformCost.min
-      ),
-      constraints.platformCost.max
+    const platformInvestment = Math.max(
+      totalSavingsAtTarget, // Minimum investment needed to break even
+      monthlyPlatformCost * implementationMonths // Minimum investment based on implementation time
     );
-
-    // Calculate monthly maintenance (5% of platform cost annually)
-    const platformMaintenance = platformCost * 0.05 / 12;
 
     // Update results
     results = {
-      platformCost,
-      platformMaintenance,
+      platformCost: platformInvestment, // Total platform investment
+      platformMaintenance: monthlyPlatformCost, // Monthly maintenance cost
       timeToBuild: implementationMonths,
       teamReduction: teamTarget,
       processEfficiency: efficiencyTarget,
-      baselineCost: annualBaseCost,
+      baselineCost: monthlyBaseCost,
       annualBaseline: annualBaseCost,
       targetType: 'roi',
       targetValue: breakEvenMonths,
@@ -464,7 +459,8 @@
       { type: 'roi', value: sharedParams.breakEvenTarget },
       { type: 'team', value: sharedParams.reductionTarget },
       { type: 'efficiency', value: sharedParams.efficiencyTarget },
-      { type: 'implementation', value: sharedParams.implementationTarget }
+      { type: 'implementation', value: sharedParams.implementationTarget },
+      { type: 'platform_cost', value: sharedParams.platformCostTarget }
     ];
     
     // Clear URL parameters
@@ -490,7 +486,8 @@
       breakEvenTarget: targets[0].value,
       reductionTarget: targets[1].value,
       efficiencyTarget: targets[2].value,
-      implementationTarget: targets[3].value
+      implementationTarget: targets[3].value,
+      platformCostTarget: targets[4].value
     };
   }
 
@@ -1145,6 +1142,54 @@
           </div>
         </div>
       {/if}
+
+      <!-- Platform Cost Target -->
+      <div class="field-container">
+        <div>
+          <div class="field-info">
+            <label class="field-label" for="platformCostTarget">
+              Monthly Platform Cost
+              <button 
+                class="tooltip ml-1"
+                aria-label="Help information" 
+                data-tippy-content="Target monthly cost for the platform solution">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </label>
+            <p class="input-description">
+              Expected monthly cost for the platform solution including maintenance.
+            </p>
+          </div>
+          <div class="input-group">
+            <div class="value-container">
+              <div class="relative">
+                <input
+                  type="number"
+                  id="platformCostTarget"
+                  bind:value={targets[4].value}
+                  min={constraints.platformCost.min}
+                  max={constraints.platformCost.max}
+                  step={constraints.platformCost.step}
+                  class="number-input pr-8"
+                />
+                <span class="unit-suffix">$</span>
+              </div>
+            </div>
+            <div class="slider-container">
+              <input
+                type="range"
+                bind:value={targets[4].value}
+                min={constraints.platformCost.min}
+                max={constraints.platformCost.max}
+                step={constraints.platformCost.step}
+                class="slider-input"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Implementation Time Target -->
       <div class="field-container">

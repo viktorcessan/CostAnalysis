@@ -16,14 +16,15 @@ Model Selection: Team-Based Model
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
-- Service Efficiency: ${inputs.serviceEfficiency}%
-- Operational Overhead: ${inputs.operationalOverhead}%
+- Hourly Rate: $${inputs.hourlyRate}/hour
+- Service Efficiency: ${Math.round(inputs.serviceEfficiency * 100)}%
+- Operational Overhead: ${Math.round(inputs.operationalOverhead * 100)}%
 
 Target Goals:
-- Break Even Time: ${targets[0].value} months
-- Team Reduction: ${targets[1].value}%
-- Process Efficiency: ${targets[2].value}%
-- Implementation Time: ${targets[3].value} months
+- Break Even Time: ${targets.find(t => t.type === 'roi')?.value} months
+- Team Reduction: ${targets.find(t => t.type === 'team')?.value}%
+- Process Efficiency: ${targets.find(t => t.type === 'efficiency')?.value}%
+- Implementation Time: ${targets.find(t => t.type === 'implementation')?.value} months
 
 Key Formulas Used:
 1. Monthly Baseline Cost:
@@ -34,8 +35,8 @@ Key Formulas Used:
 
 2. Required Investment Calculation:
    Monthly Operating Cost = Monthly Cost × (1 - Team Reduction) × (1 - Process Efficiency)
-   Monthly Savings = Monthly Cost - Monthly Operating Cost
-   Required Investment = Monthly Savings × Break Even Time
+   Monthly Savings = Monthly Cost - Monthly Operating Cost - Monthly Platform Cost
+   Required Investment = Monthly Platform Cost × Implementation Time
 
 Based on this analysis, please provide insights on:
 1. Is this transformation timeline realistic given the team size and target reductions?
@@ -72,8 +73,8 @@ Key Formulas Used:
 
 2. Required Investment Calculation:
    Monthly Operating Cost = Monthly Cost × (1 - Automation Rate) × (1 - SLA Improvement)
-   Monthly Savings = Monthly Cost - Monthly Operating Cost
-   Required Investment = Monthly Savings × Break Even Time
+   Monthly Savings = Monthly Cost - Monthly Operating Cost - Monthly Platform Cost
+   Required Investment = Monthly Platform Cost × Implementation Time
 
 Based on this analysis, please provide insights on:
 1. Is this transformation timeline realistic given the ticket volume and complexity?

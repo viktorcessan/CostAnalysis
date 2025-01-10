@@ -170,15 +170,36 @@ export function initTutorial() {
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
-            <strong class="text-slate-900">Coordination Costs:</strong>
-            <p class="mt-1">Set the cost of communication and collaboration between teams, including meetings, documentation, and alignment activities.</p>
+            <strong class="text-slate-900">Dev Rate:</strong>
+            <p class="mt-1">Set the average hourly rate for developers, including benefits and overhead costs ($20-$200/hr).</p>
           </div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
-            <strong class="text-slate-900">Efficiency Factors:</strong>
-            <p class="mt-1">Adjust how team size and interactions affect productivity and overhead costs.</p>
+            <strong class="text-slate-900">Meeting Parameters:</strong>
+            <p class="mt-1">Configure weekly meeting hours (1-20) and average attendees per team (1-20) for coordination activities.</p>
+          </div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>
+            <strong class="text-slate-900">Communication Overhead:</strong>
+            <p class="mt-1">Set the multiplier (1.0-2.0x) for additional time spent on coordination and communication.</p>
+          </div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>
+            <strong class="text-slate-900">Baseline Communication:</strong>
+            <p class="mt-1">Define minimum weekly hours (1-10) spent on asynchronous communication per team.</p>
+          </div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>
+            <strong class="text-slate-900">Dependency Hours Rate:</strong>
+            <p class="mt-1">Specify additional hours (1-10) needed per dependency level for team coordination.</p>
           </div>
         </li>
       </ul>`

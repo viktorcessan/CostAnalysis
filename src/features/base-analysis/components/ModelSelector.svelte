@@ -27,7 +27,7 @@
       <div class="flex-1">
         <h3 class="text-xl font-semibold text-gray-900 mb-3">Team-Based Model</h3>
         <p class="text-sm text-gray-600 mb-6 leading-relaxed">
-          Your service delivery is organized around dedicated teams that handle various types of work. 
+          Your Operations Costs is organized around dedicated teams that handle various types of work. 
           This model focuses on team capacity, utilization, and operational efficiency.
         </p>
         <div class="space-y-3">
@@ -85,7 +85,7 @@
       <div class="flex-1">
         <h3 class="text-xl font-semibold text-gray-900 mb-3">Ticket-Based Model</h3>
         <p class="text-sm text-gray-600 mb-6 leading-relaxed">
-          Your service delivery is organized around individual tickets or work items. 
+          Your Operations Costs is organized around individual tickets or work items. 
           This model focuses on throughput, processing time, and resource allocation per ticket.
         </p>
         <div class="space-y-3">

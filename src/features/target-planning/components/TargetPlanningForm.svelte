@@ -541,7 +541,7 @@
                 </button>
               </label>
               <p class="input-description">
-                Define the number of employees currently working on service delivery.
+                Define the number of employees currently working on Operations Costs.
               </p>
             </div>
             <div>
@@ -632,7 +632,7 @@
                 </button>
               </label>
               <p class="input-description">
-                Percentage of time spent on productive service delivery work.
+                Percentage of time spent on productive Operations Costs work.
               </p>
             </div>
             <div>
@@ -1318,7 +1318,7 @@
       <div class="flex flex-col relative">
         <div class="text-center mb-6">
           <h3 class="text-2xl font-semibold text-gray-900 mb-2">Get Expert Guidance</h3>
-          <p class="text-gray-600">Validate your target goals and develop a concrete implementation plan with our service delivery expert.</p>
+          <p class="text-gray-600">Validate your target goals and develop a concrete implementation plan with our Operations Costs expert.</p>
         </div>
 
         <div class="flex flex-col md:flex-row items-center gap-8">

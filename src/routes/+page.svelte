@@ -5,7 +5,7 @@
   const features = [
     {
       title: 'Cost Analysis',
-      description: 'Compare team-based vs ticket-based service delivery models',
+      description: 'Compare team-based vs ticket-based Operations Costs models',
       details: [
         'Monthly cost breakdown',
         'Break-even analysis',
@@ -42,10 +42,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto text-center">
         <h1 class="text-3xl font-semibold text-secondary mb-4">
-          Service Delivery Calculator
+          Operations Costs Planning
         </h1>
         <p class="text-xl text-gray-600 mb-6">
-          Optimize your service delivery model with data-driven insights
+          Optimize your Operations Costs model with data-driven insights
         </p>
         <div class="flex justify-center gap-4">
           <a
@@ -98,7 +98,7 @@
           How It Works
         </h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          Three simple steps to optimize your service delivery
+          Three simple steps to optimize your Operations Costs
         </p>
       </div>
 
@@ -106,7 +106,7 @@
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <div class="text-2xl font-semibold text-secondary mb-3">01</div>
           <h3 class="text-lg font-medium mb-2">Input Your Data</h3>
-          <p class="text-gray-600">Enter your current service delivery metrics, team size, and costs</p>
+          <p class="text-gray-600">Enter your current Operations Costs metrics, team size, and costs</p>
         </div>
 
         <div class="bg-white p-6 rounded-lg border border-gray-200">
@@ -128,10 +128,10 @@
   <div class="bg-secondary py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <h2 class="text-2xl font-semibold text-white mb-4">
-        Ready to Optimize Your Service Delivery?
+        Ready to Optimize Your Operations Costs?
       </h2>
       <p class="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-        Start using our calculator today to make data-driven decisions about your service delivery model
+        Start using our calculator today to make data-driven decisions about your Operations Costs model
       </p>
       <a
         href="{base}/calculator"

@@ -21,7 +21,7 @@
             </div>
             <div class="flex flex-col">
               <span class="text-lg font-bold tracking-tight text-secondary">
-                Service Calculator
+                Operations Costs Planning
               </span>
               <span class="text-xs text-gray-500">
                 Optimize Your Delivery

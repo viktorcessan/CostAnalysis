@@ -386,10 +386,10 @@
   <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-2 rounded-lg border border-secondary/20">
     <p class="text-secondary text-xs leading-relaxed">
       {#if model === 'team'}
-        Calculate and optimize your service delivery costs based on team composition and operational metrics. 
+        Calculate and optimize your Operations Costs costs based on team composition and operational metrics. 
         This model helps you analyze costs from a workforce perspective and identify opportunities for efficiency improvements.
       {:else}
-        Calculate and optimize your service delivery costs based on workload volume and processing requirements. 
+        Calculate and optimize your Operations Costs costs based on workload volume and processing requirements. 
         This model helps you analyze costs from a throughput perspective and identify opportunities for process optimization.
       {/if}
     </p>
@@ -445,8 +445,8 @@
                  'Hybrid Solution'}
               </h3>
               <p class="text-xs mt-0.5 {solution === solutionType ? 'text-white text-opacity-90' : 'text-gray-600'}">
-                {solutionType === 'platform' ? 'Automate service delivery through platform investment' :
-                 solutionType === 'outsource' ? 'Transfer service delivery to external providers' :
+                {solutionType === 'platform' ? 'Automate Operations Costs through platform investment' :
+                 solutionType === 'outsource' ? 'Transfer Operations Costs to external providers' :
                  'Combine platform automation with outsourcing'}
               </p>
             </div>
@@ -503,7 +503,7 @@
                   </button>
                 </label>
                 <p class="input-description">
-                  Define the number of employees currently working on service delivery. This helps calculate baseline operational costs.
+                  Define the number of employees currently working on Operations Costs. This helps calculate baseline operational costs.
                 </p>
               </div>
               <div class="input-group">
@@ -882,7 +882,7 @@
                       </button>
                     </label>
                     <p class="input-description">
-                      Determine the percentage of work handled by the platform. This helps calculate the platform's contribution to service delivery.
+                      Determine the percentage of work handled by the platform. This helps calculate the platform's contribution to Operations Costs.
                     </p>
                   </div>
                   <div class="input-group">
@@ -927,7 +927,7 @@
                       </button>
                     </label>
                     <p class="input-description">
-                      Determine the percentage of work handled by external vendors. This helps calculate the vendor's contribution to service delivery.
+                      Determine the percentage of work handled by external vendors. This helps calculate the vendor's contribution to Operations Costs.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1239,7 +1239,7 @@
                       </button>
                     </label>
                     <p class="input-description">
-                      Specify the hourly rate charged by external vendors. This is used to calculate outsourced service delivery costs.
+                      Specify the hourly rate charged by external vendors. This is used to calculate outsourced Operations Costs costs.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1743,7 +1743,7 @@
                 </label>
                 <p class="input-description">
                   {#if model === 'team'}
-                    Specify the hourly rate charged by external vendors. This is used to calculate outsourced service delivery costs.
+                    Specify the hourly rate charged by external vendors. This is used to calculate outsourced Operations Costs costs.
                   {:else}
                     Specify the hourly rate charged by external vendors for ticket processing.
                   {/if}

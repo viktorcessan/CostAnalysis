@@ -82,7 +82,7 @@
           <div>
             <h2 class="text-3xl font-bold text-gray-900">Find Break-Even Point</h2>
             <p class="text-lg text-gray-600 mt-2">
-              Determine how long it will take to recover your investment in a new service delivery model. Compare different approaches and understand the financial implications of each option.
+              Determine how long it will take to recover your investment in a new Operations Costs model. Compare different approaches and understand the financial implications of each option.
             </p>
           </div>
         </div>

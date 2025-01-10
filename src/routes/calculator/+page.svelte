@@ -30,9 +30,9 @@
       id: 'breakeven',
       name: 'Find Break-Even Point',
       description: 'Calculate the break-even point for a given solution',
-      longDescription: 'Determine how long it will take to recover your investment in a new service delivery model. Compare different approaches and understand the financial implications of each option.',
+      longDescription: 'Determine how long it will take to recover your investment in a new Operations Costs model. Compare different approaches and understand the financial implications of each option.',
       benefits: [
-        'Compare different service delivery models',
+        'Compare different Operations Costs models',
         'Calculate ROI and payback period',
         'Understand monthly cost implications',
         'Make data-driven investment decisions'
@@ -121,7 +121,7 @@
           <div class="max-w-3xl mx-auto text-center mb-12">
             <h2 class="text-3xl font-bold text-gray-900 mb-4">What would you like to analyze?</h2>
             <p class="text-lg text-gray-600">
-              Choose your analysis goal and we'll guide you through the process of optimizing your service delivery model.
+              Choose your analysis goal and we'll guide you through the process of optimizing your Operations Costs model.
             </p>
           </div>
 
@@ -169,7 +169,7 @@
             </button>
             <div>
               <h2 class="text-3xl font-bold text-gray-900">How do you work today?</h2>
-              <p class="text-lg text-gray-600 mt-2">Select your current service delivery model to get started.</p>
+              <p class="text-lg text-gray-600 mt-2">Select your current Operations Costs model to get started.</p>
             </div>
           </div>
           <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />

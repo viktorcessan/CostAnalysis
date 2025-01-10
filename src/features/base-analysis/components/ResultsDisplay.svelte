@@ -898,7 +898,7 @@
         <div class="flex flex-col relative">
           <div class="text-center mb-6">
             <h3 class="text-2xl font-semibold text-gray-900 mb-2">Get Expert Guidance</h3>
-            <p class="text-gray-600">Schedule a consultation with our service delivery expert to dive deeper into your analysis and develop a tailored optimization strategy.</p>
+            <p class="text-gray-600">Schedule a consultation with our Operations Costs expert to dive deeper into your analysis and develop a tailored optimization strategy.</p>
           </div>
 
           <div class="flex flex-col md:flex-row items-center gap-8">
@@ -960,7 +960,7 @@
         <!-- ChatGPT Analysis -->
         <div class="bg-white rounded-xl p-6 border border-gray-200">
           <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
-          <p class="text-gray-600 mb-4">Get instant AI insights about your service delivery model and potential optimizations.</p>
+          <p class="text-gray-600 mb-4">Get instant AI insights about your Operations Costs model and potential optimizations.</p>
           <button
             on:click={() => showLLMTemplate = true}
             class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"

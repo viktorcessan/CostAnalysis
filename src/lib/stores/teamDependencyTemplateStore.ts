@@ -44,6 +44,8 @@ interface CostAnalysis {
   weeklyDuration: number;
   attendeesPerTeam: number;
   communicationOverhead: number;
+  baselineCommunicationHours: number;
+  dependencyHoursRate: number;
 }
 
 interface Metrics {
@@ -79,6 +81,8 @@ Dev Rate ($/hr): $${costs.hourlyRate}
 Weekly Meeting Hours: ${costs.weeklyDuration}
 Meeting Attendees: ${costs.attendeesPerTeam}
 Communication Overhead: ${costs.communicationOverhead}x
+Baseline Communication Hours: ${costs.baselineCommunicationHours} hrs/week
+Dependency Hours Rate: ${costs.dependencyHoursRate} hrs/dependency
 
 Team Configuration:
 ${teams.map((team, i) => `- ${team.name}:
@@ -119,12 +123,13 @@ Formulas Used:
 1. Dependency Factor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))
 2. Throughput = baseCapacity * dependencyFactor
 3. Weekly Meeting Cost = weeklyDuration * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
-4. Lead Time = waitTime + processingTime
+4. Communication Cost = (totalConnections * communicationOverhead * hourlyRate * baselineCommunicationHours) + (dependencyStrength * dependencyHoursRate * hourlyRate)
+5. Lead Time = waitTime + processingTime
    where:
    - waitTime = incomingDependencies.length * baseLeadTime * 0.5
    - processingTime = baseLeadTime * (1 + (outgoingDependencies.length * 0.3))
-5. Flow Efficiency = (processTime / (processTime + waitTime)) * 100
-6. Dependency Impact Score = (totalDependencies / maxPossibleDependencies) * 100
+6. Flow Efficiency = (processTime / (processTime + waitTime)) * 100
+7. Dependency Impact Score = (totalDependencies / maxPossibleDependencies) * 100
 
 Based on this data, please provide:
 1. Analysis of the current team structure and dependency patterns
@@ -141,6 +146,8 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[]): CostAnalys
   const weeklyDuration = 4; // Default weekly meeting hours
   const attendeesPerTeam = 5; // Default attendees per team
   const communicationOverhead = 1.2; // Default communication overhead
+  const baselineCommunicationHours = 2; // Default baseline communication hours
+  const dependencyHoursRate = 2; // Default dependency hours rate
 
   const totalTeams = nodes.length;
   const totalConnections = edges.length;
@@ -157,8 +164,8 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[]): CostAnalys
   // Communication costs
   const communicationCost =
     totalConnections * communicationOverhead *
-    hourlyRate * 10 + // 10 hours baseline communication
-    edges.reduce((sum, edge) => sum + (edge.data.strength * 4 * hourlyRate), 0);
+    hourlyRate * baselineCommunicationHours + // Baseline communication
+    edges.reduce((sum, edge) => sum + (edge.data.strength * dependencyHoursRate * hourlyRate), 0);
 
   // Process overhead
   const processOverhead = 
@@ -172,7 +179,9 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[]): CostAnalys
     hourlyRate,
     weeklyDuration,
     attendeesPerTeam,
-    communicationOverhead
+    communicationOverhead,
+    baselineCommunicationHours,
+    dependencyHoursRate
   };
 }
 

@@ -46,7 +46,7 @@ export interface Metrics {
 }
 
 export interface CostAnalysis {
-  weeklyMeetingCost: number;
+  monthlyMeetingCost: number;
   communicationCost: number;
   totalCost: number;
 } 

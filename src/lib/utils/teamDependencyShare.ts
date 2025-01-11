@@ -11,7 +11,7 @@ export interface TeamDependencyParams {
       developer: number;
     };
     meetings: {
-      weeklyDuration: number;
+      monthlyDuration: number;
       attendeesPerTeam: number;
     };
     overhead: {
@@ -85,7 +85,7 @@ export function validateShareParams(params: TeamDependencyParams): boolean {
     params.teams?.length > 0 &&
     params.dependencyMatrix?.teams?.length > 0 &&
     params.costParams?.hourlyRate?.developer &&
-    params.costParams?.meetings?.weeklyDuration &&
+    params.costParams?.meetings?.monthlyDuration &&
     params.costParams?.meetings?.attendeesPerTeam &&
     params.costParams?.overhead?.communicationOverhead &&
     params.costParams?.overhead?.baselineCommunicationHours &&

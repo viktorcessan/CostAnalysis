@@ -14,7 +14,7 @@
       developer: 75
     },
     meetings: {
-      weeklyDuration: 4,
+      monthlyDuration: 16,
       attendeesPerTeam: 5
     },
     overhead: {
@@ -80,8 +80,8 @@
               <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
             </div>
             <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Weekly Meeting Hours</span>
-              <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
+              <span class="text-sm text-gray-600">Monthly Meeting Hours</span>
+              <span class="text-sm font-medium text-gray-900">{costParams.meetings.monthlyDuration}</span>
             </div>
             <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
               <span class="text-sm text-gray-600">Meeting Attendees</span>

@@ -93,7 +93,7 @@
   // Calculate metrics for a given dependency matrix
   function calculateMetricsForMatrix(matrix: number[][]) {
     const costs = {
-      weeklyMeetingCost: costParams.meetings.weeklyDuration * 
+      weeklyMeetingCost: costParams.meetings.monthlyDuration * 
         costParams.meetings.attendeesPerTeam * 
         costParams.hourlyRate.developer * 
         matrix.reduce((sum, row) => sum + row.filter(v => v > 0).length, 0),
@@ -238,14 +238,14 @@
       teamLead: 90
     },
     meetings: {
-      weeklyDuration: 4,
+      monthlyDuration: 16, // Changed from weeklyDuration: 4 to monthlyDuration: 16 (4 weeks * 4 hours)
       attendeesPerTeam: 5
     },
     overhead: {
       communicationOverhead: 1.2,
       waitTimeMultiplier: 1.5,
-      baselineCommunicationHours: 2,
-      dependencyHoursRate: 2
+      baselineCommunicationHours: 8, // Changed from 2 to 8 (2 * 4 weeks)
+      dependencyHoursRate: 8 // Changed from 2 to 8 (2 * 4 weeks)
     }
   };
 
@@ -272,94 +272,72 @@
     }
   }
 
+  // Add canvas binding at the top of the script section
+  let costChartCanvas: HTMLCanvasElement | undefined;
   let costDistributionChart: Chart | null = null;
-  let costChartCanvas: HTMLCanvasElement;
 
+  // Update the CostAnalysis interface
   interface CostAnalysis {
-    weeklyMeetingCost: number;
+    monthlyMeetingCost: number;
     communicationCost: number;
     totalCost: number;
   }
 
+  // Update the cost chart initialization
   function createCostDistributionChart(costs: CostAnalysis) {
+    if (!costChartCanvas) return;
+    
     if (costDistributionChart) {
       costDistributionChart.destroy();
     }
 
     const data = [
-      costs.weeklyMeetingCost,
+      costs.monthlyMeetingCost,
       costs.communicationCost
     ];
 
     const total = costs.totalCost;
     const percentages = data.map(value => ((value / total) * 100).toFixed(1));
 
-    const chartConfig: ChartConfiguration<'doughnut'> = {
+    costDistributionChart = new Chart(costChartCanvas, {
       type: 'doughnut',
-      plugins: [ChartDataLabels as Plugin],
       data: {
-        labels: ['Weekly Meetings', 'Communication'],
+        labels: ['Monthly Meetings', 'Communication'],
         datasets: [{
-          data: data,
+          data,
           backgroundColor: [
-            '#0EA5E9',  // sky-500 for meetings
-            '#F59E0B',  // amber-500 for communication
+            'rgb(14, 165, 233)',
+            'rgb(245, 158, 11)'
           ],
-          borderWidth: 0
+          borderWidth: 1
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '60%',
-        layout: {
-          padding: 20
-        },
         plugins: {
           legend: {
-            display: true,
             position: 'bottom',
             labels: {
+              usePointStyle: true,
               padding: 20,
               font: {
-                size: 12,
-                weight: 'bold'
-              },
-              color: '#374151'
+                size: 12
+              }
             }
           },
           tooltip: {
             callbacks: {
               label: (context) => {
                 const value = context.raw as number;
-                const percentage = (value / total * 100).toFixed(1);
-                return `${context.label}: $${value.toFixed(2)} (${percentage}%)`;
+                const percentage = percentages[context.dataIndex];
+                return `$${value.toFixed(2)} (${percentage}%)`;
               }
             }
-          },
-          datalabels: {
-            color: '#ffffff',
-            font: {
-              size: 16,
-              weight: 'bold',
-              family: 'system-ui, -apple-system, sans-serif'
-            },
-            formatter: (value: number) => {
-              return ((value / total) * 100).toFixed(1) + '%';
-            },
-            textStrokeColor: 'rgba(0,0,0,0.2)',
-            textStrokeWidth: 2,
-            textShadowBlur: 5,
-            textShadowColor: 'rgba(0,0,0,0.2)'
           }
-        },
-        animation: {
-          duration: 500
         }
       }
-    };
-
-    costDistributionChart = new Chart(costChartCanvas, chartConfig);
+    });
   }
 
   // Add onMount initialization
@@ -654,29 +632,29 @@
     };
   }
 
-  function calculateCosts() {
+  function calculateCosts(): CostAnalysis {
     const totalTeams = nodes.length;
     const totalConnections = edges.length;
     const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
     
     // Meeting costs
-    const weeklyMeetingCost = 
-      costParams.meetings.weeklyDuration * 
+    const monthlyMeetingCost = 
+      costParams.meetings.monthlyDuration * 
       costParams.meetings.attendeesPerTeam * 
       costParams.hourlyRate.developer * 
       totalConnections * 
       costParams.overhead.communicationOverhead;
 
-    // Communication costs (including async communication and coordination)
+    // Communication costs
     const communicationCost =
       totalConnections * costParams.overhead.communicationOverhead *
       costParams.hourlyRate.developer * costParams.overhead.baselineCommunicationHours + // Baseline communication
       edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * costParams.hourlyRate.developer), 0); // Additional cost based on dependency strength
 
     return {
-      weeklyMeetingCost,
+      monthlyMeetingCost,
       communicationCost,
-      totalCost: weeklyMeetingCost + communicationCost
+      totalCost: monthlyMeetingCost + communicationCost
     };
   }
 
@@ -791,7 +769,7 @@
     costParams.meetings;
     costParams.overhead;
     
-    if (costChartCanvas && nodes.length > 0) {
+    if (nodes.length > 0 && costChartCanvas) {
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
@@ -800,21 +778,22 @@
   // Add function to calculate metrics for independent teams
   function calculateIndependentTeamMetrics() {
     const independentCosts = {
-      weeklyMeetingCost: costParams.meetings.weeklyDuration * 
+      monthlyMeetingCost: costParams.meetings.monthlyDuration * 
         costParams.meetings.attendeesPerTeam * 
         costParams.hourlyRate.developer * 
-        nodes.length, // Only internal team meetings
-      communicationCost: nodes.length * costParams.hourlyRate.developer * 5, // Minimal communication
-    } as CostAnalysis;
+        nodes.length,
+      communicationCost: nodes.length * costParams.hourlyRate.developer * 5,
+      totalCost: 0
+    };
     
-    independentCosts.totalCost = independentCosts.weeklyMeetingCost + 
+    independentCosts.totalCost = independentCosts.monthlyMeetingCost + 
       independentCosts.communicationCost;
     
     return {
       costs: independentCosts,
-      flowEfficiency: 95, // High efficiency due to independence
-      leadTime: teamParams.baseLeadTime, // Minimal lead time
-      utilizationRate: 90, // High utilization due to less overhead
+      flowEfficiency: 95,
+      leadTime: teamParams.baseLeadTime,
+      utilizationRate: 90
     };
   }
 
@@ -882,7 +861,7 @@
       },
       meetings: {
         ...costParams.meetings,
-        weeklyDuration: sharedConfig.costParams.meetings.weeklyDuration,
+        monthlyDuration: sharedConfig.costParams.meetings.monthlyDuration,
         attendeesPerTeam: sharedConfig.costParams.meetings.attendeesPerTeam
       },
       overhead: {
@@ -946,19 +925,37 @@
   }
 
   async function handleExportPNG() {
-    // Ensure the chart is rendered before export
-    if (costChartCanvas && nodes.length > 0) {
+    if (nodes.length > 0) {
       const costs = calculateCosts();
-      // Destroy existing chart
-      if (costDistributionChart) {
-        costDistributionChart.destroy();
+      if (costChartCanvas) {
+        createCostDistributionChart(costs);
       }
-      // Create new chart and wait for it to render
-      createCostDistributionChart(costs);
-      // Add a longer delay to ensure the chart is fully rendered
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await exportTeamDependencyToPNG();
     }
-    await exportTeamDependencyToPNG();
+  }
+
+  // Add these variables and calculations
+  let comparisonMetrics = {
+    costs: {
+      monthlyMeetingCost: 0,
+      communicationCost: 0,
+      totalCost: 0
+    },
+    flowEfficiency: 0,
+    leadTime: 0,
+    utilizationRate: 0
+  };
+
+  let costDifference = 0;
+
+  // Update the reactive statement to calculate comparison metrics
+  $: {
+    if (nodes.length > 0) {
+      const currentCosts = calculateCosts();
+      const independentTeamMetrics = calculateIndependentTeamMetrics();
+      comparisonMetrics = independentTeamMetrics;
+      costDifference = currentCosts.totalCost - comparisonMetrics.costs.totalCost;
+    }
   }
 </script>
 
@@ -1216,13 +1213,13 @@
 
       <!-- Cost Parameters -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
-        <!-- Weekly Meeting Hours -->
+        <!-- Monthly Meeting Hours -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Weekly Meeting Hours
+            Monthly Meeting Hours
             <button 
               class="tooltip ml-1"
-              data-tippy-content="Set the average number of hours spent in meetings per week (1-20 hours). Includes team syncs, planning, and coordination meetings.">
+              data-tippy-content="Set the average number of hours spent in meetings per month (4-80 hours). Includes team syncs, planning, and coordination meetings.">
               <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -1231,13 +1228,13 @@
           <div class="flex items-center gap-2">
             <input
               type="range"
-              bind:value={costParams.meetings.weeklyDuration}
-              min="1"
-              max="20"
+              bind:value={costParams.meetings.monthlyDuration}
+              min="4"
+              max="80"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{costParams.meetings.weeklyDuration}</span>
+              <span class="text-sm font-medium text-gray-900">{costParams.meetings.monthlyDuration}</span>
             </div>
           </div>
         </div>
@@ -1839,7 +1836,7 @@
           <h3 class="text-lg font-semibold text-gray-900">Cost Analysis of Current Team Dependencies</h3>
           <div class="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 px-4 py-2 bg-secondary/5 rounded-lg border border-secondary/20">
             <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-600 whitespace-nowrap">Total Weekly Cost:</span>
+              <span class="text-sm text-gray-600 whitespace-nowrap">Total Monthly Cost:</span>
               <span class="text-xl font-bold text-secondary whitespace-nowrap">${costs.totalCost.toFixed(2)}</span>
             </div>
             <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">(${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(2)} per team member)</span>
@@ -1860,16 +1857,16 @@
 
           <!-- Cost Impact Analysis -->
           <div class="space-y-6">
-            <!-- Weekly Cost Summary -->
+            <!-- Monthly Cost Summary -->
             {#if costs}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
-                <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
+                <div class="text-sm font-medium text-gray-600">Monthly Meetings</div>
                 <div class="text-xl font-bold text-sky-500 mt-1">
-                  ${costs.weeklyMeetingCost.toFixed(2)}
+                  ${costs.monthlyMeetingCost.toFixed(2)}
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
-                  Based on {costParams.meetings.weeklyDuration}hr × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
+                  Based on {costParams.meetings.monthlyDuration}hr × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
                 </div>
               </div>
 
@@ -1898,9 +1895,9 @@
                   <div>
                     <h6 class="text-sm font-medium text-gray-900">Synchronous Coordination</h6>
                     <p class="text-sm text-gray-600 mt-1">
-                      {#if (costs.weeklyMeetingCost / costs.totalCost) > 0.6}
+                      {#if (costs.monthlyMeetingCost / costs.totalCost) > 0.6}
                         High meeting costs indicate significant time spent in synchronous coordination. Consider reducing meeting frequency or attendee count.
-                      {:else if (costs.weeklyMeetingCost / costs.totalCost) > 0.4}
+                      {:else if (costs.monthlyMeetingCost / costs.totalCost) > 0.4}
                         Moderate meeting overhead. Review meeting structures for potential optimization.
                       {:else}
                         Efficient meeting structure with balanced synchronous coordination.
@@ -1940,9 +1937,9 @@
                   <div>
                     <h6 class="text-sm font-medium text-gray-900">Cost Efficiency</h6>
                     <p class="text-sm text-gray-600 mt-1">
-                      {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 10)}
+                      {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 40)}
                         Total coordination costs are high relative to team size. Consider reviewing team structure and dependency patterns.
-                      {:else if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 5)}
+                      {:else if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 20)}
                         Moderate overall costs. Monitor trends and optimize where possible.
                       {:else}
                         Cost-efficient team structure with well-managed coordination overhead.
@@ -2221,7 +2218,7 @@
             <div class="space-y-3">
               <div>
                   <div class="flex justify-between text-sm items-center">
-                  <span class="text-gray-600">Weekly Cost</span>
+                  <span class="text-gray-600">Monthly Cost</span>
                     <div class="flex items-center gap-2">
                       <span class="font-medium">${currentCosts.totalCost.toFixed(0)}</span>
                     </div>
@@ -2264,7 +2261,7 @@
             <div class="space-y-3">
               <div>
                   <div class="flex justify-between text-sm items-center">
-                  <span class="text-gray-600">Weekly Cost</span>
+                  <span class="text-gray-600">Monthly Cost</span>
                     <div class="flex items-center gap-2">
                       <span class="font-medium">${comparisonMetrics.costs.totalCost.toFixed(0)}</span>
                     </div>
@@ -2623,7 +2620,7 @@
           <h5 class="text-sm font-medium text-gray-900 mb-2">Impact Summary</h5>
           <div class="space-y-2">
             <p class="text-sm text-gray-600">
-              Team dependencies are adding <span class="font-medium text-secondary">${costDifference.toFixed(2)}</span> in weekly costs 
+              Team dependencies are adding <span class="font-medium text-secondary">${costDifference.toFixed(2)}</span> in monthly costs 
               ({((costDifference / comparisonMetrics.costs.totalCost) * 100).toFixed(2)}% increase).
             </p>
             <p class="text-sm text-gray-600">

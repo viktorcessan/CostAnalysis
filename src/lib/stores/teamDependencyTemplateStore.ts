@@ -36,7 +36,7 @@ interface DependencyMatrix {
 }
 
 interface CostAnalysis {
-  weeklyMeetingCost: number;
+  monthlyMeetingCost: number;
   communicationCost: number;
   totalCost: number;
 }
@@ -60,7 +60,7 @@ interface CostParams {
     teamLead: number;
   };
   meetings: {
-    weeklyDuration: number;
+    monthlyDuration: number;
     attendeesPerTeam: number;
   };
   overhead: {
@@ -90,10 +90,10 @@ Distribution Mode: ${distributionMode}
 Number of Teams: ${teamCount}
 Dependency Level: ${companyDependencyLevel} (Scale 1-5, where 1 is Very Low and 5 is Very High)
 Dev Rate ($/hr): $${costParams.hourlyRate.developer.toFixed(2)}
-Weekly Meeting Hours: ${costParams.meetings.weeklyDuration}
+Monthly Meeting Hours: ${costParams.meetings.monthlyDuration}
 Meeting Attendees: ${costParams.meetings.attendeesPerTeam}
 Communication Overhead: ${costParams.overhead.communicationOverhead.toFixed(2)}x
-Baseline Communication Hours: ${costParams.overhead.baselineCommunicationHours} hrs/week
+Baseline Communication Hours: ${costParams.overhead.baselineCommunicationHours} hrs/month
 Dependency Hours Rate: ${costParams.overhead.dependencyHoursRate} hrs/dependency
 
 Teams:
@@ -126,14 +126,14 @@ Key Metrics:
 - Overhead Ratio: ${(metrics.overheadRatio * 100).toFixed(2)}%
 
 Cost Analysis:
-- Weekly Meeting Cost: $${costs.weeklyMeetingCost.toFixed(2)}
+- Monthly Meeting Cost: $${costs.monthlyMeetingCost.toFixed(2)}
 - Communication Cost: $${costs.communicationCost.toFixed(2)}
-- Total Weekly Cost: $${costs.totalCost.toFixed(2)}
+- Total Monthly Cost: $${costs.totalCost.toFixed(2)}
 
 Formulas Used:
 1. Dependency Factor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))
 2. Throughput = baseCapacity * dependencyFactor
-3. Weekly Meeting Cost = weeklyDuration * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
+3. Monthly Meeting Cost = monthlyDuration * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
 4. Communication Cost = (totalConnections * communicationOverhead * hourlyRate * baselineCommunicationHours) + (dependencyStrength * dependencyHoursRate * hourlyRate)
 5. Lead Time = waitTime + processingTime
    where:
@@ -158,8 +158,8 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[], costParams:
   const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
   
   // Meeting costs
-  const weeklyMeetingCost = 
-    costParams.meetings.weeklyDuration * 
+  const monthlyMeetingCost = 
+    costParams.meetings.monthlyDuration * 
     costParams.meetings.attendeesPerTeam * 
     costParams.hourlyRate.developer * 
     totalConnections * 
@@ -172,9 +172,9 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[], costParams:
     edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * costParams.hourlyRate.developer), 0);
 
   return {
-    weeklyMeetingCost,
+    monthlyMeetingCost,
     communicationCost,
-    totalCost: weeklyMeetingCost + communicationCost
+    totalCost: monthlyMeetingCost + communicationCost
   };
 }
 

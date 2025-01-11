@@ -14,7 +14,7 @@ interface TeamDependencyExportData {
     serviceEfficiency: number;
   };
   costs: {
-    weeklyMeetingCost: number;
+    monthlyMeetingCost: number;
     communicationCost: number;
     totalCost: number;
   };
@@ -29,14 +29,14 @@ export async function exportTeamDependencyToExcel(data: TeamDependencyExportData
     results: {
       model: 'team' as const,
       solution: 'platform' as const,
-      totalCost: data.costs.totalCost * 4,
-      annualCost: data.costs.totalCost * 52,
+      totalCost: data.costs.totalCost,
+      annualCost: data.costs.totalCost * 12,
       monthlySavings: 0,
       breakEvenMonths: 0,
       monthlyData: [{
         month: 1,
-        baseline: data.costs.totalCost * 4,
-        solution: data.costs.totalCost * 4,
+        baseline: data.costs.totalCost,
+        solution: data.costs.totalCost,
         savings: 0
       }],
       costPerTicket: 0,
@@ -46,9 +46,9 @@ export async function exportTeamDependencyToExcel(data: TeamDependencyExportData
       teams: data.teams,
       dependencies: data.dependencyMatrix,
       metrics: {
-        weeklyMeetingCost: data.costs.weeklyMeetingCost,
+        monthlyMeetingCost: data.costs.monthlyMeetingCost,
         communicationCost: data.costs.communicationCost,
-        totalWeeklyCost: data.costs.totalCost,
+        totalMonthlyCost: data.costs.totalCost,
         flowEfficiency: data.metrics.flowEfficiency,
         utilizationRate: data.metrics.utilizationRate,
         serviceEfficiency: data.metrics.serviceEfficiency
@@ -68,7 +68,7 @@ export async function exportTeamDependencyToExcel(data: TeamDependencyExportData
         timeToBuild: 0,
         teamReduction: 0,
         processEfficiency: data.metrics.flowEfficiency,
-        baselineCost: data.costs.totalCost * 4
+        baselineCost: data.costs.totalCost
       }
     }
   };

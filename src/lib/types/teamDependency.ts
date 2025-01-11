@@ -43,4 +43,10 @@ export interface Metrics {
   serviceEfficiency: number;
   costPerFTE: number;
   overheadRatio: number;
+}
+
+export interface CostAnalysis {
+  weeklyMeetingCost: number;
+  communicationCost: number;
+  totalCost: number;
 } 

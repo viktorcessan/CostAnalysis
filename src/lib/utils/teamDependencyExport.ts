@@ -2,6 +2,8 @@ import type { Team, DependencyMatrix } from '$lib/types/teamDependency';
 import { exportToExcel } from './exportUtils';
 import { toPng } from 'html-to-image/es';
 import { Chart } from 'chart.js/auto';
+import { calculatorStore } from '$lib/stores/calculatorStore';
+import type { TeamInputs } from '$lib/types/calculator';
 
 interface TeamDependencyExportData {
   teams: Team[];
@@ -14,12 +16,15 @@ interface TeamDependencyExportData {
   costs: {
     weeklyMeetingCost: number;
     communicationCost: number;
-    processOverhead: number;
     totalCost: number;
   };
 }
 
 export async function exportTeamDependencyToExcel(data: TeamDependencyExportData) {
+  const currentState = calculatorStore.getCurrentState();
+  const baseInputs = currentState?.baseInputs as TeamInputs;
+  const hourlyRate = baseInputs?.hourlyRate || 75;
+
   const exportData = {
     results: {
       model: 'team' as const,
@@ -43,7 +48,6 @@ export async function exportTeamDependencyToExcel(data: TeamDependencyExportData
       metrics: {
         weeklyMeetingCost: data.costs.weeklyMeetingCost,
         communicationCost: data.costs.communicationCost,
-        processOverhead: data.costs.processOverhead,
         totalWeeklyCost: data.costs.totalCost,
         flowEfficiency: data.metrics.flowEfficiency,
         utilizationRate: data.metrics.utilizationRate,
@@ -52,7 +56,7 @@ export async function exportTeamDependencyToExcel(data: TeamDependencyExportData
     },
     baseInputs: {
       teamSize: data.teams.length,
-      hourlyRate: 75,
+      hourlyRate,
       serviceEfficiency: data.metrics.serviceEfficiency,
       operationalOverhead: 1.2
     },
@@ -68,8 +72,8 @@ export async function exportTeamDependencyToExcel(data: TeamDependencyExportData
       }
     }
   };
-  
-  await exportToExcel(exportData);
+
+  return exportToExcel(exportData);
 }
 
 export async function exportTeamDependencyToPNG() {

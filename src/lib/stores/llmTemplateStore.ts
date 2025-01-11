@@ -2,8 +2,15 @@ import { derived } from 'svelte/store';
 import { calculatorStore } from './calculatorStore';
 import type { CalculatorModel, SolutionType, CalculationResults } from '$lib/types/calculator';
 
+interface ExtendedCalculationResults extends CalculationResults {
+  baseInputs?: {
+    hourlyRate: number;
+    [key: string]: any;
+  };
+}
+
 // Template generation functions for each model and solution type
-function generateTeamPlatformTemplate(inputs: any, results: CalculationResults): string {
+function generateTeamPlatformTemplate(inputs: any, results: ExtendedCalculationResults): string {
   const platformInputs = results.solutionInputs?.platform;
   if (!platformInputs) return '';
 
@@ -15,7 +22,7 @@ Model Selection: Team-Based Model
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
-- Hourly Rate: $${inputs.hourlyRate}/hour
+- Hourly Rate: $${results.baseInputs?.hourlyRate}/hour
 - Service Efficiency: ${Math.round(inputs.serviceEfficiency * 100)}%
 - Operational Overhead: ${Math.round(inputs.operationalOverhead * 100)}%
 
@@ -58,7 +65,7 @@ Based on this analysis, please provide insights on:
 5. What other factors should be considered in this analysis?`;
 }
 
-function generateTeamOutsourceTemplate(inputs: any, results: CalculationResults): string {
+function generateTeamOutsourceTemplate(inputs: any, results: ExtendedCalculationResults): string {
   const outsourceInputs = results.solutionInputs?.outsource;
   if (!outsourceInputs) return '';
 
@@ -70,7 +77,7 @@ Model Selection: Team-Based Model
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
-- Hourly Rate: $${inputs.hourlyRate}/hour
+- Hourly Rate: $${results.baseInputs?.hourlyRate}/hour
 - Service Efficiency: ${(inputs.serviceEfficiency * 100).toFixed(0)}%
 - Operational Overhead: ${(inputs.operationalOverhead * 100).toFixed(0)}%
 
@@ -112,7 +119,7 @@ Based on this analysis, please provide insights on:
 5. What transition strategies would you recommend?`;
 }
 
-function generateTeamHybridTemplate(inputs: any, results: CalculationResults): string {
+function generateTeamHybridTemplate(inputs: any, results: ExtendedCalculationResults): string {
   const hybridInputs = results.solutionInputs?.hybrid;
   if (!hybridInputs) return '';
 
@@ -124,7 +131,7 @@ Model Selection: Team-Based Model
 
 Current Configuration:
 - Team Size: ${inputs.teamSize} members
-- Hourly Rate: $${inputs.hourlyRate}/hour
+- Hourly Rate: $${results.baseInputs?.hourlyRate}/hour
 - Service Efficiency: ${(inputs.serviceEfficiency * 100).toFixed(0)}%
 - Operational Overhead: ${(inputs.operationalOverhead * 100).toFixed(0)}%
 
@@ -170,7 +177,7 @@ Based on this analysis, please provide insights on:
 5. How can we ensure effective coordination between platforms and outsourced teams?`;
 }
 
-function generateTicketPlatformTemplate(inputs: any, results: CalculationResults): string {
+function generateTicketPlatformTemplate(inputs: any, results: ExtendedCalculationResults): string {
   const platformInputs = results.solutionInputs?.platform;
   if (!platformInputs) return '';
 
@@ -223,7 +230,7 @@ Based on this analysis, please provide insights on:
 5. How does this compare to similar automation initiatives?`;
 }
 
-function generateTicketOutsourceTemplate(inputs: any, results: CalculationResults): string {
+function generateTicketOutsourceTemplate(inputs: any, results: ExtendedCalculationResults): string {
   const outsourceInputs = results.solutionInputs?.outsource;
   if (!outsourceInputs) return '';
 
@@ -275,7 +282,7 @@ Based on this analysis, please provide insights on:
 5. What governance model would you recommend?`;
 }
 
-function generateTicketHybridTemplate(inputs: any, results: CalculationResults): string {
+function generateTicketHybridTemplate(inputs: any, results: ExtendedCalculationResults): string {
   const hybridInputs = results.solutionInputs?.hybrid;
   if (!hybridInputs) return '';
 

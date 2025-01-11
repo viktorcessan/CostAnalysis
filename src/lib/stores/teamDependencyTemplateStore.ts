@@ -38,14 +38,7 @@ interface DependencyMatrix {
 interface CostAnalysis {
   weeklyMeetingCost: number;
   communicationCost: number;
-  processOverhead: number;
   totalCost: number;
-  hourlyRate: number;
-  weeklyDuration: number;
-  attendeesPerTeam: number;
-  communicationOverhead: number;
-  baselineCommunicationHours: number;
-  dependencyHoursRate: number;
 }
 
 interface Metrics {
@@ -60,6 +53,24 @@ interface Metrics {
   overheadRatio: number;
 }
 
+interface CostParams {
+  hourlyRate: {
+    developer: number;
+    manager: number;
+    teamLead: number;
+  };
+  meetings: {
+    weeklyDuration: number;
+    attendeesPerTeam: number;
+  };
+  overhead: {
+    communicationOverhead: number;
+    waitTimeMultiplier: number;
+    baselineCommunicationHours: number;
+    dependencyHoursRate: number;
+  };
+}
+
 function generateTemplate(
   distributionMode: 'even' | 'hub-spoke',
   teamCount: number,
@@ -68,26 +79,27 @@ function generateTemplate(
   nodes: Node[],
   edges: Edge[],
   dependencyMatrix: DependencyMatrix,
-  metrics: Metrics
+  metrics: Metrics,
+  costParams: CostParams
 ): string {
-  const costs = calculateCosts(nodes, edges, teams);
+  const costs = calculateCosts(nodes, edges, teams, costParams);
   
   const template = `I'm analyzing a team dependency structure with the following configuration:
 
-Distribution Mode: ${distributionMode === 'even' ? 'Even Distribution (teams work together with balanced dependencies)' : 'Hub and Spoke (central team coordinates with satellite teams)'}
+Distribution Mode: ${distributionMode}
 Number of Teams: ${teamCount}
 Dependency Level: ${companyDependencyLevel} (Scale 1-5, where 1 is Very Low and 5 is Very High)
-Dev Rate ($/hr): $${costs.hourlyRate}
-Weekly Meeting Hours: ${costs.weeklyDuration}
-Meeting Attendees: ${costs.attendeesPerTeam}
-Communication Overhead: ${costs.communicationOverhead}x
-Baseline Communication Hours: ${costs.baselineCommunicationHours} hrs/week
-Dependency Hours Rate: ${costs.dependencyHoursRate} hrs/dependency
+Dev Rate ($/hr): $${costParams.hourlyRate.developer.toFixed(2)}
+Weekly Meeting Hours: ${costParams.meetings.weeklyDuration}
+Meeting Attendees: ${costParams.meetings.attendeesPerTeam}
+Communication Overhead: ${costParams.overhead.communicationOverhead.toFixed(2)}x
+Baseline Communication Hours: ${costParams.overhead.baselineCommunicationHours} hrs/week
+Dependency Hours Rate: ${costParams.overhead.dependencyHoursRate} hrs/dependency
 
-Team Configuration:
-${teams.map((team, i) => `- ${team.name}:
-  * Team Size: ${team.size} members
-  * Base Capacity: ${team.baseCapacity} items per person per week
+Teams:
+${teams.map(team => `- ${team.name}:
+  * Team Size: ${team.size}
+  * Base Capacity: ${team.baseCapacity} items per week
   * Team Efficiency: ${team.efficiency * 100}%`).join('\n')}
 
 Team Performance Metrics:
@@ -116,7 +128,6 @@ Key Metrics:
 Cost Analysis:
 - Weekly Meeting Cost: $${costs.weeklyMeetingCost.toFixed(2)}
 - Communication Cost: $${costs.communicationCost.toFixed(2)}
-- Process Overhead: $${costs.processOverhead.toFixed(2)}
 - Total Weekly Cost: $${costs.totalCost.toFixed(2)}
 
 Formulas Used:
@@ -141,47 +152,29 @@ Based on this data, please provide:
   return template;
 }
 
-function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[]): CostAnalysis {
-  const hourlyRate = 75; // Default developer rate
-  const weeklyDuration = 4; // Default weekly meeting hours
-  const attendeesPerTeam = 5; // Default attendees per team
-  const communicationOverhead = 1.2; // Default communication overhead
-  const baselineCommunicationHours = 2; // Default baseline communication hours
-  const dependencyHoursRate = 2; // Default dependency hours rate
-
+function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[], costParams: CostParams): CostAnalysis {
   const totalTeams = nodes.length;
   const totalConnections = edges.length;
   const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
   
   // Meeting costs
   const weeklyMeetingCost = 
-    weeklyDuration * 
-    attendeesPerTeam * 
-    hourlyRate * 
+    costParams.meetings.weeklyDuration * 
+    costParams.meetings.attendeesPerTeam * 
+    costParams.hourlyRate.developer * 
     totalConnections * 
-    communicationOverhead;
+    costParams.overhead.communicationOverhead;
 
   // Communication costs
   const communicationCost =
-    totalConnections * communicationOverhead *
-    hourlyRate * baselineCommunicationHours + // Baseline communication
-    edges.reduce((sum, edge) => sum + (edge.data.strength * dependencyHoursRate * hourlyRate), 0);
-
-  // Process overhead
-  const processOverhead = 
-    edges.reduce((sum, edge) => sum + (edge.data.strength * hourlyRate * 3), 0);
+    totalConnections * costParams.overhead.communicationOverhead *
+    costParams.hourlyRate.developer * costParams.overhead.baselineCommunicationHours + // Baseline communication
+    edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * costParams.hourlyRate.developer), 0);
 
   return {
     weeklyMeetingCost,
     communicationCost,
-    processOverhead,
-    totalCost: weeklyMeetingCost + communicationCost + processOverhead,
-    hourlyRate,
-    weeklyDuration,
-    attendeesPerTeam,
-    communicationOverhead,
-    baselineCommunicationHours,
-    dependencyHoursRate
+    totalCost: weeklyMeetingCost + communicationCost
   };
 }
 

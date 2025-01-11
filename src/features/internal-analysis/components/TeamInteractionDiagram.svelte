@@ -20,6 +20,8 @@
   import { exportTeamDependencyToExcel, exportTeamDependencyToPNG } from '$lib/utils/teamDependencyExport';
   import { initTutorial } from '$lib/utils/tutorial';
   import type { Tour } from 'shepherd.js';
+  import { calculatorStore } from '$lib/stores/calculatorStore';
+  import type { TeamInputs } from '$lib/types/calculator';
 
   let tour: Tour | null = null;
 
@@ -97,10 +99,8 @@
         matrix.reduce((sum, row) => sum + row.filter(v => v > 0).length, 0),
       communicationCost: matrix.reduce((sum, row) => 
         sum + row.reduce((s, v) => s + (v > 0 ? v * costParams.hourlyRate.developer * 4 : 0), 0), 0),
-      processOverhead: matrix.reduce((sum, row) => 
-        sum + row.reduce((s, v) => s + (v * costParams.hourlyRate.developer * 2), 0), 0),
       get totalCost() {
-        return this.weeklyMeetingCost + this.communicationCost + this.processOverhead;
+        return this.weeklyMeetingCost + this.communicationCost;
       }
     };
 
@@ -249,13 +249,35 @@
     }
   };
 
+  // Subscribe to calculator store to sync hourly rate
+  calculatorStore.subscribe(state => {
+    const currentState = calculatorStore.getCurrentState();
+    const baseInputs = currentState?.baseInputs as TeamInputs;
+    if (baseInputs?.hourlyRate) {
+      costParams.hourlyRate.developer = baseInputs.hourlyRate;
+    }
+  });
+
+  // Update calculator store when hourly rate changes
+  function handleHourlyRateChange() {
+    const currentState = calculatorStore.getCurrentState();
+    const baseInputs = currentState?.baseInputs as TeamInputs;
+    if (baseInputs) {
+      calculatorStore.updateTeamInputs({
+        teamSize: baseInputs.teamSize,
+        hourlyRate: costParams.hourlyRate.developer,
+        serviceEfficiency: baseInputs.serviceEfficiency,
+        operationalOverhead: baseInputs.operationalOverhead
+      });
+    }
+  }
+
   let costDistributionChart: Chart | null = null;
   let costChartCanvas: HTMLCanvasElement;
 
   interface CostAnalysis {
     weeklyMeetingCost: number;
     communicationCost: number;
-    processOverhead: number;
     totalCost: number;
   }
 
@@ -266,8 +288,7 @@
 
     const data = [
       costs.weeklyMeetingCost,
-      costs.communicationCost,
-      costs.processOverhead
+      costs.communicationCost
     ];
 
     const total = costs.totalCost;
@@ -277,13 +298,12 @@
       type: 'doughnut',
       plugins: [ChartDataLabels as Plugin],
       data: {
-        labels: ['Weekly Meetings', 'Communication', 'Process Overhead'],
+        labels: ['Weekly Meetings', 'Communication'],
         datasets: [{
           data: data,
           backgroundColor: [
             '#0EA5E9',  // sky-500 for meetings
             '#F59E0B',  // amber-500 for communication
-            '#10B981'   // emerald-500 for process
           ],
           borderWidth: 0
         }]
@@ -653,15 +673,10 @@
       costParams.hourlyRate.developer * costParams.overhead.baselineCommunicationHours + // Baseline communication
       edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * costParams.hourlyRate.developer), 0); // Additional cost based on dependency strength
 
-    // Process and coordination overhead
-    const processOverhead = 
-      edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.hourlyRate.developer * 3), 0); // Coordination overhead
-
     return {
       weeklyMeetingCost,
       communicationCost,
-      processOverhead,
-      totalCost: weeklyMeetingCost + communicationCost + processOverhead
+      totalCost: weeklyMeetingCost + communicationCost
     };
   }
 
@@ -790,12 +805,10 @@
         costParams.hourlyRate.developer * 
         nodes.length, // Only internal team meetings
       communicationCost: nodes.length * costParams.hourlyRate.developer * 5, // Minimal communication
-      processOverhead: nodes.length * costParams.hourlyRate.developer * 2, // Minimal process overhead
     } as CostAnalysis;
     
     independentCosts.totalCost = independentCosts.weeklyMeetingCost + 
-      independentCosts.communicationCost + 
-      independentCosts.processOverhead;
+      independentCosts.communicationCost;
     
     return {
       costs: independentCosts,
@@ -1188,6 +1201,7 @@
             <input
               type="range"
               bind:value={costParams.hourlyRate.developer}
+              on:input={handleHourlyRateChange}
               min="20"
               max="200"
               step="5"
@@ -1821,127 +1835,126 @@
   <div class="cost-analysis-section bg-white p-6 rounded-lg shadow border border-gray-200">
       {#if nodes.length > 0}
         {@const costs = calculateCosts()}
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-semibold text-gray-900">Cost Analysis of Current Team Dependencies</h3>
-        <div class="flex items-center gap-2 px-4 py-2 bg-secondary/5 rounded-lg border border-secondary/20">
-          <span class="text-sm text-gray-600">Total Weekly Cost:</span>
-          <span class="text-xl font-bold text-secondary">${costs.totalCost.toFixed(2)}</span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Cost Distribution Chart -->
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-          <h4 class="text-sm font-medium text-gray-700 mb-4">Cost Distribution</h4>
-          <div class="relative h-[400px] w-full">
-            <canvas
-              bind:this={costChartCanvas}
-              class="w-full h-full"
-            ></canvas>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h3 class="text-lg font-semibold text-gray-900">Cost Analysis of Current Team Dependencies</h3>
+          <div class="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 px-4 py-2 bg-secondary/5 rounded-lg border border-secondary/20">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600 whitespace-nowrap">Total Weekly Cost:</span>
+              <span class="text-xl font-bold text-secondary whitespace-nowrap">${costs.totalCost.toFixed(2)}</span>
+            </div>
+            <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">(${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(2)} per team member)</span>
           </div>
         </div>
 
-        <!-- Cost Impact Analysis -->
-        <div class="space-y-6">
-          <!-- Weekly Cost Summary -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
-              <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
-              <div class="text-xl font-bold text-sky-500 mt-1">
-                ${costs.weeklyMeetingCost.toFixed(2)}
-              </div>
-              <div class="text-xs text-gray-500 mt-1">
-                {((costs.weeklyMeetingCost / costs.totalCost) * 100).toFixed(2)}% of total
-              </div>
-            </div>
-            <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
-              <div class="text-sm font-medium text-gray-600">Communication</div>
-              <div class="text-xl font-bold text-amber-500 mt-1">
-                ${costs.communicationCost.toFixed(2)}
-              </div>
-              <div class="text-xs text-gray-500 mt-1">
-                {((costs.communicationCost / costs.totalCost) * 100).toFixed(2)}% of total
-              </div>
-            </div>
-            <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
-              <div class="text-sm font-medium text-gray-600">Process Overhead</div>
-              <div class="text-xl font-bold text-emerald-500 mt-1 whitespace-nowrap">
-                ${costs.processOverhead.toFixed(2)}
-              </div>
-              <div class="text-xs text-gray-500 mt-1">
-                {((costs.processOverhead / costs.totalCost) * 100).toFixed(2)}% of total
-              </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Cost Distribution Chart -->
+          <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h4 class="text-sm font-medium text-gray-700 mb-4">Cost Distribution</h4>
+            <div class="relative h-[400px] w-full">
+              <canvas
+                bind:this={costChartCanvas}
+                class="w-full h-full"
+              ></canvas>
             </div>
           </div>
 
-          <!-- Impact Summary -->
-          <div class="p-4 bg-gray-50 rounded-lg">
-            <h4 class="text-sm font-medium text-gray-900 mb-2">Dependency Impact Summary</h4>
-            <div class="space-y-4">
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <h5 class="text-sm font-medium text-sky-500">Meeting Impact</h5>
-                  <span class="text-xs text-gray-500">Per Team Member: ${(costs.weeklyMeetingCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week</span>
+          <!-- Cost Impact Analysis -->
+          <div class="space-y-6">
+            <!-- Weekly Cost Summary -->
+            {#if costs}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
+                <div class="text-sm font-medium text-gray-600">Weekly Meetings</div>
+                <div class="text-xl font-bold text-sky-500 mt-1">
+                  ${costs.weeklyMeetingCost.toFixed(2)}
                 </div>
-                <p class="text-xs text-gray-600">
-                  Based on {costParams.meetings.weeklyDuration}hr/week × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
-                </p>
+                <div class="text-xs text-gray-500 mt-1">
+                  Based on {costParams.meetings.weeklyDuration}hr × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
+                </div>
               </div>
-              
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <h5 class="text-sm font-medium text-amber-500">Communication Overhead</h5>
-                  <span class="text-xs text-gray-500">Overhead Factor: {costParams.overhead.communicationOverhead}x</span>
+
+              <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
+                <div class="text-sm font-medium text-gray-600">Communication</div>
+                <div class="text-xl font-bold text-amber-500 mt-1">
+                  ${costs.communicationCost.toFixed(2)}
                 </div>
-                <p class="text-xs text-gray-600">
-                  Includes async communication, documentation, and cross-team coordination costs
-                </p>
-              </div>
-              
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <h5 class="text-sm font-medium text-emerald-500">Process Efficiency</h5>
-                  <span class="text-xs text-gray-500">Annual Cost: ${(costs.totalCost * 52).toFixed(2)}</span>
+                <div class="text-xs text-gray-500 mt-1">
+                  Includes async communication and coordination costs
                 </div>
-                <p class="text-xs text-gray-600">
-                  Total coordination cost per team member: ${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(2)}/week
-                </p>
               </div>
             </div>
-          </div>
 
-          <!-- Optimization Suggestions -->
-          <div class="p-4 bg-secondary/5 rounded-lg border border-secondary/20">
-            <h4 class="text-sm font-medium text-gray-900 mb-2">Cost Optimization Opportunities</h4>
-            <ul class="space-y-2 text-sm text-gray-600">
-              {#if (costs.weeklyMeetingCost / costs.totalCost) > 0.4}
-                <li class="flex items-start gap-2">
-                  <span class="text-secondary">•</span>
-                  Consider reducing meeting frequency or attendee count
-                </li>
-              {/if}
-              {#if (costs.communicationCost / costs.totalCost) > 0.4}
-                <li class="flex items-start gap-2">
-                  <span class="text-secondary">•</span>
-                  Look for ways to streamline team communication channels
-                </li>
-              {/if}
-              {#if (costs.processOverhead / costs.totalCost) > 0.3}
-                <li class="flex items-start gap-2">
-                  <span class="text-secondary">•</span>
-                  Review and optimize coordination processes
-                </li>
-              {/if}
-              {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 10)}
-                <li class="flex items-start gap-2">
-                  <span class="text-secondary">•</span>
-                  Total coordination costs are high relative to team size
-                </li>
-              {/if}
-            </ul>
+            <!-- Cost Insights -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h5 class="text-sm font-medium text-gray-900 mb-3">Cost Distribution Insights</h5>
+              <div class="space-y-4">
+                <!-- Meeting Costs Insight -->
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h6 class="text-sm font-medium text-gray-900">Synchronous Coordination</h6>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {#if (costs.weeklyMeetingCost / costs.totalCost) > 0.6}
+                        High meeting costs indicate significant time spent in synchronous coordination. Consider reducing meeting frequency or attendee count.
+                      {:else if (costs.weeklyMeetingCost / costs.totalCost) > 0.4}
+                        Moderate meeting overhead. Review meeting structures for potential optimization.
+                      {:else}
+                        Efficient meeting structure with balanced synchronous coordination.
+                      {/if}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Communication Costs Insight -->
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h6 class="text-sm font-medium text-gray-900">Asynchronous Communication</h6>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {#if (costs.communicationCost / costs.totalCost) > 0.6}
+                        High communication overhead suggests complex dependencies. Consider streamlining team interfaces and documentation.
+                      {:else if (costs.communicationCost / costs.totalCost) > 0.4}
+                        Moderate communication costs. Look for opportunities to improve async communication channels.
+                      {:else}
+                        Well-managed async communication with effective coordination patterns.
+                      {/if}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Overall Efficiency -->
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h6 class="text-sm font-medium text-gray-900">Cost Efficiency</h6>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 10)}
+                        Total coordination costs are high relative to team size. Consider reviewing team structure and dependency patterns.
+                      {:else if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 5)}
+                        Moderate overall costs. Monitor trends and optimize where possible.
+                      {:else}
+                        Cost-efficient team structure with well-managed coordination overhead.
+                      {/if}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/if}
           </div>
         </div>
-      </div>
       {/if}
     </div>
 
@@ -2043,14 +2056,14 @@
 
     <!-- Comparison Controls based on Mode -->
     {#if comparisonMode === 'lazy'}
-      <div class="mb-6 p-6 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
+      <div class="mb-6 p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
         <h4 class="text-sm font-medium text-gray-700 mb-4">Dependency Level Adjustment</h4>
         <div class="space-y-6">
           <!-- Adjustment Controls -->
           <div class="flex flex-col items-center gap-4">
-            <div class="flex items-center gap-6">
+            <div class="flex flex-wrap justify-center items-center gap-2 sm:gap-6">
               <button 
-                class="h-12 w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
+                class="h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
                   dependencyAdjustment === -2 
                     ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' 
                     : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-500 hover:text-green-500'
@@ -2058,7 +2071,7 @@
                 on:click={() => dependencyAdjustment = -2}
               >-2</button>
               <button 
-                class="h-12 w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
+                class="h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
                   dependencyAdjustment === -1 
                     ? 'bg-green-400 text-white shadow-lg shadow-green-400/20' 
                     : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400 hover:text-green-400'
@@ -2066,7 +2079,7 @@
                 on:click={() => dependencyAdjustment = -1}
               >-1</button>
               <button 
-                class="h-14 w-20 flex items-center justify-center rounded-xl transition-all font-medium text-xl {
+                class="h-12 sm:h-14 w-16 sm:w-20 flex items-center justify-center rounded-xl transition-all font-medium text-xl {
                   dependencyAdjustment === 0 
                     ? 'bg-gray-100 text-gray-900 shadow-lg shadow-gray-500/10' 
                     : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-400'
@@ -2074,7 +2087,7 @@
                 on:click={() => dependencyAdjustment = 0}
               >0</button>
               <button 
-                class="h-12 w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
+                class="h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
                   dependencyAdjustment === 1 
                     ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' 
                     : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-amber-500 hover:text-amber-500'
@@ -2082,7 +2095,7 @@
                 on:click={() => dependencyAdjustment = 1}
               >+1</button>
               <button 
-                class="h-12 w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
+                class="h-10 sm:h-12 w-10 sm:w-12 flex items-center justify-center rounded-xl transition-all font-medium text-base {
                   dependencyAdjustment === 2 
                     ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' 
                     : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-red-500 hover:text-red-500'
@@ -2094,7 +2107,7 @@
           </div>
 
           <!-- Legend -->
-          <div class="grid grid-cols-3 gap-4 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div class="flex flex-col items-center gap-1.5">
               <div class="flex items-center gap-1.5">
                 <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
@@ -2777,7 +2790,8 @@
     nodes,
     edges,
     dependencyMatrix,
-    metrics
+    metrics,
+    costParams
   )}
 />
 

@@ -239,74 +239,89 @@
   // Update chart data generation to match base analysis
   function generateTimelineData(results: TargetBasedPlanningResults) {
     const months = Math.max(60, results.timeframe + 24); // Show at least target + 2 years
-    const monthlyBaseline = results.baselineCost / 12;
+    const monthlyBaseline = results.monthlyBaseCost;
     const targetBreakEvenMonths = results.timeframe;
     
-    // Calculate the required platform cost and monthly operating cost to hit break-even
-    const baselineCostAtBreakEven = monthlyBaseline * targetBreakEvenMonths;
-    const requiredPlatformCost = results.platformCost;
-    
-    // Calculate the required monthly operating cost to achieve break-even
-    const remainingMonths = targetBreakEvenMonths - results.timeToBuild;
-    const requiredMonthlyOperatingCost = (baselineCostAtBreakEven - requiredPlatformCost) / remainingMonths;
+    // Calculate monthly values
+    const monthlyOperatingCost = monthlyBaseline - results.monthlyOperatingCostReduction;
+    const monthlyPlatformCost = results.platformMaintenance;
+    const implementationCost = results.platformCost / results.timeToBuild;
 
-    // Generate cost arrays
+    // Generate arrays for different cost components
     const baselineCosts: number[] = Array.from({length: months + 1}, (_, i) => monthlyBaseline * i);
     const platformCosts: number[] = Array.from({length: months + 1}, (_, i) => {
       if (i <= results.timeToBuild) {
-        // During implementation: Only platform investment (spread evenly)
-        return (requiredPlatformCost * i / results.timeToBuild);
+        // During implementation: Platform investment (spread evenly) + maintenance
+        return (implementationCost * i) + (monthlyPlatformCost * i);
       } else {
-        // After implementation: Platform cost + cumulative operating costs
+        // After implementation: Total platform cost + cumulative operating costs
+        const implementationTotal = results.platformCost;
         const operatingMonths = i - results.timeToBuild;
-        return requiredPlatformCost + (requiredMonthlyOperatingCost * operatingMonths);
+        return implementationTotal + 
+               (monthlyPlatformCost * i) + 
+               (monthlyOperatingCost * operatingMonths);
       }
     });
 
+    // Calculate monthly savings line
+    const monthlySavings: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
+      if (i <= results.timeToBuild) return null;
+      return monthlyBaseline - monthlyOperatingCost - monthlyPlatformCost;
+    });
+
     // Add break-even point marker
-    const breakEvenPoint = targetBreakEvenMonths;
+    const breakEvenPoint = findBreakEvenPoint(baselineCosts, platformCosts);
     const breakEvenMarker: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
       return i === breakEvenPoint ? baselineCosts[i] : null;
     });
 
     const data = {
       labels: Array.from({length: months + 1}, (_, i) => `Month ${i}`),
-      datasets: {
-        costs: [
-          {
-            label: 'Current Solution',
-            data: baselineCosts,
-            borderColor: '#94a3b8',
-            backgroundColor: '#94a3b880',
-            fill: true,
-            pointRadius: 0
-          },
-          {
-            label: 'Platform Solution',
-            data: platformCosts,
-            borderColor: '#dd9933',
-            backgroundColor: '#dd993380',
-            fill: true,
-            pointRadius: 0
-          }
-        ],
-        monthly: [
-          {
-            label: 'Break-Even Point',
-            data: breakEvenMarker,
-            borderColor: '#22c55e',
-            backgroundColor: '#22c55e',
-            pointRadius: 6,
-            pointStyle: 'circle',
-            showLine: false
-          }
-        ]
-      }
+      datasets: [
+        {
+          label: 'Current Solution',
+          data: baselineCosts,
+          borderColor: '#94a3b8',
+          backgroundColor: '#94a3b880',
+          fill: true,
+          pointRadius: 0,
+          order: 4
+        },
+        {
+          label: 'Platform Solution',
+          data: platformCosts,
+          borderColor: '#dd9933',
+          backgroundColor: '#dd993380',
+          fill: true,
+          pointRadius: 0,
+          order: 3
+        },
+        {
+          label: 'Monthly Savings',
+          data: monthlySavings,
+          borderColor: '#22c55e',
+          backgroundColor: '#22c55e20',
+          borderDash: [5, 5],
+          fill: true,
+          pointRadius: 0,
+          order: 2
+        },
+        {
+          label: 'Break-Even Point',
+          data: breakEvenMarker,
+          borderColor: '#22c55e',
+          backgroundColor: '#22c55e',
+          pointRadius: 8,
+          pointStyle: 'rectRot',
+          showLine: false,
+          order: 1
+        }
+      ]
     };
     return data;
   }
 
-  // Update chart rendering to fix tick callback type
+  // Update chart rendering
   function updateCharts() {
     if (!results) return;
 
@@ -324,14 +339,15 @@
       type: 'line',
       data: {
         labels: data.labels,
-        datasets: [...data.datasets.costs, ...data.datasets.monthly]
+        datasets: data.datasets
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
           mode: 'nearest',
-          intersect: false
+          intersect: false,
+          axis: 'x'
         },
         plugins: {
           tooltip: {
@@ -356,10 +372,15 @@
             }
           },
           legend: {
-            display: false
-          },
-          datalabels: {
-            display: false
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
           }
         },
         elements: {
@@ -377,17 +398,32 @@
             type: 'category',
             title: {
               display: true,
-              text: 'Time'
+              text: 'Time (Months)',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
             },
             grid: {
               display: false
+            },
+            ticks: {
+              maxTicksLimit: 12,
+              callback: function(value, index) {
+                if (index % 3 === 0) return `Month ${value}`;
+                return '';
+              }
             }
           },
           y: {
             type: 'linear',
             title: {
               display: true,
-              text: 'Cumulative Cost ($)'
+              text: 'Cumulative Cost ($)',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
             },
             grid: {
               color: '#e2e8f0'
@@ -399,7 +435,9 @@
                     style: 'currency',
                     currency: 'USD',
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
+                    maximumFractionDigits: 0,
+                    notation: 'compact',
+                    compactDisplay: 'short'
                   }).format(value);
                 }
                 return '';
@@ -1415,99 +1453,47 @@
 <!-- Results Container -->
 {#if results}
   <div class="space-y-6">
-    <!-- Key Metrics -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-white rounded-lg shadow-sm p-4">
-        <p class="text-sm text-gray-500">Platform Investment</p>
-        <p class="text-xl font-semibold text-gray-900">${results.platformCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm p-4">
-        <p class="text-sm text-gray-500">Monthly Savings</p>
-        <p class="text-xl font-semibold text-green-600">${results.monthlyOperatingCostReduction.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm p-4">
-        <p class="text-sm text-gray-500">Break-Even Period</p>
-        <p class="text-xl font-semibold text-gray-900">{results.timeframe} months</p>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm p-4">
-        <p class="text-sm text-gray-500">Implementation Time</p>
-        <p class="text-xl font-semibold text-gray-900">{results.timeToBuild} months</p>
-      </div>
-    </div>
-
-    <!-- Detailed Metrics -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Current vs Future State -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Cost Comparison</h3>
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-sm text-gray-500">Current Monthly Cost</p>
-              <p class="text-lg font-medium text-gray-900">${(results.monthlyBaseCost).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-sm text-gray-500">Future Monthly Cost</p>
-              <p class="text-lg font-medium text-green-600">${(results.monthlyBaseCost - results.monthlyOperatingCostReduction).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-            </div>
-          </div>
-          <div class="pt-4 border-t border-gray-100">
-            <div class="flex justify-between items-center">
-              <div>
-                <p class="text-sm text-gray-500">Current Annual Cost</p>
-                <p class="text-lg font-medium text-gray-900">${results.baselineCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-500">Future Annual Cost</p>
-                <p class="text-lg font-medium text-green-600">${(results.baselineCost - (results.monthlyOperatingCostReduction * 12)).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Efficiency Metrics -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Efficiency Metrics</h3>
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-sm text-gray-500">Team Reduction</p>
-              <p class="text-lg font-medium text-gray-900">{(results.teamReduction * 100).toFixed(0)}%</p>
-            </div>
-            <div class="text-right">
-              <p class="text-sm text-gray-500">Process Efficiency Gain</p>
-              <p class="text-lg font-medium text-gray-900">{(results.processEfficiency * 100).toFixed(0)}%</p>
-            </div>
-          </div>
-          <div class="pt-4 border-t border-gray-100">
-            <div>
-              <p class="text-sm text-gray-500">Platform Maintenance</p>
-              <p class="text-lg font-medium text-gray-900">${results.platformMaintenance.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} / month</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Cost Analysis Chart -->
     <div class="bg-white rounded-lg shadow-sm p-6">
-      <h3 class="text-sm font-semibold text-gray-900 mb-4">Cumulative Cost Analysis</h3>
+      <h3 class="text-sm font-semibold text-gray-900 mb-4">Cost Analysis</h3>
       <div class="h-80 relative">
         <canvas id="cumulativeCostChart"></canvas>
       </div>
-      <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
-        <div>
+      <div class="mt-4 flex flex-wrap justify-between items-center text-sm text-gray-500 gap-4">
+        <div class="flex items-center">
           <span class="inline-block w-3 h-3 bg-[#94a3b8] rounded-full mr-2"></span>
-          Current Solution
+          <span>Current Solution</span>
         </div>
-        <div>
+        <div class="flex items-center">
           <span class="inline-block w-3 h-3 bg-[#dd9933] rounded-full mr-2"></span>
-          Platform Solution
+          <span>Platform Solution</span>
         </div>
-        <div>
-          <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-          Break-Even: {results.timeframe} months
+        <div class="flex items-center">
+          <span class="inline-block w-3 h-3 bg-[#22c55e] rounded-full mr-2"></span>
+          <span>Monthly Savings</span>
+        </div>
+        <div class="flex items-center">
+          <span class="inline-block w-4 h-4 bg-[#22c55e] transform rotate-45 mr-2"></span>
+          <span>Break-Even: {results.timeframe} months</span>
+        </div>
+      </div>
+      <!-- Additional Metrics -->
+      <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <p class="text-gray-500">Monthly Cost</p>
+          <p class="text-lg font-semibold text-gray-900">${results.monthlyBaseCost.toLocaleString()}</p>
+        </div>
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <p class="text-gray-500">Monthly Savings</p>
+          <p class="text-lg font-semibold text-green-600">${results.monthlyOperatingCostReduction.toLocaleString()}</p>
+        </div>
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <p class="text-gray-500">Platform Cost</p>
+          <p class="text-lg font-semibold text-gray-900">${results.platformCost.toLocaleString()}</p>
+        </div>
+        <div class="p-3 bg-gray-50 rounded-lg">
+          <p class="text-gray-500">ROI Period</p>
+          <p class="text-lg font-semibold text-gray-900">{results.timeframe} months</p>
         </div>
       </div>
     </div>
@@ -1656,7 +1642,7 @@
 />
 <LoadingConfirmationModal
   bind:show={showLoadingModal}
-  params={sharedParams}
+  params={sharedParams || undefined}
   onConfirm={applySharedParams}
   onCancel={handleLoadingCancel}
 />

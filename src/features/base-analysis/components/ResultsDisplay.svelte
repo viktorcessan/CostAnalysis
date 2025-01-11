@@ -107,9 +107,9 @@
             borderColor: '#6B7280', // Gray-500
             backgroundColor: 'rgba(107, 114, 128, 0.05)',
             fill: true,
-            pointRadius: 3,
+            pointRadius: 0,
             borderWidth: 2,
-            tension: 0.4
+            tension: 0
           },
           {
             label: 'Solution Cost',
@@ -117,9 +117,9 @@
             borderColor: '#dd9933', // Theme orange
             backgroundColor: 'rgba(221, 153, 51, 0.05)',
             fill: true,
-            pointRadius: 3,
+            pointRadius: 0,
             borderWidth: 2,
-            tension: 0.4
+            tension: 0
           }
         ]
       },
@@ -449,6 +449,9 @@
 
   async function handleExportPDF() {
     try {
+      // Wait a moment for the chart to be fully rendered
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Get the main content area
       const element = document.querySelector('#app') || document.querySelector('main');
       if (!element || !(element instanceof HTMLElement)) {
@@ -489,7 +492,7 @@
       // Handle the chart - create a new canvas and copy the content
       const originalCanvas = chartCanvas;
       if (originalCanvas) {
-        const chartContainer = clone.querySelector('.h-80');
+        const chartContainer = clone.querySelector('.chart-container');
         if (chartContainer) {
           const newCanvas = document.createElement('canvas');
           newCanvas.width = originalCanvas.width;
@@ -497,6 +500,9 @@
           const ctx = newCanvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(originalCanvas, 0, 0);
+            // Ensure the new canvas has the same dimensions as the chart container
+            newCanvas.style.width = '100%';
+            newCanvas.style.height = '100%';
           }
           // Replace the old canvas in the clone
           const oldCanvas = chartContainer.querySelector('canvas');
@@ -792,7 +798,7 @@
   </div>
 
   <!-- Chart -->
-  <div class="h-[500px] bg-gray-50 rounded-lg p-4">
+  <div class="h-[500px] chart-container bg-gray-50 rounded-lg p-4">
     <canvas bind:this={chartCanvas}></canvas>
   </div>
 

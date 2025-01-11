@@ -16,6 +16,8 @@
   import type { TargetPlanningParams } from '$lib/utils/shareLink';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import { exportToExcel } from '$lib/utils/exportUtils';
+  import html2canvas from 'html2canvas';
 
   // Modal state
   let showLLMTemplate = false;
@@ -501,6 +503,174 @@
     showLoadingModal = false;
     sharedParams = null;
     goto($page.url.pathname, { replaceState: true });
+  }
+
+  // Export functions
+  async function handleExportExcel() {
+    if (!results) return;
+    
+    await exportToExcel({
+      results: {
+        model,
+        solution: 'platform',
+        totalCost: results.monthlyBaseCost,
+        annualCost: results.baselineCost,
+        monthlySavings: results.monthlyOperatingCostReduction,
+        breakEvenMonths: results.timeframe,
+        monthlyData: [{
+          month: 1,
+          baseline: results.monthlyBaseCost,
+          solution: results.monthlyBaseCost - results.monthlyOperatingCostReduction,
+          savings: results.monthlyOperatingCostReduction
+        }],
+        costPerTicket: 0,
+        efficiency: results.processEfficiency * 100,
+        recommendedTeamSize: model === 'team' ? teamSize : 0,
+        isViable: true
+      },
+      baseInputs: model === 'team' ? {
+        teamSize,
+        hourlyRate,
+        serviceEfficiency: serviceEfficiency / 100,
+        operationalOverhead: operationalOverhead / 100
+      } : {
+        monthlyTickets,
+        hoursPerTicket,
+        peoplePerTicket,
+        slaCompliance
+      },
+      solutionInputs: {
+        type: 'platform',
+        platform: {
+          platformCost: targets[4].value * 12, // Convert monthly to annual
+          platformMaintenance: targets[4].value,
+          timeToBuild: targets[3].value,
+          teamReduction: targets[1].value / 100,
+          processEfficiency: targets[2].value / 100,
+          baselineCost: results.baselineCost
+        }
+      }
+    });
+  }
+
+  async function handleExportPNG() {
+    try {
+      // Get the main content area
+      const element = document.querySelector('#app') || document.querySelector('main');
+      if (!element || !(element instanceof HTMLElement)) {
+        throw new Error('Could not find main content container');
+      }
+
+      // Create a temporary container for the snapshot
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.background = '#ffffff';
+      tempContainer.style.width = `${element.offsetWidth}px`;
+      document.body.appendChild(tempContainer);
+
+      // Clone the element
+      const clone = element.cloneNode(true) as HTMLElement;
+      tempContainer.appendChild(clone);
+
+      // Replace input sections with static values display
+      const inputSections = clone.querySelectorAll('input, select, .slider-container');
+      inputSections.forEach(section => {
+        const container = section.closest('.form-group, .input-group');
+        if (container) {
+          const label = container.querySelector('label')?.textContent || '';
+          const value = (section as HTMLInputElement).value;
+          const unit = container.querySelector('.unit')?.textContent || '';
+          
+          const staticValue = document.createElement('div');
+          staticValue.className = 'static-value flex justify-between items-center p-2 bg-gray-50 rounded';
+          staticValue.innerHTML = `
+            <span class="font-medium">${label}</span>
+            <span class="text-right font-bold">${value}${unit}</span>
+          `;
+          
+          container.replaceWith(staticValue);
+        }
+      });
+
+      // Handle the chart - create a new canvas and copy the content
+      if (cumulativeChart) {
+        const chartContainer = clone.querySelector('.h-80');
+        if (chartContainer) {
+          const newCanvas = document.createElement('canvas');
+          newCanvas.width = cumulativeChart.canvas.width;
+          newCanvas.height = cumulativeChart.canvas.height;
+          const ctx = newCanvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(cumulativeChart.canvas, 0, 0);
+          }
+          // Replace the old canvas in the clone
+          const oldCanvas = chartContainer.querySelector('canvas');
+          if (oldCanvas) {
+            oldCanvas.replaceWith(newCanvas);
+          }
+        }
+      }
+
+      // Ensure all images are loaded
+      const images = clone.getElementsByTagName('img');
+      await Promise.all(Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+      }));
+
+      // Set explicit dimensions
+      clone.style.width = `${element.offsetWidth}px`;
+      clone.style.height = 'auto';
+      clone.style.position = 'relative';
+      clone.style.transform = 'none';
+      clone.style.background = '#ffffff';
+      clone.style.margin = '0';
+      clone.style.padding = '24px';
+      clone.style.maxWidth = 'none';
+
+      // Create canvas with optimal settings
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: element.offsetWidth,
+        height: clone.scrollHeight,
+        windowWidth: element.offsetWidth,
+        windowHeight: clone.scrollHeight,
+        onclone: (clonedDoc) => {
+          const allElements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < allElements.length; i++) {
+            const el = allElements[i] as HTMLElement;
+            if (el.style.position === 'fixed') {
+              el.style.position = 'absolute';
+            }
+            // Remove any height constraints but avoid overflow on canvas
+            if (!(el instanceof HTMLCanvasElement)) {
+              el.style.maxHeight = 'none';
+              el.style.overflow = 'visible';
+            }
+          }
+        }
+      });
+
+      // Clean up
+      document.body.removeChild(tempContainer);
+
+      // Convert to high-quality PNG and download
+      const link = document.createElement('a');
+      link.download = `target-planning-analysis-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+    } catch (error) {
+      console.error('PNG Export Error:', error);
+      alert('There was an error generating the PNG. Please try again.');
+    }
   }
 </script>
 
@@ -1434,26 +1604,44 @@
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
             </svg>
-            Analyze with ChatGPT
+            <span>Analyze with ChatGPT</span>
           </div>
         </button>
       </div>
 
       <!-- Share Options -->
       <div class="bg-white rounded-xl p-6 border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Share Analysis</h3>
-        <p class="text-gray-600 mb-4">Share your target planning analysis with stakeholders.</p>
-        <button
-          on:click={handleShare}
-          class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
-        >
-          <div class="flex items-center justify-center gap-2">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Share & Export</h3>
+        <p class="text-gray-600 mb-4">Share or export your target planning analysis.</p>
+        <div class="flex flex-col gap-3">
+          <button
+            on:click={handleShare}
+            class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 flex items-center justify-center gap-2"
+          >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
             </svg>
             Share Analysis
-          </div>
-        </button>
+          </button>
+          <button
+            on:click={handleExportExcel}
+            class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center justify-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Export to Excel
+          </button>
+          <button
+            on:click={handleExportPNG}
+            class="w-full px-4 py-3 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Export as PNG
+          </button>
+        </div>
       </div>
     </div>
   </div>

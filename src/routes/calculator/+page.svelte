@@ -28,14 +28,14 @@
   const goals: Goal[] = [
     {
       id: 'breakeven',
-      name: 'Find Break-Even Point',
-      description: 'Calculate the break-even point for a given solution',
-      longDescription: 'Determine how long it will take to recover your investment in a new Operations Costs model. Compare different approaches and understand the financial implications of each option.',
+      name: 'Build business case',
+      description: 'Calculate and compare different Operations Costs models',
+      longDescription: 'Build a comprehensive business case by analyzing different Operations Costs models. Compare approaches and understand the financial implications to make informed decisions.',
       benefits: [
-        'Compare different Operations Costs models',
+        'Compare operations costs models',
+        'Find break-even point',
         'Calculate ROI and payback period',
-        'Understand monthly cost implications',
-        'Make data-driven investment decisions'
+        'Understand monthly cost implications'
       ],
       mode: 'base',
       requiresModel: true,
@@ -46,7 +46,7 @@
     },
     {
       id: 'target',
-      name: 'Plan Target Solution',
+      name: 'Find your platform budget',
       description: 'Determine optimal investment and resource allocation',
       longDescription: 'Set your desired targets for ROI, team reduction, or process efficiency, and we will help you determine the optimal investment parameters to achieve these goals.',
       benefits: [
@@ -64,7 +64,7 @@
     },
     {
       id: 'team-analysis',
-      name: 'Analyze Team Dependencies',
+      name: 'Reveal team dependencies costs',
       description: 'Explore team interactions and optimize collaboration',
       longDescription: 'Visualize and analyze how your teams interact, identify bottlenecks, and discover opportunities to optimize collaboration and knowledge sharing.',
       benefits: [
@@ -119,7 +119,7 @@
         <!-- Goal Selection -->
         <div class="bg-white rounded-xl shadow-lg p-8">
           <div class="max-w-3xl mx-auto text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">What would you like to analyze?</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">What would you like to do?</h2>
             <p class="text-lg text-gray-600">
               Choose your analysis goal and we'll guide you through the process of optimizing your Operations Costs model.
             </p>

@@ -28,14 +28,15 @@
   const goals: Goal[] = [
     {
       id: 'breakeven',
-      name: 'Build business case',
-      description: 'Calculate and compare different Operations Costs models',
-      longDescription: 'Build a comprehensive business case by analyzing different Operations Costs models. Compare approaches and understand the financial implications to make informed decisions.',
+      name: 'Build a business case',
+      description: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point.',
+      longDescription: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point to build a strong case for change. Put your existing data to work to uncover actionable insights and make better investment decisions. Perfect for analyzing, projecting, and comparing opportunities in platform automation and service outsourcing..',
       benefits: [
-        'Compare operations costs models',
-        'Find break-even point',
-        'Calculate ROI and payback period',
-        'Understand monthly cost implications'
+        'Analyze and justify costs',
+        'Calculate ROI',
+        'Identify break-even points',
+        'See future cost implications'
+
       ],
       mode: 'base',
       requiresModel: true,
@@ -46,14 +47,14 @@
     },
     {
       id: 'target',
-      name: 'Find your platform budget',
-      description: 'Determine optimal investment and resource allocation',
+      name: 'Determine your Platform Budget',
+      description: 'Determine an optimal platform investment size that enables lower costs while meeting efficiency goals.',
       longDescription: 'Set your desired targets for ROI, team reduction, or process efficiency, and we will help you determine the optimal investment parameters to achieve these goals.',
       benefits: [
-        'Set clear efficiency targets',
-        'Optimize resource allocation',
-        'Plan phased transitions',
-        'Balance cost and performance'
+        'Set cost and efficiency targets',
+        'Identify break-even points',
+        'See monthly cost reductions',
+        'Identify total investment size'
       ],
       mode: 'solutions',
       requiresModel: true,
@@ -64,14 +65,14 @@
     },
     {
       id: 'team-analysis',
-      name: 'Reveal team dependencies costs',
-      description: 'Explore team interactions and optimize collaboration',
+      name: 'Reveal Team Dependency Costs',
+      description: 'Understand how team dependencies are driving up costs and find actionable ways to reduce them.',
       longDescription: 'Visualize and analyze how your teams interact, identify bottlenecks, and discover opportunities to optimize collaboration and knowledge sharing.',
       benefits: [
-        'Map team interactions',
-        'Identify collaboration bottlenecks',
-        'Optimize knowledge sharing',
-        'Improve team efficiency'
+        'Uncover hidden costs',
+        'Map team dependencies',
+        'Optimize team efficiency',
+        'Reduce dependency costs'
       ],
       mode: 'internal',
       requiresModel: false,
@@ -121,7 +122,7 @@
           <div class="max-w-3xl mx-auto text-center mb-12">
             <h2 class="text-3xl font-bold text-gray-900 mb-4">What would you like to do?</h2>
             <p class="text-lg text-gray-600">
-              Choose your analysis goal and we'll guide you through the process of optimizing your Operations Costs model.
+              Choose the specific type of cost analysis you need, and we’ll guide you step-by-step.
             </p>
           </div>
 

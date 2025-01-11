@@ -4,8 +4,8 @@
 
   const features = [
     {
-      title: 'Cost Analysis',
-      description: 'Compare team-based vs ticket-based Operations Costs models',
+      title: 'Build a Business Case',
+      description: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point.',
       details: [
         'Monthly cost breakdown',
         'Break-even analysis',
@@ -14,8 +14,8 @@
       ]
     },
     {
-      title: 'Target Planning',
-      description: 'Set and track efficiency targets with real-time insights',
+      title: 'Find Platform Budget',
+      description: 'Determine how much to invest in your platform to lower costs while meeting your efficiency goals.',
       details: [
         'Process efficiency tracking',
         'Team productivity metrics',
@@ -24,8 +24,8 @@
       ]
     },
     {
-      title: 'Team Interactions',
-      description: 'Visualize and optimize team dynamics and workflows',
+      title: 'Reveal Team Dependency Costs',
+      description: 'Understand how team dependencies are driving up costs and find actionable ways to reduce them.',
       details: [
         'Collaboration patterns',
         'Knowledge transfer',
@@ -45,7 +45,7 @@
           Operations Cost Planning
         </h1>
         <p class="text-xl text-gray-600 mb-6">
-          Optimize your Operations Costs model with data-driven insights
+          Optimize your delivery with tailored analyses to understand your development, application management, and service delivery costs, identify opportunities, and make informed decisions.
         </p>
         <div class="flex justify-center gap-4">
           <a
@@ -64,10 +64,10 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
         <h2 class="text-2xl font-semibold text-gray-900 mb-4">
-          Analysis Tools
+         What would you like to do?
         </h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          Make informed decisions with our analytics and planning tools
+          Choose the specific type of analysis you need, and we’ll guide you step-by-step:
         </p>
       </div>
 
@@ -98,27 +98,27 @@
           How It Works
         </h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          Three simple steps to optimize your Operations Costs
+          Three simple steps to uncover actionable insights:
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <div class="text-2xl font-semibold text-secondary mb-3">01</div>
-          <h3 class="text-lg font-medium mb-2">Input Your Data</h3>
-          <p class="text-gray-600">Enter your current Operations Costs metrics, team size, and costs</p>
+          <h3 class="text-lg font-medium mb-2">1.	Choose Your Analysis</h3>
+          <p class="text-gray-600">Select the analysis that matches your goals.</p>
         </div>
 
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <div class="text-2xl font-semibold text-secondary mb-3">02</div>
-          <h3 class="text-lg font-medium mb-2">Compare Models</h3>
-          <p class="text-gray-600">Analyze team-based vs ticket-based approaches with our algorithms</p>
+          <h3 class="text-lg font-medium mb-2">Input Your Data</h3>
+          <p class="text-gray-600">Add key details about your team, services, and targets.</p>
         </div>
 
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <div class="text-2xl font-semibold text-secondary mb-3">03</div>
-          <h3 class="text-lg font-medium mb-2">Get Insights</h3>
-          <p class="text-gray-600">Receive detailed analysis and optimization strategies</p>
+          <h3 class="text-lg font-medium mb-2">Gain Insights</h3>
+          <p class="text-gray-600">Get clear, actionable recommendations tailored to your operations.</p>
         </div>
       </div>
     </div>
@@ -131,7 +131,7 @@
         Ready to Optimize Your Operations Costs?
       </h2>
       <p class="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-        Start using our calculator today to make data-driven decisions about your Operations Costs model
+        Start using the calculator today to make objective, data-driven decisions for your team.
       </p>
       <a
         href="{base}/calculator"

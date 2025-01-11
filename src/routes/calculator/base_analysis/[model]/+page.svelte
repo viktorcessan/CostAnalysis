@@ -36,10 +36,15 @@
             </svg>
           </button>
           <div>
-            <h2 class="text-3xl font-bold text-gray-900">Find Break-Even Point</h2>
+            <h2 class="text-3xl font-bold text-gray-900">Build a Business Case</h2>
             <p class="text-lg text-gray-600 mt-2">
-              Determine how long it will take to recover your investment in a new Operations Costs model. Compare different approaches and understand the financial implications of each option.
+              Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point to build a strong case for change. Put your existing data to work to uncover actionable insights and make better investment decisions. Perfect for analyzing, projecting, and comparing opportunities in platform automation and service outsourcing.
             </p>
+            <ul class="text-lg text-gray-600 mt-4 list-disc pl-6">
+              <li>Gain a clear, objective view of automation and outsourcing costs.</li>
+              <li>Justify operational investments to your manager, CTO, or finance team.</li>
+              <li>Compare cost models to identify the best long-term approach.</li>
+            </ul>
           </div>
         </div>
       </div>

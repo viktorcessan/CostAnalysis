@@ -35,10 +35,17 @@
             </svg>
           </button>
           <div>
-            <h2 class="text-3xl font-bold text-gray-900">Plan Target Solution</h2>
+            <h2 class="text-3xl font-bold text-gray-900">Determine Your Platform Budget</h2>
             <p class="text-lg text-gray-600 mt-2">
-              Set your desired targets for ROI, team reduction, or process efficiency, and we will help you determine the optimal investment parameters to achieve these goals.
+              See how much to invest in your platform to lower costs while meeting efficiency goals. Enter data about your team and service, add performance targets, and discover the budget you can afford.
             </p>
+            <ul class="text-lg text-gray-600 mt-4 list-disc pl-6">
+              <li>Identify and address cost increases tied to staff growth.</li>
+              <li>Plan cost reductions while maintaining performance levels.</li>
+              <li>Estimate the budget needed to achieve efficiency targets.</li>
+              <li>Align platform investments with leadership or finance expectations.</li>
+              <li>Balance performance improvements with financial constraints.</li>
+            </ul>
           </div>
         </div>
       </div>

@@ -27,10 +27,17 @@
             </svg>
           </button>
           <div>
-            <h2 class="text-3xl font-bold text-gray-900">Analyze Team Dependencies</h2>
+            <h2 class="text-3xl font-bold text-gray-900">Reveal Team Dependency Costs</h2>
             <p class="text-lg text-gray-600 mt-2">
-              Visualize and analyze how your teams interact, identify bottlenecks, and discover opportunities to optimize collaboration and knowledge sharing.
+              See how team dependencies and interactions drive up costs, identify bottlenecks, and find actionable ways to optimize collaboration and workflows.
             </p>
+            <ul class="text-lg text-gray-600 mt-4 list-disc pl-6">
+              <li>Reveal and discuss the cost of team dependencies with your management team, CTO, or tech leads.</li>
+              <li>Proactively access collaboration costs for a planned reorganization.</li>
+              <li>Align team structures and architecture with your future product vision.</li>
+              <li>Visualize inefficiencies when teams report poor interactions or collaboration.</li>
+              <li>Streamline processes and improve efficiency with tech leads or management.</li>
+            </ul>
           </div>
         </div>
       </div>

@@ -386,10 +386,10 @@
   <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-2 rounded-lg border border-secondary/20">
     <p class="text-secondary text-xs leading-relaxed">
       {#if model === 'team'}
-        Calculate and optimize your Operations Costs costs based on team composition and operational metrics. 
+        Calculate and optimize your Operations Costs based on team composition and operational metrics. 
         This model helps you analyze costs from a workforce perspective and identify opportunities for efficiency improvements.
       {:else}
-        Calculate and optimize your Operations Costs costs based on workload volume and processing requirements. 
+        Calculate and optimize your Operations Costs based on workload volume and processing requirements. 
         This model helps you analyze costs from a throughput perspective and identify opportunities for process optimization.
       {/if}
     </p>

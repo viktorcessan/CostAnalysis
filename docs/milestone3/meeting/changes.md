@@ -4,7 +4,7 @@
 3. Copy changes pending:
    - Change "team size reduction" to "Time freed up"
    - Change mode names to: "Build Business Case", "Define Platform Budget", "Reveal Team Dependency Costs"
-   - Rename "Service Calculator" to "Operations Costs Planning"
+   - Rename "Service Calculator" to "Operations Cost Planning"
 
 # Questions & Observations
 

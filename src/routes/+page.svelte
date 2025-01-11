@@ -42,7 +42,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto text-center">
         <h1 class="text-3xl font-semibold text-secondary mb-4">
-          Operations Costs Planning
+          Operations Cost Planning
         </h1>
         <p class="text-xl text-gray-600 mb-6">
           Optimize your Operations Costs model with data-driven insights

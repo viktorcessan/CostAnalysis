@@ -963,11 +963,11 @@
 <div id="team-dependencies-container" class="space-y-6">
 <div class="space-y-6">
   <!-- Mode Selection Controls -->
-  <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+  <div class="bg-white p-6 rounded-lg shadow border border-gray-200 space-y-8">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-semibold text-gray-900">Team Structure Configuration</h3>
       <!-- Add Tutorial Button -->
-       <!--
+      
       <button
         class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-all flex items-center gap-2 shadow hover:shadow-lg"
         on:click={() => {
@@ -980,13 +980,13 @@
         </svg>
         Tutorial
       </button>
-      -->
+      
       
     </div>
     
-    <!-- Distribution Mode Selection -->
-    <div class="mb-8">
-      <h4 class="text-sm font-medium text-gray-700 mb-4">Select Distribution Pattern</h4>
+    <!-- Distribution Pattern Selection -->
+    <div>
+      <h3 class="text-base font-semibold text-gray-900 mb-4">Distribution Pattern</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Even Distribution -->
         <button
@@ -1118,41 +1118,162 @@
       </div>
     </div>
 
-    <!-- Configuration Panel -->
-    <div class="space-y-6">
-      <!-- Basic Parameters -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Number of Teams -->
-        <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Number of Teams
-            <button 
-              class="tooltip ml-1"
-              data-tippy-content="Adjust the number of teams in the organization (3-10 teams)">
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </h4>
-          <div class="flex items-center gap-2">
-            <input
-              type="range"
-              bind:value={teamCount}
-              min="3"
-              max="10"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-              on:input={() => {
-                dependencyMatrix = initializeDependencyMatrix(teamCount);
-                generateNodes();
-              }}
-            />
-            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{teamCount}</span>
+    <!-- Team Parameters Section -->
+    <div class="border-t pt-8">
+      <h3 class="text-base font-semibold text-gray-900 mb-6">Team Parameters</h3>
+      <div class="space-y-6">
+        <!-- Basic Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Number of Teams -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">
+              Number of Teams
+              <button 
+                class="tooltip ml-1"
+                data-tippy-content="Adjust the number of teams in the organization (3-10 teams)">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={teamCount}
+                min="3"
+                max="10"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+                on:input={() => {
+                  dependencyMatrix = initializeDependencyMatrix(teamCount);
+                  generateNodes();
+                }}
+              />
+              <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{teamCount}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dev Rate -->
+          <div>
+            <h4 class="text-sm font-medium text-gray-700 mb-2">
+              Dev Rate ($/hr)
+              <button 
+                class="tooltip ml-1"
+                data-tippy-content="Set the average hourly rate for developers, including benefits and overhead costs ($20-$200/hr)">
+                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </h4>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                bind:value={costParams.hourlyRate.developer}
+                on:input={handleHourlyRateChange}
+                min="20"
+                max="200"
+                step="5"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+              />
+              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Company Dependency Level -->
+        <!-- Team Details Table -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-3">Team Details</h4>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Team</th>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Size</th>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Cap</th>
+                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Eff</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                {#each teamParams.teams.slice(0, teamCount) as team, i}
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-2 py-2">
+                        <div class="relative group">
+                      <input
+                        type="text"
+                        value={team.name}
+                            class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs truncate"
+                        on:change={(e) => updateTeamName(i, e.currentTarget.value)}
+                            data-tippy-content={team.name}
+                          />
+                          {#if team.name.length > 12}
+                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap">
+                              {team.name}
+                            </div>
+                          {/if}
+                        </div>
+                    </td>
+                    <td class="px-2 py-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        value={team.size}
+                        on:input={(e) => updateTeamParam(i, 'size', parseInt(e.currentTarget.value) || 1)}
+                      />
+                    </td>
+                    <td class="px-2 py-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        value={team.baseCapacity}
+                        on:input={(e) => updateTeamParam(i, 'baseCapacity', parseInt(e.currentTarget.value) || 1)}
+                      />
+                    </td>
+                    <td class="px-2 py-2">
+                      <input
+                        type="number"
+                        min="0.1"
+                        max="2"
+                        step="0.1"
+                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        value={team.efficiency}
+                        on:input={(e) => updateTeamParam(i, 'efficiency', parseFloat(e.currentTarget.value) || 0.1)}
+                      />
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2 space-y-1 text-xs text-gray-500">
+            <div class="flex gap-2">
+              <span class="font-medium">Size:</span>
+              <span>Number of team members</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="font-medium">Cap:</span>
+              <span>Base capacity (story points/sprint)</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="font-medium">Eff:</span>
+              <span>Team efficiency multiplier (0.1-2.0)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependency Parameters Section -->
+    <div class="border-t pt-8">
+      <h3 class="text-base font-semibold text-gray-900 mb-6">Dependency Parameters</h3>
+      <div class="space-y-6">
+        <!-- Dependency Level -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">
             Dependency Level
@@ -1182,37 +1303,88 @@
           </div>
         </div>
 
-        <!-- Dev Rate -->
+        <!-- Team Dependencies Matrix -->
         <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Dev Rate ($/hr)
-            <button 
-              class="tooltip ml-1"
-              data-tippy-content="Set the average hourly rate for developers, including benefits and overhead costs ($20-$200/hr)">
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </h4>
-          <div class="flex items-center gap-2">
-            <input
-              type="range"
-              bind:value={costParams.hourlyRate.developer}
-              on:input={handleHourlyRateChange}
-              min="20"
-              max="200"
-              step="5"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-            />
-            <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-medium text-gray-700">Team Dependencies</h4>
+            <div class="flex items-center gap-4 text-xs text-gray-500">
+              <div class="flex items-center gap-1">
+                <span class="w-3 h-3 rounded-sm bg-green-100 border border-green-300"></span>
+                <span>0-1: Low</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="w-3 h-3 rounded-sm bg-yellow-100 border border-yellow-300"></span>
+                <span>2-3: Medium</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="w-3 h-3 rounded-sm bg-red-100 border border-red-300"></span>
+                <span>4-5: High</span>
+              </div>
             </div>
+          </div>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                    <th class="w-12 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                  {#each dependencyMatrix.teams as team}
+                      <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div class="relative group w-12">
+                          <div class="truncate w-12">{team}</div>
+                          {#if team.length > 8}
+                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
+                              {team}
+                            </div>
+                          {/if}
+                        </div>
+                      </th>
+                  {/each}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                {#each dependencyMatrix.teams as fromTeam, fromIndex}
+                  <tr class="hover:bg-gray-50">
+                      <th class="w-12 px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div class="relative group w-12">
+                          <div class="truncate w-12">{fromTeam}</div>
+                          {#if fromTeam.length > 8}
+                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
+                      {fromTeam}
+                            </div>
+                          {/if}
+                        </div>
+                    </th>
+                    {#each dependencyMatrix.teams as toTeam, toIndex}
+                      <td class="px-2 py-2">
+                        {#if fromIndex !== toIndex}
+                          <input
+                            type="number"
+                            min="0"
+                            max="5"
+                            class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors
+                              {dependencyMatrix.dependencies[fromIndex][toIndex] <= 1 ? 'bg-green-50' : 
+                               dependencyMatrix.dependencies[fromIndex][toIndex] <= 3 ? 'bg-yellow-50' : 'bg-red-50'}"
+                            value={dependencyMatrix.dependencies[fromIndex][toIndex]}
+                            on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
+                          />
+                        {:else}
+                          <div class="w-12 h-8 bg-gray-100 rounded-md"></div>
+                        {/if}
+                      </td>
+                    {/each}
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Cost Parameters -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+    <!-- Meeting Parameters Section -->
+    <div class="border-t pt-8">
+      <h3 class="text-base font-semibold text-gray-900 mb-6">Meeting Parameters</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Monthly Meeting Hours -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">
@@ -1344,183 +1516,20 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Team Details and Dependencies -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Team Configuration -->
-        <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-3">Team Details</h4>
-          <div class="overflow-x-auto border rounded-lg">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Team</th>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Size</th>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Cap</th>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Eff</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                {#each teamParams.teams.slice(0, teamCount) as team, i}
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-2 py-2">
-                        <div class="relative group">
-                      <input
-                        type="text"
-                        value={team.name}
-                            class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs truncate"
-                        on:change={(e) => updateTeamName(i, e.currentTarget.value)}
-                            data-tippy-content={team.name}
-                          />
-                          {#if team.name.length > 12}
-                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap">
-                              {team.name}
-                            </div>
-                          {/if}
-                        </div>
-                    </td>
-                    <td class="px-2 py-2">
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                        value={team.size}
-                        on:input={(e) => updateTeamParam(i, 'size', parseInt(e.currentTarget.value) || 1)}
-                      />
-                    </td>
-                    <td class="px-2 py-2">
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                        value={team.baseCapacity}
-                        on:input={(e) => updateTeamParam(i, 'baseCapacity', parseInt(e.currentTarget.value) || 1)}
-                      />
-                    </td>
-                    <td class="px-2 py-2">
-                      <input
-                        type="number"
-                        min="0.1"
-                        max="2"
-                        step="0.1"
-                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                        value={team.efficiency}
-                        on:input={(e) => updateTeamParam(i, 'efficiency', parseFloat(e.currentTarget.value) || 0.1)}
-                      />
-                    </td>
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-          <div class="mt-2 space-y-1 text-xs text-gray-500">
-            <div class="flex gap-2">
-              <span class="font-medium">Size:</span>
-              <span>Number of team members</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="font-medium">Cap:</span>
-              <span>Base capacity (story points/sprint)</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="font-medium">Eff:</span>
-              <span>Team efficiency multiplier (0.1-2.0)</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dependency Matrix -->
-        <div class="lg:col-span-2">
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="text-sm font-medium text-gray-700">Team Dependencies</h4>
-            <div class="flex items-center gap-4 text-xs text-gray-500">
-              <div class="flex items-center gap-1">
-                <span class="w-3 h-3 rounded-sm bg-green-100 border border-green-300"></span>
-                <span>0-1: Low</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <span class="w-3 h-3 rounded-sm bg-yellow-100 border border-yellow-300"></span>
-                <span>2-3: Medium</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <span class="w-3 h-3 rounded-sm bg-red-100 border border-red-300"></span>
-                <span>4-5: High</span>
-              </div>
-            </div>
-          </div>
-          <div class="overflow-x-auto border rounded-lg">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                    <th class="w-12 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
-                  {#each dependencyMatrix.teams as team}
-                      <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div class="relative group w-12">
-                          <div class="truncate w-12">{team}</div>
-                          {#if team.length > 8}
-                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
-                              {team}
-                            </div>
-                          {/if}
-                        </div>
-                      </th>
-                  {/each}
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                {#each dependencyMatrix.teams as fromTeam, fromIndex}
-                  <tr class="hover:bg-gray-50">
-                      <th class="w-12 px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div class="relative group w-12">
-                          <div class="truncate w-12">{fromTeam}</div>
-                          {#if fromTeam.length > 8}
-                            <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
-                      {fromTeam}
-                            </div>
-                          {/if}
-                        </div>
-                    </th>
-                    {#each dependencyMatrix.teams as toTeam, toIndex}
-                      <td class="px-2 py-2">
-                        {#if fromIndex !== toIndex}
-                          <input
-                            type="number"
-                            min="0"
-                            max="5"
-                            class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors
-                              {dependencyMatrix.dependencies[fromIndex][toIndex] <= 1 ? 'bg-green-50' : 
-                               dependencyMatrix.dependencies[fromIndex][toIndex] <= 3 ? 'bg-yellow-50' : 'bg-red-50'}"
-                            value={dependencyMatrix.dependencies[fromIndex][toIndex]}
-                            on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
-                          />
-                        {:else}
-                          <div class="w-12 h-8 bg-gray-100 rounded-md"></div>
-                        {/if}
-                      </td>
-                    {/each}
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Apply Dependencies Button -->
-      <div class="flex justify-end">
-        <button
-          type="button"
-          class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
-          on:click={applyMatrix}
-        >
-          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-          </svg>
-          Apply Dependencies
-        </button>
-      </div>
+    <!-- Apply Dependencies Button -->
+    <div class="flex justify-end">
+      <button
+        type="button"
+        class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+        on:click={applyMatrix}
+      >
+        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>
+        Apply Dependencies
+      </button>
     </div>
   </div>
 

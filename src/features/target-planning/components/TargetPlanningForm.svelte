@@ -314,7 +314,13 @@
           pointRadius: 8,
           pointStyle: 'rectRot',
           showLine: false,
-          order: 1
+          order: 1,
+          pointLabels: {
+            display: false
+          },
+          datalabels: {
+            display: false
+          }
         }
       ]
     };
@@ -339,7 +345,11 @@
       type: 'line',
       data: {
         labels: data.labels,
-        datasets: data.datasets
+        datasets: data.datasets.map(dataset => ({
+          ...dataset,
+          pointRadius: dataset.label === 'Break-Even Point' ? 8 : 0,
+          pointLabels: { display: false }
+        }))
       },
       options: {
         responsive: true,
@@ -372,22 +382,15 @@
             }
           },
           legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              usePointStyle: true,
-              padding: 15,
-              font: {
-                size: 12
-              }
-            }
+            display: false
+          },
+          datalabels: {
+            display: false
           }
         },
         elements: {
           point: {
-            radius: 0,
-            hitRadius: 10,
-            hoverRadius: 5
+            radius: 0
           },
           line: {
             tension: 0.4

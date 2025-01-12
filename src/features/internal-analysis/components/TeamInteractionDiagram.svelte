@@ -1846,9 +1846,9 @@
           <div class="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 px-4 py-2 bg-secondary/5 rounded-lg border border-secondary/20">
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-600 whitespace-nowrap">Total Monthly Cost:</span>
-              <span class="text-xl font-bold text-secondary whitespace-nowrap">${costs.totalCost.toFixed(2)}</span>
+              <span class="text-xl font-bold text-secondary whitespace-nowrap">${costs.totalCost.toFixed(0)}</span>
             </div>
-            <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">(${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(2)} per team member)</span>
+            <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">(${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(0)} per team member)</span>
           </div>
         </div>
 
@@ -1872,7 +1872,7 @@
               <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
                 <div class="text-sm font-medium text-gray-600">Monthly Meetings</div>
                 <div class="text-xl font-bold text-sky-500 mt-1">
-                  ${costs.monthlyMeetingCost.toFixed(2)}
+                  ${costs.monthlyMeetingCost.toFixed(0)}
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
                   Based on {costParams.meetings.monthlyDuration}hr × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
@@ -1882,7 +1882,7 @@
               <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
                 <div class="text-sm font-medium text-gray-600">Communication</div>
                 <div class="text-xl font-bold text-amber-500 mt-1">
-                  ${costs.communicationCost.toFixed(2)}
+                  ${costs.communicationCost.toFixed(0)}
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
                   Includes async communication and coordination costs

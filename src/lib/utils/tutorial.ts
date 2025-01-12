@@ -91,20 +91,20 @@ export function initTutorial() {
           <span class="text-orange-500 mr-2">•</span>
           <div>
             <strong class="text-slate-900">Even Distribution:</strong>
-            <p class="mt-1">Teams work collaboratively with balanced dependencies, promoting equal participation and shared responsibility.</p>
+            <p class="mt-1">Teams work collaboratively with balanced dependencies, promoting equal participation.</p>
           </div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
             <strong class="text-slate-900">Hub & Spoke:</strong>
-            <p class="mt-1">A central team coordinates activities, ideal for projects requiring strong central oversight and standardization.</p>
+            <p class="mt-1">A central team coordinates activities with satellite teams.</p>
           </div>
         </li>
       </ul>`
     ),
     attachTo: {
-      element: '.grid.grid-cols-1.md\\:grid-cols-2.gap-6',
+      element: '#distribution-pattern-section',
       on: 'bottom'
     },
     buttons: [
@@ -122,90 +122,29 @@ export function initTutorial() {
   });
 
   tour.addStep({
-    id: 'team-config',
+    id: 'team-params',
     text: createCardContent(
-      'Organization Setup',
-      `<p class="text-slate-600 mb-3">Configure your organization's fundamental structure:</p>
+      'Team Parameters',
+      `<p class="text-slate-600 mb-3">Configure your team structure:</p>
       <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
-            <strong class="text-slate-900">Team Count:</strong>
-            <p class="mt-1">Define how many teams will be part of your analysis, impacting overall coordination complexity.</p>
+            <strong class="text-slate-900">Number of Teams:</strong>
+            <p class="mt-1">Set how many teams are in your organization (3-10).</p>
           </div>
         </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Dependency Levels:</strong>
-            <p class="mt-1">Set how closely teams need to work together, affecting communication overhead and coordination costs.</p>
-          </div>
-        </li>
-      </ul>`
-    ),
-    attachTo: {
-      element: '.grid.grid-cols-1.md\\:grid-cols-3.gap-6',
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action: tour.back,
-        classes: getButtonClasses(false)
-      },
-      {
-        text: 'Next',
-        action: tour.next,
-        classes: getButtonClasses(true)
-      }
-    ]
-  });
-
-  tour.addStep({
-    id: 'cost-params',
-    text: createCardContent(
-      'Cost Parameters',
-      `<p class="text-slate-600 mb-3">Define the financial aspects of team coordination:</p>
-      <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
             <strong class="text-slate-900">Dev Rate:</strong>
-            <p class="mt-1">Set the average hourly rate for developers, including benefits and overhead costs ($20-$200/hr).</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Meeting Parameters:</strong>
-            <p class="mt-1">Configure weekly meeting hours (1-20) and average attendees per team (1-20) for coordination activities.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Communication Overhead:</strong>
-            <p class="mt-1">Set the multiplier (1.0-2.0x) for additional time spent on coordination and communication.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Baseline Communication:</strong>
-            <p class="mt-1">Define minimum weekly hours (1-10) spent on asynchronous communication per team.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Dependency Hours Rate:</strong>
-            <p class="mt-1">Specify additional hours (1-10) needed per dependency level for team coordination.</p>
+            <p class="mt-1">Average hourly rate including benefits ($20-$200/hr).</p>
           </div>
         </li>
       </ul>`
     ),
     attachTo: {
-      element: '.grid.grid-cols-1.md\\:grid-cols-3.gap-4.bg-gray-50',
+      element: '#team-params-section',
       on: 'bottom'
     },
     buttons: [
@@ -231,28 +170,21 @@ export function initTutorial() {
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
-            <strong class="text-slate-900">Team Size:</strong>
-            <p class="mt-1">Set the number of members in each team, affecting their capacity and coordination needs.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Base Capacity:</strong>
-            <p class="mt-1">Define each team's story points per sprint, representing their baseline delivery capability.</p>
+            <strong class="text-slate-900">Team Size & Capacity:</strong>
+            <p class="mt-1">Set team members (1-20) and story points per sprint.</p>
           </div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
             <strong class="text-slate-900">Efficiency:</strong>
-            <p class="mt-1">Adjust team efficiency multipliers (0.1-2.0) to account for team maturity and performance factors.</p>
+            <p class="mt-1">Adjust team performance multipliers (0.1-2.0).</p>
           </div>
         </li>
       </ul>`
     ),
     attachTo: {
-      element: '.overflow-x-auto.border.rounded-lg table',
+      element: '#team-details-table',
       on: 'right'
     },
     buttons: [
@@ -270,37 +202,91 @@ export function initTutorial() {
   });
 
   tour.addStep({
-    id: 'dependency-matrix',
+    id: 'dependency-params',
     text: createCardContent(
-      'Team Dependencies',
-      `<p class="text-slate-600 mb-3">Map out how teams work together using the dependency matrix:</p>
+      'Dependency Parameters',
+      `<p class="text-slate-600 mb-3">Configure team dependencies and their relationships:</p>
       <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
+            <strong class="text-slate-900">Dependency Level:</strong>
+            <p class="mt-1">Set overall dependency strength between teams (1-5).</p>
+          </div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>
             <strong class="text-slate-900">Strong Dependencies (4-5):</strong>
-            <p class="mt-1">Teams require frequent communication and tight coordination for success.</p>
+            <p class="mt-1">Teams require frequent communication and tight coordination.</p>
           </div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
-            <strong class="text-slate-900">Moderate Dependencies (3):</strong>
-            <p class="mt-1">Regular alignment and information sharing is needed.</p>
+            <strong class="text-slate-900">Moderate Dependencies (2-3):</strong>
+            <p class="mt-1">Regular alignment and information sharing needed.</p>
           </div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
           <div>
-            <strong class="text-slate-900">Light Dependencies (1-2):</strong>
-            <p class="mt-1">Teams operate mostly independently with occasional touchpoints.</p>
+            <strong class="text-slate-900">Light Dependencies (0-1):</strong>
+            <p class="mt-1">Teams operate mostly independently.</p>
           </div>
         </li>
       </ul>`
     ),
     attachTo: {
-      element: '.lg\\:col-span-2 .overflow-x-auto.border.rounded-lg',
-      on: 'left'
+      element: '#dependency-params-section',
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Back',
+        action: tour.back,
+        classes: getButtonClasses(false)
+      },
+      {
+        text: 'Next',
+        action: tour.next,
+        classes: getButtonClasses(true)
+      }
+    ]
+  });
+
+  tour.addStep({
+    id: 'meeting-params',
+    text: createCardContent(
+      'Meeting Parameters',
+      `<p class="text-slate-600 mb-3">Configure meeting and communication costs:</p>
+      <ul class="space-y-3 text-slate-600">
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>
+            <strong class="text-slate-900">Meeting Duration:</strong>
+            <p class="mt-1">Monthly meeting hours per team.</p>
+          </div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>
+            <strong class="text-slate-900">Attendees:</strong>
+            <p class="mt-1">Average number of attendees per team.</p>
+          </div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>
+            <strong class="text-slate-900">Communication Overhead:</strong>
+            <p class="mt-1">Additional time for preparation and follow-up.</p>
+          </div>
+        </li>
+      </ul>`
+    ),
+    attachTo: {
+      element: '#meeting-params-section',
+      on: 'bottom'
     },
     buttons: [
       {
@@ -339,7 +325,7 @@ export function initTutorial() {
       </ul>`
     ),
     attachTo: {
-      element: '.relative.w-full.h-\\[660px\\]',
+      element: '#visualization-container',
       on: 'bottom'
     },
     buttons: [

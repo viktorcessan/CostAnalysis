@@ -985,7 +985,7 @@
     </div>
     
     <!-- Distribution Pattern Selection -->
-    <div>
+    <div id="distribution-pattern-section">
       <h3 class="text-base font-semibold text-gray-900 mb-4">Distribution Pattern</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Even Distribution -->
@@ -1119,7 +1119,7 @@
     </div>
 
     <!-- Team Parameters Section -->
-    <div class="border-t pt-8">
+    <div id="team-params-section" class="border-t pt-8">
       <h3 class="text-base font-semibold text-gray-900 mb-6">Team Parameters</h3>
       <div class="space-y-6">
         <!-- Basic Controls -->
@@ -1184,7 +1184,7 @@
         </div>
 
         <!-- Team Details Table -->
-        <div>
+        <div id="team-details-table">
           <h4 class="text-sm font-medium text-gray-700 mb-3">Team Details</h4>
           <div class="overflow-x-auto border rounded-lg">
             <table class="min-w-full divide-y divide-gray-200">
@@ -1270,7 +1270,7 @@
     </div>
 
     <!-- Dependency Parameters Section -->
-    <div class="border-t pt-8">
+    <div id="dependency-params-section" class="border-t pt-8">
       <h3 class="text-base font-semibold text-gray-900 mb-6">Dependency Parameters</h3>
       <div class="space-y-6">
         <!-- Dependency Level -->
@@ -1322,7 +1322,7 @@
               </div>
             </div>
           </div>
-          <div class="overflow-x-auto border rounded-lg">
+          <div id="dependency-matrix-table" class="overflow-x-auto border rounded-lg">
             <table class="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -1382,7 +1382,7 @@
     </div>
 
     <!-- Meeting Parameters Section -->
-    <div class="border-t pt-8">
+    <div id="meeting-params-section" class="border-t pt-8">
       <h3 class="text-base font-semibold text-gray-900 mb-6">Meeting Parameters</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Monthly Meeting Hours -->
@@ -1572,7 +1572,7 @@
       </div>
     </div>
 
-      <div class="relative w-full h-[660px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+      <div id="visualization-container" class="relative w-full h-[660px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
       <!-- Legend -->
       {#if showLegend}
         <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-sm">

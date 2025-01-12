@@ -83,15 +83,19 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         {#each features as feature}
           <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div class="mb-6">
+            <div class="flex items-center gap-4 mb-6">
               {@html feature.icon}
+              <h3 class="text-xl font-semibold text-gray-900">{feature.title}</h3>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">{feature.title}</h3>
             <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
             <ul class="space-y-3">
               {#each feature.details as detail}
                 <li class="flex items-center text-gray-700">
-                  <span class="text-secondary mr-2">•</span>
+                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                   {detail}
                 </li>
               {/each}
@@ -116,20 +120,26 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300">
-          <div class="text-4xl font-bold text-secondary/20 mb-4">01</div>
-          <h3 class="text-xl font-semibold mb-3">Choose Your Analysis</h3>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="text-4xl font-bold text-secondary/20">01</div>
+            <h3 class="text-xl font-semibold">Choose Your Analysis</h3>
+          </div>
           <p class="text-gray-600 leading-relaxed">Select the analysis that matches your goals.</p>
         </div>
 
         <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300">
-          <div class="text-4xl font-bold text-secondary/20 mb-4">02</div>
-          <h3 class="text-xl font-semibold mb-3">Input Your Data</h3>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="text-4xl font-bold text-secondary/20">02</div>
+            <h3 class="text-xl font-semibold">Input Your Data</h3>
+          </div>
           <p class="text-gray-600 leading-relaxed">Add key details about your team, services, and targets.</p>
         </div>
 
         <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300">
-          <div class="text-4xl font-bold text-secondary/20 mb-4">03</div>
-          <h3 class="text-xl font-semibold mb-3">Gain Insights</h3>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="text-4xl font-bold text-secondary/20">03</div>
+            <h3 class="text-xl font-semibold">Gain Insights</h3>
+          </div>
           <p class="text-gray-600 leading-relaxed">Get clear, actionable recommendations tailored to your operations.</p>
         </div>
       </div>

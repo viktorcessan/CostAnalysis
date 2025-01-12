@@ -34,18 +34,65 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div>
-            <h2 class="text-3xl font-bold text-gray-900">Determine Your Platform Budget</h2>
-            <p class="text-lg text-gray-600 mt-2">
-              See how much to invest in your platform to lower costs while meeting efficiency goals. Enter data about your team and service, add performance targets, and discover the budget you can afford.
-            </p>
-            <ul class="text-lg text-gray-600 mt-4 list-disc pl-6">
-              <li>Identify and address cost increases tied to staff growth.</li>
-              <li>Plan cost reductions while maintaining performance levels.</li>
-              <li>Estimate the budget needed to achieve efficiency targets.</li>
-              <li>Align platform investments with leadership or finance expectations.</li>
-              <li>Balance performance improvements with financial constraints.</li>
-            </ul>
+          <div class="space-y-6 flex-1">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-8 h-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-3xl font-bold text-gray-900">Determine Your Platform Budget</h2>
+                <p class="text-lg text-gray-600 mt-2">
+                  See how much to invest in your platform to lower costs while meeting efficiency goals. Enter data about your team and service, add performance targets, and discover the budget you can afford.
+                </p>
+              </div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-4">What to use this for</h3>
+              <ul class="space-y-4">
+                <li class="flex items-center text-gray-700">
+                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span class="text-lg">Identify and address cost increases tied to staff growth</span>
+                </li>
+                <li class="flex items-center text-gray-700">
+                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span class="text-lg">Plan cost reductions while maintaining performance levels</span>
+                </li>
+                <li class="flex items-center text-gray-700">
+                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span class="text-lg">Estimate the budget needed to achieve efficiency targets</span>
+                </li>
+                <li class="flex items-center text-gray-700">
+                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span class="text-lg">Align platform investments with leadership or finance expectations</span>
+                </li>
+                <li class="flex items-center text-gray-700">
+                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span class="text-lg">Balance performance improvements with financial constraints</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

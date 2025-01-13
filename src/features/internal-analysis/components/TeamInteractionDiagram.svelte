@@ -352,11 +352,15 @@
 
   // Add onMount initialization
   onMount(() => {
+    if (sharedConfig) {
+      showLoadingModal = true;
+    }
+    
     if (costChartCanvas) {
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
-
+    
     // Initialize tooltips
     const tooltipInstances = tippy('[data-tippy-content]', {
       theme: 'light-border',
@@ -373,7 +377,7 @@
       allowHTML: false
     });
 
-    // Initialize tour
+    // Initialize tutorial
     tour = initTutorial();
   });
 
@@ -785,7 +789,7 @@
       allowHTML: false
     });
 
-    // Initialize tour
+    // Initialize tutorial
     tour = initTutorial();
   });
 
@@ -907,16 +911,22 @@
       ...costParams,
       hourlyRate: {
         ...costParams.hourlyRate,
-        developer: sharedConfig.costParams.hourlyRate.developer
+        developer: sharedConfig.costParams.hourlyRate.developer,
+        manager: sharedConfig.costParams.hourlyRate.manager,
+        teamLead: sharedConfig.costParams.hourlyRate.teamLead
       },
       meetings: {
         ...costParams.meetings,
-        monthlyDuration: sharedConfig.costParams.meetings.monthlyDuration,
-        attendeesPerTeam: sharedConfig.costParams.meetings.attendeesPerTeam
+        duration: sharedConfig.costParams.meetings.duration,
+        recurrence: sharedConfig.costParams.meetings.recurrence,
+        attendeesPerTeam: sharedConfig.costParams.meetings.attendeesPerTeam,
+        communicationOverhead: sharedConfig.costParams.meetings.communicationOverhead,
+        additionalHours: sharedConfig.costParams.meetings.additionalHours
       },
       overhead: {
         ...costParams.overhead,
         communicationOverhead: sharedConfig.costParams.overhead.communicationOverhead,
+        waitTimeMultiplier: sharedConfig.costParams.overhead.waitTimeMultiplier,
         baselineCommunicationHours: sharedConfig.costParams.overhead.baselineCommunicationHours,
         dependencyHoursRate: sharedConfig.costParams.overhead.dependencyHoursRate
       }
@@ -1073,6 +1083,13 @@
       
       // Recalculate team communication metrics
       teamCommunicationMetrics = calculateTeamCommunicationMetrics();
+    }
+  }
+
+  // ... existing code ...
+  $: {
+    if (sharedConfig) {
+      showLoadingModal = true;
     }
   }
 </script>
@@ -1913,12 +1930,7 @@
 
 <TeamDependencyLoadingModal
   bind:show={showLoadingModal}
-  distributionMode={sharedConfig?.distributionMode || 'even'}
-  teamCount={sharedConfig?.teamCount || teamCount}
-  companyDependencyLevel={sharedConfig?.companyDependencyLevel || companyDependencyLevel}
-  teams={sharedConfig?.teams || teamParams.teams}
-  dependencyMatrix={sharedConfig?.dependencyMatrix || dependencyMatrix}
-  costParams={sharedConfig?.costParams || costParams}
+  params={sharedConfig}
   onConfirm={handleLoadConfig}
   onCancel={() => showLoadingModal = false}
 />

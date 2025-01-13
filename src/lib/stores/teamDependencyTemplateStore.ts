@@ -92,13 +92,19 @@ function generateTemplate(
 Distribution Mode: ${distributionMode}
 Number of Teams: ${teamCount}
 Dependency Level: ${companyDependencyLevel} (Scale 1-5, where 1 is Very Low and 5 is Very High)
-Dev Rate ($/hr): $${costParams.hourlyRate.developer.toFixed(2)}
-Meeting Duration: ${costParams.meetings.duration}hr
-Meeting Frequency: ${costParams.meetings.recurrence}
-Meeting Attendees: ${costParams.meetings.attendeesPerTeam}
-Communication Overhead: ${costParams.overhead.communicationOverhead.toFixed(2)}x
-Baseline Communication Hours: ${costParams.overhead.baselineCommunicationHours} hrs/month
-Dependency Hours Rate: ${costParams.overhead.dependencyHoursRate} hrs/dependency
+
+Cost Parameters:
+- Dev Rate ($/hr): $${costParams.hourlyRate.developer.toFixed(2)}
+- Manager Rate ($/hr): $${costParams.hourlyRate.manager.toFixed(2)}
+- Team Lead Rate ($/hr): $${costParams.hourlyRate.teamLead.toFixed(2)}
+- Meeting Duration: ${costParams.meetings.duration}hr
+- Meeting Frequency: ${costParams.meetings.recurrence}
+- Meeting Attendees: ${costParams.meetings.attendeesPerTeam}
+- Communication Overhead: ${costParams.meetings.communicationOverhead.toFixed(2)}x
+- Additional Hours: ${costParams.meetings.additionalHours} hrs/month
+- Wait Time Multiplier: ${costParams.overhead.waitTimeMultiplier.toFixed(2)}x
+- Baseline Communication Hours: ${costParams.overhead.baselineCommunicationHours} hrs/month
+- Dependency Hours Rate: ${costParams.overhead.dependencyHoursRate} hrs/dependency
 
 Teams:
 ${teams.map(team => `- ${team.name}:
@@ -137,11 +143,11 @@ Cost Analysis:
 Formulas Used:
 1. Dependency Factor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))
 2. Throughput = baseCapacity * dependencyFactor
-3. Monthly Meeting Cost = monthlyDuration * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
+3. Monthly Meeting Cost = duration * getMonthlyMeetingMultiplier(recurrence) * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
 4. Communication Cost = (totalConnections * communicationOverhead * hourlyRate * baselineCommunicationHours) + (dependencyStrength * dependencyHoursRate * hourlyRate)
 5. Lead Time = waitTime + processingTime
    where:
-   - waitTime = incomingDependencies.length * baseLeadTime * 0.5
+   - waitTime = incomingDependencies.length * baseLeadTime * waitTimeMultiplier
    - processingTime = baseLeadTime * (1 + (outgoingDependencies.length * 0.3))
 6. Flow Efficiency = (processTime / (processTime + waitTime)) * 100
 7. Dependency Impact Score = (totalDependencies / maxPossibleDependencies) * 100
@@ -161,19 +167,34 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[], costParams:
   const totalConnections = edges.length;
   const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
   
+  // Calculate monthly meeting multiplier based on recurrence
+  const getMonthlyMeetingMultiplier = (recurrence: string) => {
+    switch (recurrence.toLowerCase()) {
+      case 'daily': return 20; // 20 working days per month
+      case 'weekly': return 4; // 4 weeks per month
+      case 'biweekly': return 2; // 2 times per month
+      case 'monthly': return 1; // Once per month
+      default: return 1;
+    }
+  };
+
   // Meeting costs
   const monthlyMeetingCost = 
     costParams.meetings.duration * 
+    getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
     costParams.meetings.attendeesPerTeam * 
     costParams.hourlyRate.developer * 
     totalConnections * 
-    costParams.overhead.communicationOverhead;
+    costParams.meetings.communicationOverhead +
+    (costParams.meetings.additionalHours * costParams.hourlyRate.developer * totalTeams);
 
-  // Communication costs
+  // Communication costs including baseline and dependency-based
   const communicationCost =
-    totalConnections * costParams.overhead.communicationOverhead *
-    costParams.hourlyRate.developer * costParams.overhead.baselineCommunicationHours + // Baseline communication
-    edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * costParams.hourlyRate.developer), 0);
+    (totalConnections * costParams.overhead.communicationOverhead *
+    costParams.hourlyRate.developer * costParams.overhead.baselineCommunicationHours) + // Baseline communication
+    edges.reduce((sum, edge) => 
+      sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * 
+      costParams.hourlyRate.developer * costParams.overhead.waitTimeMultiplier), 0); // Dependency-based communication
 
   return {
     monthlyMeetingCost,

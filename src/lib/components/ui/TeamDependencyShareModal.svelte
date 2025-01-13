@@ -16,14 +16,20 @@
   export let dependencyMatrix: DependencyMatrix;
   export let costParams = {
     hourlyRate: {
-      developer: 75
+      developer: 75,
+      manager: 100,
+      teamLead: 125
     },
     meetings: {
-      monthlyDuration: 16,
-      attendeesPerTeam: 5
+      duration: 1,
+      recurrence: 'weekly',
+      attendeesPerTeam: 5,
+      communicationOverhead: 1.2,
+      additionalHours: 0
     },
     overhead: {
       communicationOverhead: 1.2,
+      waitTimeMultiplier: 0.5,
       baselineCommunicationHours: 10,
       dependencyHoursRate: 4
     }
@@ -131,16 +137,36 @@
                 <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
               </div>
               <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-                <span class="text-sm text-gray-600">Monthly Meeting Hours</span>
-                <span class="text-sm font-medium text-gray-900">{costParams.meetings.monthlyDuration}</span>
+                <span class="text-sm text-gray-600">Manager Rate ($/hr)</span>
+                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.manager}</span>
+              </div>
+              <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Team Lead Rate ($/hr)</span>
+                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.teamLead}</span>
+              </div>
+              <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Meeting Duration (hr)</span>
+                <span class="text-sm font-medium text-gray-900">{costParams.meetings.duration}</span>
+              </div>
+              <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Meeting Frequency</span>
+                <span class="text-sm font-medium text-gray-900">{costParams.meetings.recurrence}</span>
               </div>
               <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Meeting Attendees</span>
                 <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
               </div>
               <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-                <span class="text-sm text-gray-600">Communication Overhead</span>
-                <span class="text-sm font-medium text-gray-900">{formatValue(costParams.overhead.communicationOverhead)}</span>
+                <span class="text-sm text-gray-600">Meeting Communication Overhead</span>
+                <span class="text-sm font-medium text-gray-900">{formatValue(costParams.meetings.communicationOverhead)}</span>
+              </div>
+              <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Additional Hours</span>
+                <span class="text-sm font-medium text-gray-900">{costParams.meetings.additionalHours}</span>
+              </div>
+              <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Wait Time Multiplier</span>
+                <span class="text-sm font-medium text-gray-900">{formatValue(costParams.overhead.waitTimeMultiplier)}</span>
               </div>
               <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Baseline Communication Hours</span>

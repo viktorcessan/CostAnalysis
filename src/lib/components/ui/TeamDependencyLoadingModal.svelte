@@ -1,123 +1,143 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import { clickOutside } from '$lib/actions/clickOutside';
-  import type { Team, DependencyMatrix } from '$lib/types/teamDependency';
+  import type { TeamDependencyParams } from '$lib/utils/teamDependencyShare';
 
   export let show = false;
-  export let distributionMode: 'even' | 'hub-spoke';
-  export let teamCount: number;
-  export let companyDependencyLevel: number;
-  export let teams: Team[];
-  export let dependencyMatrix: DependencyMatrix;
-  export let costParams = {
-    hourlyRate: {
-      developer: 75
-    },
-    meetings: {
-      monthlyDuration: 16,
-      attendeesPerTeam: 5
-    },
-    overhead: {
-      communicationOverhead: 1.2,
-      baselineCommunicationHours: 10,
-      dependencyHoursRate: 4
-    }
-  };
+  export let params: TeamDependencyParams | null = null;
   export let onConfirm: () => void;
   export let onCancel: () => void;
 
-  function formatValue(value: number): string {
-    if (value >= 1) return value.toString();
-    return (value * 100).toFixed(1) + '%';
+  function formatRecurrence(recurrence: string): string {
+    switch (recurrence) {
+      case 'twice-weekly': return 'twice per week';
+      case 'weekly': return 'weekly';
+      case 'biweekly': return 'every two weeks';
+      case 'monthly': return 'monthly';
+      default: return recurrence;
+    }
   }
 
-  function handleClickOutside() {
-    onCancel();
-  }
+  $: isValid = params && params.teams && params.dependencyMatrix && params.costParams;
 </script>
 
-{#if show}
+{#if show && isValid}
   <div
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
     transition:fade={{ duration: 200 }}
+    on:click={onCancel}
   >
     <div
-      class="bg-white/95 backdrop-blur rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-gray-100"
-      use:clickOutside={{
-        enabled: true,
-        callback: handleClickOutside
-      }}
+      class="bg-white/95 backdrop-blur rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden border border-gray-100"
       on:click|stopPropagation
     >
       <!-- Header -->
       <div class="px-8 py-5 border-b border-gray-100">
-        <h3 class="text-xl font-semibold text-gray-800">Load Shared Configuration</h3>
-        <p class="mt-2 text-sm text-gray-600">
-          Review the shared team dependency configuration before loading it. This will replace your current configuration.
-        </p>
+        <h3 class="text-xl font-semibold text-gray-800">Load Team Analysis</h3>
       </div>
       
       <!-- Content -->
-      <div class="px-8 py-6 space-y-6 max-h-[60vh] overflow-y-auto">
-        <!-- Basic Parameters -->
-        <div class="bg-gray-50/50 backdrop-blur-sm rounded-xl p-5 border border-gray-100">
-          <div class="text-sm font-medium text-gray-700 mb-3">Basic Parameters</div>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Distribution Mode</span>
-              <span class="text-sm font-medium text-gray-900">{distributionMode === 'even' ? 'Even Distribution' : 'Hub and Spoke'}</span>
+      <div class="px-8 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <p class="text-sm text-gray-600">
+          You're loading a shared analysis with the following configuration:
+        </p>
+        
+        <!-- Basic Configuration -->
+        <div class="space-y-4">
+          <h4 class="text-sm font-medium text-gray-700">Basic Configuration</h4>
+          <div class="bg-gray-50/50 rounded-xl p-4 space-y-2">
+            <div class="text-sm text-gray-600">
+              • Distribution Mode: {params.distributionMode === 'hub-spoke' ? 'Hub and Spoke' : 'Even Distribution'}
             </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Number of Teams</span>
-              <span class="text-sm font-medium text-gray-900">{teamCount}</span>
+            <div class="text-sm text-gray-600">
+              • Number of Teams: {params.teamCount}
             </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Dependency Level</span>
-              <span class="text-sm font-medium text-gray-900">{companyDependencyLevel}</span>
-            </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Dev Rate ($/hr)</span>
-              <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
-            </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Monthly Meeting Hours</span>
-              <span class="text-sm font-medium text-gray-900">{costParams.meetings.monthlyDuration}</span>
-            </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Meeting Attendees</span>
-              <span class="text-sm font-medium text-gray-900">{costParams.meetings.attendeesPerTeam}</span>
-            </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Communication Overhead</span>
-              <span class="text-sm font-medium text-gray-900">{formatValue(costParams.overhead.communicationOverhead)}</span>
-            </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Baseline Communication Hours</span>
-              <span class="text-sm font-medium text-gray-900">{costParams.overhead.baselineCommunicationHours}</span>
-            </div>
-            <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-              <span class="text-sm text-gray-600">Dependency Hours Rate</span>
-              <span class="text-sm font-medium text-gray-900">{costParams.overhead.dependencyHoursRate}</span>
+            <div class="text-sm text-gray-600">
+              • Company Dependency Level: {params.companyDependencyLevel}
             </div>
           </div>
         </div>
 
-        <!-- Team Configuration -->
-        <div class="bg-gray-50/50 backdrop-blur-sm rounded-xl p-5 border border-gray-100">
-          <div class="text-sm font-medium text-gray-700 mb-3">Team Configuration</div>
-          <div class="space-y-3">
-            {#each teams as team, i}
-              <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-                <span class="text-sm text-gray-600">{team.name}</span>
-                <div class="flex items-center gap-4">
-                  <span class="text-xs text-gray-500">Size: <span class="font-medium text-gray-900">{team.size}</span></span>
-                  <span class="text-xs text-gray-500">Capacity: <span class="font-medium text-gray-900">{team.baseCapacity}</span></span>
-                  <span class="text-xs text-gray-500">Efficiency: <span class="font-medium text-gray-900">{team.efficiency}x</span></span>
+        <!-- Teams -->
+        {#if params.teams?.length > 0}
+          <div class="space-y-4">
+            <h4 class="text-sm font-medium text-gray-700">Teams</h4>
+            <div class="bg-gray-50/50 rounded-xl p-4 space-y-2">
+              {#each params.teams as team}
+                <div class="text-sm text-gray-600">
+                  • {team.name} (Size: {team.size}, Base Capacity: {team.baseCapacity})
                 </div>
-              </div>
-            {/each}
+              {/each}
+            </div>
           </div>
-        </div>
+        {/if}
+
+        <!-- Cost Parameters -->
+        {#if params.costParams?.hourlyRate}
+          <div class="space-y-4">
+            <h4 class="text-sm font-medium text-gray-700">Cost Parameters</h4>
+            <div class="bg-gray-50/50 rounded-xl p-4 space-y-2">
+              <div class="text-sm text-gray-600">
+                • Developer Rate: ${params.costParams.hourlyRate.developer}/hr
+              </div>
+              <div class="text-sm text-gray-600">
+                • Manager Rate: ${params.costParams.hourlyRate.manager}/hr
+              </div>
+              <div class="text-sm text-gray-600">
+                • Team Lead Rate: ${params.costParams.hourlyRate.teamLead}/hr
+              </div>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Meeting Settings -->
+        {#if params.costParams?.meetings}
+          <div class="space-y-4">
+            <h4 class="text-sm font-medium text-gray-700">Meeting Settings</h4>
+            <div class="bg-gray-50/50 rounded-xl p-4 space-y-2">
+              <div class="text-sm text-gray-600">
+                • Duration: {params.costParams.meetings.duration}hr
+              </div>
+              <div class="text-sm text-gray-600">
+                • Frequency: {formatRecurrence(params.costParams.meetings.recurrence)}
+              </div>
+              <div class="text-sm text-gray-600">
+                • Attendees per Team: {params.costParams.meetings.attendeesPerTeam}
+              </div>
+              <div class="text-sm text-gray-600">
+                • Communication Overhead: {(params.costParams.meetings.communicationOverhead * 100).toFixed(0)}%
+              </div>
+              <div class="text-sm text-gray-600">
+                • Additional Hours: {params.costParams.meetings.additionalHours}
+              </div>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Overhead Settings -->
+        {#if params.costParams?.overhead}
+          <div class="space-y-4">
+            <h4 class="text-sm font-medium text-gray-700">Overhead Settings</h4>
+            <div class="bg-gray-50/50 rounded-xl p-4 space-y-2">
+              <div class="text-sm text-gray-600">
+                • Communication Overhead: {(params.costParams.overhead.communicationOverhead * 100).toFixed(0)}%
+              </div>
+              <div class="text-sm text-gray-600">
+                • Wait Time Multiplier: {(params.costParams.overhead.waitTimeMultiplier * 100).toFixed(0)}%
+              </div>
+              <div class="text-sm text-gray-600">
+                • Baseline Communication: {params.costParams.overhead.baselineCommunicationHours} hrs/month
+              </div>
+              <div class="text-sm text-gray-600">
+                • Dependency Hours Rate: {params.costParams.overhead.dependencyHoursRate} hrs/dependency
+              </div>
+            </div>
+          </div>
+        {/if}
+
+        <p class="text-sm text-gray-600">
+          Loading this configuration will replace your current analysis settings.
+          Do you want to proceed?
+        </p>
       </div>
       
       <!-- Footer -->
@@ -132,7 +152,7 @@
           class="px-5 py-2.5 text-sm font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 transition-all shadow-sm hover:shadow-md active:shadow-sm"
           on:click={onConfirm}
         >
-          Load Configuration
+          Load Analysis
         </button>
       </div>
     </div>

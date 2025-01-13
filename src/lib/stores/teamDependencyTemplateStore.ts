@@ -60,8 +60,11 @@ interface CostParams {
     teamLead: number;
   };
   meetings: {
-    monthlyDuration: number;
+    duration: number;
+    recurrence: string;
     attendeesPerTeam: number;
+    communicationOverhead: number;
+    additionalHours: number;
   };
   overhead: {
     communicationOverhead: number;
@@ -90,7 +93,8 @@ Distribution Mode: ${distributionMode}
 Number of Teams: ${teamCount}
 Dependency Level: ${companyDependencyLevel} (Scale 1-5, where 1 is Very Low and 5 is Very High)
 Dev Rate ($/hr): $${costParams.hourlyRate.developer.toFixed(2)}
-Monthly Meeting Hours: ${costParams.meetings.monthlyDuration}
+Meeting Duration: ${costParams.meetings.duration}hr
+Meeting Frequency: ${costParams.meetings.recurrence}
 Meeting Attendees: ${costParams.meetings.attendeesPerTeam}
 Communication Overhead: ${costParams.overhead.communicationOverhead.toFixed(2)}x
 Baseline Communication Hours: ${costParams.overhead.baselineCommunicationHours} hrs/month
@@ -159,7 +163,7 @@ function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[], costParams:
   
   // Meeting costs
   const monthlyMeetingCost = 
-    costParams.meetings.monthlyDuration * 
+    costParams.meetings.duration * 
     costParams.meetings.attendeesPerTeam * 
     costParams.hourlyRate.developer * 
     totalConnections * 

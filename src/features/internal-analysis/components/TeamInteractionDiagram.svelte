@@ -99,7 +99,8 @@
   // Calculate metrics for a given dependency matrix
   function calculateMetricsForMatrix(matrix: number[][]) {
     const costs = {
-      weeklyMeetingCost: costParams.meetings.monthlyDuration * 
+      weeklyMeetingCost: costParams.meetings.duration * 
+        getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
         costParams.meetings.attendeesPerTeam * 
         costParams.hourlyRate.developer * 
         matrix.reduce((sum, row) => sum + row.filter(v => v > 0).length, 0),
@@ -244,8 +245,11 @@
       teamLead: 90
     },
     meetings: {
-      monthlyDuration: 16, // Changed from weeklyDuration: 4 to monthlyDuration: 16 (4 weeks * 4 hours)
-      attendeesPerTeam: 5
+      duration: 2, // hours per meeting
+      recurrence: 'weekly', // 'twice-weekly' | 'weekly' | 'biweekly' | 'monthly'
+      attendeesPerTeam: 5,
+      communicationOverhead: 1.2, // multiplier for meeting time
+      additionalHours: 0 // Changed from 4 to 0 (default additional communication hours)
     },
     overhead: {
       communicationOverhead: 1.2,
@@ -373,9 +377,29 @@
     tour = initTutorial();
   });
 
-  // Update reactive statement
+  // Update reactive statement for cost chart
   $: {
-    if (costChartCanvas && nodes.length > 0) {
+    if (costChartCanvas) {
+      const costs = calculateCosts();
+      createCostDistributionChart(costs);
+    }
+  }
+
+  // Replace with more comprehensive reactive statement
+  $: {
+    // Watch all variables that affect costs
+    nodes;
+    edges;
+    teamCount;
+    distributionMode;
+    companyDependencyLevel;
+    costParams.hourlyRate;
+    costParams.meetings;
+    costParams.overhead;
+    teamParams.teams;
+    dependencyMatrix;
+    
+    if (costChartCanvas) {
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
@@ -643,19 +667,36 @@
     const totalConnections = edges.length;
     const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
     
-    // Meeting costs
+    // Calculate monthly meeting cost based on:
+    // - Meeting duration per session
+    // - Number of meetings per month (based on recurrence)
+    // - Number of attendees per team
+    // - Developer hourly rate
+    // - Number of team connections
+    // - Communication overhead
     const monthlyMeetingCost = 
-      costParams.meetings.monthlyDuration * 
+      costParams.meetings.duration * 
+      getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
       costParams.meetings.attendeesPerTeam * 
       costParams.hourlyRate.developer * 
       totalConnections * 
-      costParams.overhead.communicationOverhead;
+      costParams.meetings.communicationOverhead;
 
-    // Communication costs
+    // Calculate communication costs based on:
+    // - Base communication hours
+    // - Dependency strength
+    // - Developer hourly rate
+    // - Communication overhead
     const communicationCost =
-      totalConnections * costParams.overhead.communicationOverhead *
-      costParams.hourlyRate.developer * costParams.overhead.baselineCommunicationHours + // Baseline communication
-      edges.reduce((sum, edge) => sum + (edge.data.strength * costParams.overhead.dependencyHoursRate * costParams.hourlyRate.developer), 0); // Additional cost based on dependency strength
+      totalConnections * 
+      costParams.meetings.communicationOverhead *
+      costParams.hourlyRate.developer * 
+      costParams.overhead.baselineCommunicationHours +
+      edges.reduce((sum, edge) => 
+        sum + (edge.data.strength * 
+        costParams.overhead.dependencyHoursRate * 
+        costParams.hourlyRate.developer * 
+        costParams.meetings.attendeesPerTeam), 0);
 
     return {
       monthlyMeetingCost,
@@ -774,8 +815,10 @@
     costParams.hourlyRate;
     costParams.meetings;
     costParams.overhead;
+    teamParams.teams;
+    dependencyMatrix;
     
-    if (nodes.length > 0 && costChartCanvas) {
+    if (costChartCanvas) {
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
@@ -784,7 +827,8 @@
   // Add function to calculate metrics for independent teams
   function calculateIndependentTeamMetrics() {
     const independentCosts = {
-      monthlyMeetingCost: costParams.meetings.monthlyDuration * 
+      monthlyMeetingCost: costParams.meetings.duration * 
+        getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
         costParams.meetings.attendeesPerTeam * 
         costParams.hourlyRate.developer * 
         nodes.length,
@@ -961,6 +1005,74 @@
       const independentTeamMetrics = calculateIndependentTeamMetrics();
       comparisonMetrics = independentTeamMetrics;
       costDifference = currentCosts.totalCost - comparisonMetrics.costs.totalCost;
+    }
+  }
+
+  // Add new function to calculate meeting frequency multiplier
+  function getMonthlyMeetingMultiplier(recurrence: string): number {
+    switch (recurrence) {
+      case 'twice-weekly': return 8;
+      case 'weekly': return 4;
+      case 'biweekly': return 2;
+      case 'monthly': return 1;
+      default: return 4;
+    }
+  }
+
+  // Add new interface for team communication metrics
+  interface TeamCommunicationMetrics {
+    meetingHours: number;
+    overheadHours: number;
+    additionalHours: number;
+    totalHours: number;
+  }
+
+  // Add new function to calculate team communication metrics
+  function calculateTeamCommunicationMetrics(): TeamCommunicationMetrics[] {
+    return teamParams.teams.slice(0, teamCount).map((team, index) => {
+      const connectedTeams = dependencyMatrix.dependencies[index]
+        .filter((dep, i) => i !== index && dep > 0).length;
+      
+      const baseMonthlyMeetings = getMonthlyMeetingMultiplier(costParams.meetings.recurrence);
+      const meetingHours = Math.round(baseMonthlyMeetings * costParams.meetings.duration * connectedTeams * costParams.meetings.attendeesPerTeam);
+      const overheadHours = Math.round(meetingHours * (costParams.meetings.communicationOverhead - 1));
+      const additionalHours = Math.round(costParams.meetings.additionalHours * connectedTeams);
+      
+      return {
+        meetingHours,
+        overheadHours,
+        additionalHours,
+        totalHours: meetingHours + overheadHours + additionalHours
+      };
+    });
+  }
+
+  let teamCommunicationMetrics: TeamCommunicationMetrics[] = [];
+
+  // Add new function to apply meeting parameters
+  function applyMeetingParameters() {
+    teamCommunicationMetrics = calculateTeamCommunicationMetrics();
+  }
+
+  // Remove or comment out the reactive statement that automatically updates teamCommunicationMetrics
+  // $: {
+  //   if (nodes.length > 0) {
+  //     teamCommunicationMetrics = calculateTeamCommunicationMetrics();
+  //   }
+  // }
+
+  // Update reactive statement to recalculate metrics
+  $: {
+    if (nodes.length > 0) {
+      // Watch all meeting parameters
+      costParams.meetings.attendeesPerTeam;
+      costParams.meetings.duration;
+      costParams.meetings.recurrence;
+      costParams.meetings.communicationOverhead;
+      costParams.meetings.additionalHours;
+      
+      // Recalculate team communication metrics
+      teamCommunicationMetrics = calculateTeamCommunicationMetrics();
     }
   }
 </script>
@@ -1390,14 +1502,13 @@
     <!-- Meeting Parameters Section -->
     <div id="meeting-params-section" class="border-t pt-8">
       <h3 class="text-base font-semibold text-gray-900 mb-6">Meeting Parameters</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Monthly Meeting Hours -->
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Meeting Duration -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Monthly Meeting Hours
-            <button 
-              class="tooltip ml-1"
-              data-tippy-content="Set the average number of hours spent in meetings per month (4-80 hours). Includes team syncs, planning, and coordination meetings.">
+            Cross-team Meeting Duration (hours)
+            <button class="tooltip ml-1" data-tippy-content="Typical duration of cross-team alignment meetings">
               <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -1406,24 +1517,44 @@
           <div class="flex items-center gap-2">
             <input
               type="range"
-              bind:value={costParams.meetings.monthlyDuration}
-              min="4"
-              max="80"
+              bind:value={costParams.meetings.duration}
+              min="0.5"
+              max="4"
+              step="0.5"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
             />
-            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{costParams.meetings.monthlyDuration}</span>
+            <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{costParams.meetings.duration}h</span>
             </div>
           </div>
         </div>
 
-        <!-- Meeting Attendees -->
+        <!-- Meeting Recurrence -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Meeting Attendees
-            <button 
-              class="tooltip ml-1"
-              data-tippy-content="Set the average number of attendees per team in meetings (1-20 people). Consider both regular participants and occasional contributors.">
+            Meeting Frequency
+            <button class="tooltip ml-1" data-tippy-content="How often cross-team meetings occur">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
+          <select
+            bind:value={costParams.meetings.recurrence}
+            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+          >
+            <option value="twice-weekly">Twice per Week</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Every Two Weeks</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <!-- Attendees per Team -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Average Attendees per Team
+            <button class="tooltip ml-1" data-tippy-content="Number of people attending from each team">
               <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -1434,7 +1565,7 @@
               type="range"
               bind:value={costParams.meetings.attendeesPerTeam}
               min="1"
-              max="20"
+              max="10"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
             />
             <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
@@ -1446,10 +1577,8 @@
         <!-- Communication Overhead -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Communication Overhead
-            <button 
-              class="tooltip ml-1"
-              data-tippy-content="Set the communication overhead multiplier (1.0: No overhead, 2.0: Double overhead). Accounts for additional time spent on coordination and communication.">
+            Meeting Communication Overhead
+            <button class="tooltip ml-1" data-tippy-content="Additional time overhead for meeting preparation and follow-up">
               <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -1458,68 +1587,108 @@
           <div class="flex items-center gap-2">
             <input
               type="range"
-              bind:value={costParams.overhead.communicationOverhead}
+              bind:value={costParams.meetings.communicationOverhead}
               min="1"
               max="2"
               step="0.1"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
             />
             <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{costParams.overhead.communicationOverhead}x</span>
+              <span class="text-sm font-medium text-gray-900">{costParams.meetings.communicationOverhead}x</span>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Baseline Communication Hours -->
-        <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Baseline Communication Hours
-            <button 
-              class="tooltip ml-1"
-              data-tippy-content="Set the baseline communication hours per week (1-20 hours). This represents the minimum time spent on asynchronous communication and coordination.">
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </h4>
-          <div class="flex items-center gap-2">
-            <input
-              type="range"
-              bind:value={costParams.overhead.baselineCommunicationHours}
-              min="1"
-              max="10"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-            />
-            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{costParams.overhead.baselineCommunicationHours}</span>
-            </div>
-          </div>
-        </div>
+      <!-- Add this between the meeting parameters and communication matrix -->
+      <div class="flex justify-end mt-8 mb-4">
+        <button
+          type="button"
+          class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+          on:click={applyMeetingParameters}
+        >
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          Apply Parameters
+        </button>
+      </div>
 
-        <!-- Dependency Hours Rate -->
-        <div>
-          <h4 class="text-sm font-medium text-gray-700 mb-2">
-            Dependency Hours Rate
-            <button 
-              class="tooltip ml-1"
-              data-tippy-content="Set the hours rate per dependency level (1-10 hours). This represents the additional time spent on coordination and communication due to dependencies.">
-              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </h4>
-          <div class="flex items-center gap-2">
-            <input
-              type="range"
-              bind:value={costParams.overhead.dependencyHoursRate}
-              min="1"
-              max="10"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
-            />
-            <div class="w-12 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-              <span class="text-sm font-medium text-gray-900">{costParams.overhead.dependencyHoursRate}</span>
-            </div>
-          </div>
+      <!-- Communication Matrix -->
+      <div class="mt-4">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">Team Communication Matrix</h4>
+        <div class="overflow-x-auto border rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-3 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                <th class="px-3 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Meeting Person-Hours</th>
+                <th class="px-3 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Overhead Hours</th>
+                <th class="px-3 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Additional Hours</th>
+                <th class="px-3 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Hours</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {#each teamParams.teams.slice(0, teamCount) as team, i}
+                <tr class="hover:bg-gray-50">
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{team.name}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-900">
+                    <input
+                      type="number"
+                      class="w-20 text-right rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                      value={teamCommunicationMetrics[i]?.meetingHours}
+                      on:input={(e) => {
+                        const value = Math.round(parseFloat(e.currentTarget.value));
+                        if (!isNaN(value)) {
+                          teamCommunicationMetrics[i].meetingHours = value;
+                          teamCommunicationMetrics[i].totalHours = value + 
+                            teamCommunicationMetrics[i].overheadHours + 
+                            teamCommunicationMetrics[i].additionalHours;
+                        }
+                      }}
+                    />
+                  </td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-900">
+                    <input
+                      type="number"
+                      class="w-20 text-right rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                      value={teamCommunicationMetrics[i]?.overheadHours}
+                      on:input={(e) => {
+                        const value = Math.round(parseFloat(e.currentTarget.value));
+                        if (!isNaN(value)) {
+                          teamCommunicationMetrics[i].overheadHours = value;
+                          teamCommunicationMetrics[i].totalHours = 
+                            teamCommunicationMetrics[i].meetingHours + 
+                            value + 
+                            teamCommunicationMetrics[i].additionalHours;
+                        }
+                      }}
+                    />
+                  </td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-900">
+                    <input
+                      type="number"
+                      class="w-20 text-right rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                      value={teamCommunicationMetrics[i]?.additionalHours}
+                      on:input={(e) => {
+                        const value = Math.round(parseFloat(e.currentTarget.value));
+                        if (!isNaN(value)) {
+                          teamCommunicationMetrics[i].additionalHours = value;
+                          teamCommunicationMetrics[i].totalHours = 
+                            teamCommunicationMetrics[i].meetingHours + 
+                            teamCommunicationMetrics[i].overheadHours + 
+                            value;
+                        }
+                      }}
+                    />
+                  </td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-gray-900">
+                    {teamCommunicationMetrics[i]?.totalHours}
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

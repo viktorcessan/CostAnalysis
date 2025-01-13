@@ -14,8 +14,11 @@
       developer: number;
     };
     meetings: {
-      monthlyDuration: number;
+      duration: number;
+      recurrence: string;
       attendeesPerTeam: number;
+      communicationOverhead: number;
+      additionalHours: number;
     };
     overhead: {
       communicationOverhead: number;

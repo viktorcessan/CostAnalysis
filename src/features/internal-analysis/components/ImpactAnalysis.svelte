@@ -17,12 +17,19 @@
     communicationCost: number;
     totalCost: number;
   };
-  export let calculateComparisonMetrics: (mode: string) => {
+
+  type ComparisonMode = 'topology' | 'lazy' | 'advanced';
+
+  export let calculateComparisonMetrics: (mode: ComparisonMode) => {
     costs: {
+      monthlyMeetingCost: number;
+      communicationCost: number;
       totalCost: number;
     };
     flowEfficiency: number;
     leadTime: number;
+    utilizationRate: number;
+    serviceEfficiency: number;
   };
 
   function updateTargetDependency(fromIndex: number, toIndex: number, value: number) {

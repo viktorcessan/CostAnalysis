@@ -13,13 +13,11 @@
       developer: number;
     };
     meetings: {
-      monthlyDuration: number;
+      duration: number;        // hours per meeting
+      recurrence: string;      // 'twice-weekly' | 'weekly' | 'biweekly' | 'monthly'
       attendeesPerTeam: number;
-    };
-    overhead: {
       communicationOverhead: number;
-      baselineCommunicationHours: number;
-      dependencyHoursRate: number;
+      additionalHours: number;
     };
   };
   export let calculateCosts: () => {
@@ -28,6 +26,28 @@
     totalCost: number;
   };
   export let costChartCanvas: HTMLCanvasElement;
+
+  // Helper function to get monthly meeting multiplier
+  function getMonthlyMeetingMultiplier(recurrence: string): number {
+    switch (recurrence) {
+      case 'twice-weekly': return 8;
+      case 'weekly': return 4;
+      case 'biweekly': return 2;
+      case 'monthly': return 1;
+      default: return 4;
+    }
+  }
+
+  // Helper function to get recurrence text
+  function getRecurrenceText(recurrence: string): string {
+    switch (recurrence) {
+      case 'twice-weekly': return 'twice per week';
+      case 'weekly': return 'weekly';
+      case 'biweekly': return 'every two weeks';
+      case 'monthly': return 'monthly';
+      default: return 'weekly';
+    }
+  }
 </script>
 
     <!-- Cost Analysis of Current Dependencies -->
@@ -68,7 +88,7 @@
                     ${costs.monthlyMeetingCost.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Based on {costParams.meetings.monthlyDuration}hr × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
+                    Based on {costParams.meetings.duration}hr meetings {getRecurrenceText(costParams.meetings.recurrence)} × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
                   </div>
                 </div>
   
@@ -78,7 +98,7 @@
                     ${costs.communicationCost.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Includes async communication and coordination costs
+                    Includes {costParams.meetings.communicationOverhead}x overhead and additional communication
                   </div>
                 </div>
               </div>

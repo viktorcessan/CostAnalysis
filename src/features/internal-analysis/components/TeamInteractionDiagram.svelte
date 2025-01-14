@@ -167,20 +167,26 @@
     };
   }
 
-  // Team parameters
-  let teamParams = {
+  interface TeamParams {
+    teams: Team[];
+    baseLeadTime: number;
+    dependencyImpact: number;
+  }
+
+  let teamParams: TeamParams = {
     teams: Array(10).fill(null).map((_, i) => ({
       name: `Team ${i + 1}`,
       size: 5,
-      efficiency: 1.0   // Team efficiency multiplier
-    })) as Team[],
-    baseLeadTime: 3,          // Base lead time in days
-    dependencyImpact: 0.15    // How much each dependency affects performance
+      efficiency: 1.0
+    })),
+    baseLeadTime: 3,
+    dependencyImpact: 0.15
   };
 
   // Distribution mode state
-  type DistributionMode = 'even' | 'hub-spoke';
+  type DistributionMode = 'even' | 'hub-spoke' | 'sequential' | 'mesh' | 'hierarchical' | 'clustered';
   let distributionMode: DistributionMode = 'even';
+  let clusterCount = 2; // For clustered mode
 
   let nodes: any[] = [];
   let edges: any[] = [];
@@ -195,22 +201,104 @@
     // Initialize dependencies array with zeros
     const dependencies = Array.from({ length: size }, () => Array(size).fill(0));
     
-    // Initialize dependencies based on mode and company dependency level
-    if (distributionMode === 'even') {
-      // For even distribution, create circular dependencies with strength based on company dependency level
-      for (let i = 0; i < size; i++) {
-        const nextIndex = (i + 1) % size;
-        dependencies[i][nextIndex] = Math.max(1, Math.min(5, companyDependencyLevel));
-        dependencies[nextIndex][i] = Math.max(1, Math.min(5, companyDependencyLevel));
-      }
-    } else { // hub and spoke
-      // First team (hub) has dependencies with all other teams
-      for (let i = 1; i < size; i++) {
-        dependencies[0][i] = Math.max(1, Math.min(5, companyDependencyLevel)); // Hub to spoke
-        dependencies[i][0] = Math.max(1, Math.min(5, companyDependencyLevel)); // Spoke to hub
-      }
+    switch (distributionMode) {
+      case 'clustered':
+        // Calculate balanced cluster sizes
+        const teamsPerCluster = Math.floor(size / clusterCount); // Base size
+        const remainingTeams = size % clusterCount; // Extra teams to distribute
+        
+        // Create array of cluster sizes
+        const clusterSizes = Array(clusterCount).fill(teamsPerCluster);
+        // Distribute remaining teams one by one to the first 'remainingTeams' clusters
+        for (let i = 0; i < remainingTeams; i++) {
+          clusterSizes[i]++;
+        }
+        
+        // Calculate cluster start indices
+        const clusterStartIndices = clusterSizes.reduce((acc, size, i) => {
+          acc[i] = i === 0 ? 0 : acc[i - 1] + clusterSizes[i - 1];
+          return acc;
+        }, Array(clusterCount).fill(0));
+        
+        // For each team
+        for (let i = 0; i < size; i++) {
+          // Find which cluster this team belongs to
+          let currentCluster = 0;
+          while (currentCluster < clusterCount && i >= clusterStartIndices[currentCluster] + clusterSizes[currentCluster]) {
+            currentCluster++;
+          }
+          
+          const clusterStart = clusterStartIndices[currentCluster];
+          const clusterEnd = clusterStart + clusterSizes[currentCluster];
+          
+          // Connect teams within the same cluster
+          for (let j = clusterStart; j < clusterEnd; j++) {
+            if (i !== j) {
+              dependencies[i][j] = Math.max(1, Math.min(5, companyDependencyLevel));
+              dependencies[j][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+            }
+          }
+          
+          // Connect to cluster representative (first team in cluster)
+          if (i !== clusterStart && i < clusterEnd) {
+            dependencies[i][clusterStart] = Math.max(1, Math.min(5, companyDependencyLevel));
+            dependencies[clusterStart][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+          }
+        }
+        break;
+        
+      case 'even':
+        // For even distribution, create circular dependencies
+        for (let i = 0; i < size; i++) {
+          const nextIndex = (i + 1) % size;
+          dependencies[i][nextIndex] = Math.max(1, Math.min(5, companyDependencyLevel));
+          dependencies[nextIndex][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+        }
+        break;
+        
+      case 'hub-spoke':
+        // First team (hub) has dependencies with all other teams
+        for (let i = 1; i < size; i++) {
+          dependencies[0][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+          dependencies[i][0] = Math.max(1, Math.min(5, companyDependencyLevel));
+        }
+        break;
+        
+      case 'sequential':
+        // Teams depend on the next team in sequence
+        for (let i = 0; i < size - 1; i++) {
+          dependencies[i][i + 1] = Math.max(1, Math.min(5, companyDependencyLevel));
+        }
+        break;
+        
+      case 'mesh':
+        // Every team depends on every other team
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            if (i !== j) {
+              dependencies[i][j] = Math.max(1, Math.min(5, companyDependencyLevel));
+            }
+          }
+        }
+        break;
+        
+      case 'hierarchical':
+        // Binary tree structure
+        for (let i = 0; i < size; i++) {
+          const leftChild = 2 * i + 1;
+          const rightChild = 2 * i + 2;
+          if (leftChild < size) {
+            dependencies[i][leftChild] = Math.max(1, Math.min(5, companyDependencyLevel));
+            dependencies[leftChild][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+          }
+          if (rightChild < size) {
+            dependencies[i][rightChild] = Math.max(1, Math.min(5, companyDependencyLevel));
+            dependencies[rightChild][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+          }
+        }
+        break;
     }
-
+    
     return { teams, dependencies };
   }
 
@@ -515,7 +603,7 @@
     
     // Calculate throughput based on team size and efficiency only
     const team = teams[teamIndex];
-    const baseCapacity = team.size * 8 * team.efficiency; // 8 story points per person
+    const baseCapacity = team.size * 8;
     const throughput = baseCapacity * dependencyFactor;
     
     // Calculate lead time
@@ -554,7 +642,6 @@
       teamParams.teams.push({
         name: dependencyMatrix.teams[index],
         size: currentTeamParams[0]?.size || 5,
-        baseCapacity: 8,
         efficiency: 1.0
       });
     }
@@ -580,14 +667,17 @@
     // Generate edges based on mode
     if (distributionMode === 'even') {
       generateEvenEdges();
-    } else {
+    } else if (distributionMode === 'hub-spoke') {
       generateHubAndSpokeEdges();
+    } else {
+      // For all other patterns, generate edges directly from dependency matrix
+      applyMatrix();
     }
 
     metrics = updateMetrics();
   }
 
-  function generateEvenEdges() {
+  function generateEvenEdges(mode: DistributionMode = 'even') {
     edges = [];
     nodes.forEach((source, i) => {
       const nextIndex = (i + 1) % nodes.length;
@@ -615,7 +705,7 @@
     });
   }
 
-  function generateHubAndSpokeEdges() {
+  function generateHubAndSpokeEdges(mode: DistributionMode = 'hub-spoke') {
     edges = [];
     // Hub is always the first node (index 0)
     const hubNode = nodes[0];
@@ -1122,7 +1212,7 @@
     <!-- Distribution Pattern Selection -->
     <div id="distribution-pattern-section">
       <h3 class="text-base font-semibold text-gray-900 mb-4">Distribution Pattern</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Even Distribution -->
         <button
           class="relative p-4 border-2 rounded-lg transition-all {
@@ -1132,12 +1222,11 @@
           }"
           on:click={() => {
             distributionMode = 'even';
-              // Keep existing team names when changing distribution mode
-              const currentTeams = [...dependencyMatrix.teams];
-              const currentTeamParams = [...teamParams.teams];
+            const currentTeams = [...dependencyMatrix.teams];
+            const currentTeamParams = [...teamParams.teams];
             dependencyMatrix = initializeDependencyMatrix(teamCount);
-              dependencyMatrix.teams = currentTeams;
-              teamParams.teams = currentTeamParams;
+            dependencyMatrix.teams = currentTeams;
+            teamParams.teams = currentTeamParams;
             generateNodes();
           }}
         >
@@ -1196,12 +1285,11 @@
           }"
           on:click={() => {
             distributionMode = 'hub-spoke';
-              // Keep existing team names when changing distribution mode
-              const currentTeams = [...dependencyMatrix.teams];
-              const currentTeamParams = [...teamParams.teams];
+            const currentTeams = [...dependencyMatrix.teams];
+            const currentTeamParams = [...teamParams.teams];
             dependencyMatrix = initializeDependencyMatrix(teamCount);
-              dependencyMatrix.teams = currentTeams;
-              teamParams.teams = currentTeamParams;
+            dependencyMatrix.teams = currentTeams;
+            teamParams.teams = currentTeamParams;
             generateNodes();
           }}
         >
@@ -1221,35 +1309,256 @@
           </div>
           <p class="text-sm text-gray-600 mb-3">Central team coordinates with satellite teams</p>
           <svg class="w-full h-32" viewBox="0 0 200 100">
-            <!-- Center hub -->
-            <circle
-              cx="100"
-              cy="50"
-              r="8"
-              class="fill-secondary"
-            />
+            <circle cx="100" cy="50" r="8" class="fill-secondary"/>
             {#each Array(5) as _, i}
               {@const angle = (i * Math.PI * 2) / 5}
               {@const x = 100 + Math.cos(angle) * 40}
               {@const y = 50 + Math.sin(angle) * 40}
-              <circle
-                cx={x}
-                cy={y}
-                r="5"
-                class="fill-secondary/60"
-              />
-              <line
-                x1="100"
-                y1="50"
-                x2={x}
-                y2={y}
-                class="stroke-secondary"
-                stroke-width="1.5"
-                stroke-opacity="0.5"
-              />
+              <circle cx={x} cy={y} r="5" class="fill-secondary/60"/>
+              <line x1="100" y1="50" x2={x} y2={y} class="stroke-secondary" stroke-width="1.5" stroke-opacity="0.5"/>
             {/each}
           </svg>
         </button>
+
+        <!-- Sequential -->
+        <button
+          class="relative p-4 border-2 rounded-lg transition-all {
+            distributionMode === 'sequential'
+              ? 'border-secondary bg-secondary/10'
+              : 'border-gray-200 hover:border-gray-300'
+          }"
+          on:click={() => {
+            distributionMode = 'sequential';
+            const currentTeams = [...dependencyMatrix.teams];
+            const currentTeamParams = [...teamParams.teams];
+            dependencyMatrix = initializeDependencyMatrix(teamCount);
+            dependencyMatrix.teams = currentTeams;
+            teamParams.teams = currentTeamParams;
+            generateNodes();
+          }}
+        >
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-4 h-4 rounded-full border-2 {
+              distributionMode === 'sequential'
+                ? 'border-secondary bg-secondary'
+                : 'border-gray-300'
+            }">
+              {#if distributionMode === 'sequential'}
+                <svg class="w-4 h-4 text-white" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="4" fill="white"/>
+                </svg>
+              {/if}
+            </div>
+            <span class="font-medium text-gray-900">Sequential</span>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">Teams work in a linear sequence</p>
+          <svg class="w-full h-32" viewBox="0 0 200 100">
+            {#each Array(5) as _, i}
+              {@const x = 40 + i * 30}
+              <circle cx={x} cy="50" r="5" class="fill-secondary"/>
+              {#if i < 4}
+                <line x1={x + 5} y1="50" x2={x + 25} y2="50" class="stroke-secondary" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+              {/if}
+            {/each}
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" class="text-secondary"/>
+              </marker>
+            </defs>
+          </svg>
+        </button>
+
+        <!-- Mesh -->
+        <button
+          class="relative p-4 border-2 rounded-lg transition-all {
+            distributionMode === 'mesh'
+              ? 'border-secondary bg-secondary/10'
+              : 'border-gray-200 hover:border-gray-300'
+          }"
+          on:click={() => {
+            distributionMode = 'mesh';
+            const currentTeams = [...dependencyMatrix.teams];
+            const currentTeamParams = [...teamParams.teams];
+            dependencyMatrix = initializeDependencyMatrix(teamCount);
+            dependencyMatrix.teams = currentTeams;
+            teamParams.teams = currentTeamParams;
+            generateNodes();
+          }}
+        >
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-4 h-4 rounded-full border-2 {
+              distributionMode === 'mesh'
+                ? 'border-secondary bg-secondary'
+                : 'border-gray-300'
+            }">
+              {#if distributionMode === 'mesh'}
+                <svg class="w-4 h-4 text-white" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="4" fill="white"/>
+                </svg>
+              {/if}
+            </div>
+            <span class="font-medium text-gray-900">Mesh</span>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">All teams connected to each other</p>
+          <svg class="w-full h-32" viewBox="0 0 200 100">
+            {#each Array(5) as _, i}
+              {@const angle = (i * Math.PI * 2) / 5}
+              {@const x = 100 + Math.cos(angle) * 40}
+              {@const y = 50 + Math.sin(angle) * 40}
+              <circle cx={x} cy={y} r="5" class="fill-secondary"/>
+              {#each Array(5) as _, j}
+                {@const angle2 = (j * Math.PI * 2) / 5}
+                {@const x2 = 100 + Math.cos(angle2) * 40}
+                {@const y2 = 50 + Math.sin(angle2) * 40}
+                {#if i < j}
+                  <line x1={x} y1={y} x2={x2} y2={y2} class="stroke-secondary" stroke-width="0.5" stroke-opacity="0.3"/>
+                {/if}
+              {/each}
+            {/each}
+          </svg>
+        </button>
+
+        <!-- Hierarchical -->
+        <button
+          class="relative p-4 border-2 rounded-lg transition-all {
+            distributionMode === 'hierarchical'
+              ? 'border-secondary bg-secondary/10'
+              : 'border-gray-200 hover:border-gray-300'
+          }"
+          on:click={() => {
+            distributionMode = 'hierarchical';
+            const currentTeams = [...dependencyMatrix.teams];
+            const currentTeamParams = [...teamParams.teams];
+            dependencyMatrix = initializeDependencyMatrix(teamCount);
+            dependencyMatrix.teams = currentTeams;
+            teamParams.teams = currentTeamParams;
+            generateNodes();
+          }}
+        >
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-4 h-4 rounded-full border-2 {
+              distributionMode === 'hierarchical'
+                ? 'border-secondary bg-secondary'
+                : 'border-gray-300'
+            }">
+              {#if distributionMode === 'hierarchical'}
+                <svg class="w-4 h-4 text-white" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="4" fill="white"/>
+                </svg>
+              {/if}
+            </div>
+            <span class="font-medium text-gray-900">Hierarchical</span>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">Teams organized in a binary tree</p>
+          <svg class="w-full h-32" viewBox="0 0 200 100">
+            <!-- Root -->
+            <circle cx="100" cy="20" r="5" class="fill-secondary"/>
+            <!-- Level 1 -->
+            <circle cx="70" cy="50" r="5" class="fill-secondary"/>
+            <circle cx="130" cy="50" r="5" class="fill-secondary"/>
+            <!-- Level 2 -->
+            <circle cx="55" cy="80" r="5" class="fill-secondary"/>
+            <circle cx="85" cy="80" r="5" class="fill-secondary"/>
+            <circle cx="115" cy="80" r="5" class="fill-secondary"/>
+            <circle cx="145" cy="80" r="5" class="fill-secondary"/>
+            <!-- Connections -->
+            <line x1="100" y1="20" x2="70" y2="50" class="stroke-secondary" stroke-width="1"/>
+            <line x1="100" y1="20" x2="130" y2="50" class="stroke-secondary" stroke-width="1"/>
+            <line x1="70" y1="50" x2="55" y2="80" class="stroke-secondary" stroke-width="1"/>
+            <line x1="70" y1="50" x2="85" y2="80" class="stroke-secondary" stroke-width="1"/>
+            <line x1="130" y1="50" x2="115" y2="80" class="stroke-secondary" stroke-width="1"/>
+            <line x1="130" y1="50" x2="145" y2="80" class="stroke-secondary" stroke-width="1"/>
+          </svg>
+        </button>
+
+        <!-- Clustered -->
+        <div
+          class="relative p-4 border-2 rounded-lg transition-all {
+            distributionMode === 'clustered'
+              ? 'border-secondary bg-secondary/10'
+              : 'border-gray-200 hover:border-gray-300'
+          }"
+        >
+          <div 
+            class="w-full h-full absolute inset-0 cursor-pointer"
+          on:click={() => {
+            distributionMode = 'clustered';
+            const currentTeams = [...dependencyMatrix.teams];
+            const currentTeamParams = [...teamParams.teams];
+            dependencyMatrix = initializeDependencyMatrix(teamCount);
+            dependencyMatrix.teams = currentTeams;
+            teamParams.teams = currentTeamParams;
+            generateNodes();
+          }}
+          />
+          
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-4 h-4 rounded-full border-2 {
+              distributionMode === 'clustered'
+                ? 'border-secondary bg-secondary'
+                : 'border-gray-300'
+            }">
+              {#if distributionMode === 'clustered'}
+                <svg class="w-4 h-4 text-white" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="4" fill="white"/>
+                </svg>
+              {/if}
+            </div>
+            <span class="font-medium text-gray-900">Clustered</span>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">Teams organized in clusters</p>
+          <div class="space-y-2">
+            <svg class="w-full h-24" viewBox="0 0 200 100">
+              <!-- Cluster 1 -->
+              <circle cx="60" cy="40" r="5" class="fill-secondary"/>
+              <circle cx="80" cy="40" r="5" class="fill-secondary"/>
+              <circle cx="70" cy="60" r="5" class="fill-secondary"/>
+              <line x1="60" y1="40" x2="80" y2="40" class="stroke-secondary" stroke-width="1"/>
+              <line x1="60" y1="40" x2="70" y2="60" class="stroke-secondary" stroke-width="1"/>
+              <line x1="80" y1="40" x2="70" y2="60" class="stroke-secondary" stroke-width="1"/>
+              
+              <!-- Cluster 2 -->
+              <circle cx="130" cy="40" r="5" class="fill-secondary"/>
+              <circle cx="150" cy="40" r="5" class="fill-secondary"/>
+              <circle cx="140" cy="60" r="5" class="fill-secondary"/>
+              <line x1="130" y1="40" x2="150" y2="40" class="stroke-secondary" stroke-width="1"/>
+              <line x1="130" y1="40" x2="140" y2="60" class="stroke-secondary" stroke-width="1"/>
+              <line x1="150" y1="40" x2="140" y2="60" class="stroke-secondary" stroke-width="1"/>
+              
+              <!-- Inter-cluster connection -->
+              <line x1="70" y1="50" x2="140" y2="50" class="stroke-secondary" stroke-width="1" stroke-dasharray="4 2"/>
+            </svg>
+            <div class="flex items-center justify-center gap-4 relative z-10">
+              <button
+                type="button"
+                class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                on:click|stopPropagation={() => {
+                  if (clusterCount > 2) {
+                    clusterCount--;
+                    dependencyMatrix = initializeDependencyMatrix(teamCount);
+                    generateNodes();
+                  }
+                }}
+              >
+                -
+              </button>
+              <span class="text-sm text-gray-600">{clusterCount} Clusters</span>
+              <button
+                type="button"
+                class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                on:click|stopPropagation={() => {
+                  if (clusterCount < Math.floor(teamCount / 2)) {
+                    clusterCount++;
+                    dependencyMatrix = initializeDependencyMatrix(teamCount);
+                    generateNodes();
+                  }
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

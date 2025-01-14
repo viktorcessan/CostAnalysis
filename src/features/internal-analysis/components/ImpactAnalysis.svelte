@@ -18,6 +18,42 @@
     totalCost: number;
   };
 
+  export let costParams: {
+    meetings: {
+      duration: number;
+      recurrence: string;
+      attendeesPerTeam: number;
+      communicationOverhead: number;
+    };
+    hourlyRate: {
+      developer: number;
+    };
+    overhead: {
+      baselineCommunicationHours: number;
+      dependencyHoursRate: number;
+    };
+  };
+
+  export let teamParams: {
+    baseLeadTime: number;
+    teams: {
+      name: string;
+      size: number;
+      baseCapacity: number;
+      efficiency: number;
+    }[];
+  };
+
+  function getMonthlyMeetingMultiplier(recurrence: string): number {
+    switch (recurrence) {
+      case 'twice-weekly': return 8;
+      case 'weekly': return 4;
+      case 'biweekly': return 2;
+      case 'monthly': return 1;
+      default: return 4;
+    }
+  }
+
   type ComparisonMode = 'topology' | 'lazy' | 'advanced';
 
   export let calculateComparisonMetrics: (mode: ComparisonMode) => {
@@ -33,8 +69,123 @@
   };
 
   function updateTargetDependency(fromIndex: number, toIndex: number, value: number) {
-    targetDependencyMatrix[fromIndex][toIndex] = value;
+    targetDependencyMatrix[fromIndex][toIndex] = Math.max(0, Math.min(5, value));
     targetDependencyMatrix = targetDependencyMatrix;
+  }
+
+  function calculateModeMetrics(mode: ComparisonMode) {
+    if (mode === 'topology') {
+      // For topology mode, use independent team metrics (minimal dependencies)
+      return {
+        costs: {
+          monthlyMeetingCost: costParams.meetings.duration * 
+            getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
+            costParams.meetings.attendeesPerTeam * 
+            costParams.hourlyRate.developer * 
+            nodes.length,
+          communicationCost: nodes.length * costParams.hourlyRate.developer * 5,
+          totalCost: 0
+        },
+        flowEfficiency: 95,
+        leadTime: teamParams.baseLeadTime,
+        utilizationRate: 90,
+        serviceEfficiency: 95
+      };
+    } else if (mode === 'lazy') {
+      // For lazy mode, adjust costs based on dependency adjustment
+      const adjustedEdges = edges.map(edge => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          strength: Math.max(0, Math.min(5, edge.data.strength + dependencyAdjustment))
+        }
+      }));
+
+      // Calculate costs with adjusted dependencies
+      const totalConnections = adjustedEdges.length;
+      const monthlyMeetingCost = 
+        costParams.meetings.duration * 
+        getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
+        costParams.meetings.attendeesPerTeam * 
+        costParams.hourlyRate.developer * 
+        totalConnections * 
+        costParams.meetings.communicationOverhead;
+
+      const communicationCost =
+        totalConnections * 
+        costParams.meetings.communicationOverhead *
+        costParams.hourlyRate.developer * 
+        costParams.overhead.baselineCommunicationHours +
+        adjustedEdges.reduce((sum, edge) => 
+          sum + (edge.data.strength * 
+          costParams.overhead.dependencyHoursRate * 
+          costParams.hourlyRate.developer * 
+          costParams.meetings.attendeesPerTeam), 0);
+
+      const totalCost = monthlyMeetingCost + communicationCost;
+      
+      // Adjust metrics based on dependency changes
+      const baseEfficiency = metrics.flowEfficiency;
+      const efficiencyImpact = dependencyAdjustment * 5; // 5% impact per level
+      const leadTimeImpact = dependencyAdjustment * 2; // 2 days impact per level
+
+      return {
+        costs: {
+          monthlyMeetingCost,
+          communicationCost,
+          totalCost
+        },
+        flowEfficiency: Math.max(0, Math.min(100, baseEfficiency - efficiencyImpact)),
+        leadTime: Math.max(1, metrics.avgLeadTime + leadTimeImpact),
+        utilizationRate: 85 - (dependencyAdjustment * 5),
+        serviceEfficiency: 90 - (dependencyAdjustment * 5)
+      };
+    } else {
+      // For advanced mode, use the target dependency matrix
+      const totalConnections = targetDependencyMatrix.reduce((sum, row, i) => 
+        sum + row.reduce((rowSum, val, j) => i !== j ? rowSum + (val > 0 ? 1 : 0) : rowSum, 0), 0);
+      
+      const monthlyMeetingCost = 
+        costParams.meetings.duration * 
+        getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
+        costParams.meetings.attendeesPerTeam * 
+        costParams.hourlyRate.developer * 
+        totalConnections * 
+        costParams.meetings.communicationOverhead;
+
+      const communicationCost =
+        totalConnections * 
+        costParams.meetings.communicationOverhead *
+        costParams.hourlyRate.developer * 
+        costParams.overhead.baselineCommunicationHours +
+        targetDependencyMatrix.reduce((sum, row, i) => 
+          sum + row.reduce((rowSum, val, j) => 
+            i !== j ? rowSum + (val * 
+              costParams.overhead.dependencyHoursRate * 
+              costParams.hourlyRate.developer * 
+              costParams.meetings.attendeesPerTeam) : rowSum, 0), 0);
+
+      const totalCost = monthlyMeetingCost + communicationCost;
+
+      // Calculate average dependency level
+      const avgDependencyLevel = targetDependencyMatrix.reduce((sum, row, i) => 
+        sum + row.reduce((rowSum, val, j) => i !== j ? rowSum + val : rowSum, 0), 0) / totalConnections;
+      
+      const efficiencyImpact = (avgDependencyLevel - 2) * 5; // 5% impact per level above/below baseline
+      const leadTimeImpact = (avgDependencyLevel - 2) * 2; // 2 days impact per level
+
+      return {
+        costs: {
+          monthlyMeetingCost,
+          communicationCost,
+          totalCost
+        },
+        flowEfficiency: Math.max(0, Math.min(100, metrics.flowEfficiency - efficiencyImpact)),
+        leadTime: Math.max(1, metrics.avgLeadTime + leadTimeImpact),
+        utilizationRate: 85 - ((avgDependencyLevel - 2) * 5),
+        serviceEfficiency: 90 - ((avgDependencyLevel - 2) * 5)
+      };
+    }
   }
 </script>
 
@@ -286,9 +437,9 @@
   
   <!-- Comparison Results -->
   {#if nodes.length > 0}
-    {@const comparisonMetrics = calculateComparisonMetrics(comparisonMode)}
+    {@const modeMetrics = calculateModeMetrics(comparisonMode)}
     {@const currentCosts = calculateCosts()}
-    {@const costDifference = currentCosts.totalCost - comparisonMetrics.costs.totalCost}
+    {@const costDifference = currentCosts.totalCost - modeMetrics.costs.totalCost}
     
     <div class="mb-8">
       <h4 class="text-sm font-medium text-gray-700 mb-4">Cost Impact of Team Dependencies</h4>
@@ -346,7 +497,7 @@
                 <div class="flex justify-between text-sm items-center">
                 <span class="text-gray-600">Monthly Cost</span>
                   <div class="flex items-center gap-2">
-                    <span class="font-medium">${comparisonMetrics.costs.totalCost.toFixed(0)}</span>
+                    <span class="font-medium">${modeMetrics.costs.totalCost.toFixed(0)}</span>
                   </div>
               </div>
               <div class="text-xs text-gray-500 mt-1">
@@ -362,7 +513,7 @@
             <div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Team Efficiency</span>
-                <span class="font-medium">{comparisonMetrics.flowEfficiency.toFixed(1)}%</span>
+                <span class="font-medium">{modeMetrics.flowEfficiency.toFixed(1)}%</span>
               </div>
               <div class="text-xs text-gray-500 mt-1">
                 {#if comparisonMode === 'topology'}
@@ -377,7 +528,7 @@
             <div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Average Lead Time</span>
-                <span class="font-medium">{comparisonMetrics.leadTime.toFixed(1)} days</span>
+                <span class="font-medium">{modeMetrics.leadTime.toFixed(1)} days</span>
               </div>
               <div class="text-xs text-gray-500 mt-1">
                 {#if comparisonMode === 'topology'}
@@ -704,7 +855,7 @@
         <div class="space-y-2">
           <p class="text-sm text-gray-600">
             Team dependencies are adding <span class="font-medium text-secondary">${costDifference.toFixed(2)}</span> in monthly costs 
-            ({((costDifference / comparisonMetrics.costs.totalCost) * 100).toFixed(2)}% increase).
+            ({((costDifference / modeMetrics.costs.totalCost) * 100).toFixed(2)}% increase).
           </p>
           <p class="text-sm text-gray-600">
             This cost represents necessary coordination and communication between teams, but can be optimized through:

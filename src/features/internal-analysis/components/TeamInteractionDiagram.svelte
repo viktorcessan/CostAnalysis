@@ -99,7 +99,7 @@
   // Calculate metrics for a given dependency matrix
   function calculateMetricsForMatrix(matrix: number[][]) {
     const costs = {
-      weeklyMeetingCost: costParams.meetings.duration * 
+      monthlyMeetingCost: costParams.meetings.duration * 
         getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
         costParams.meetings.attendeesPerTeam * 
         costParams.hourlyRate.developer * 
@@ -107,7 +107,7 @@
       communicationCost: matrix.reduce((sum, row) => 
         sum + row.reduce((s, v) => s + (v > 0 ? v * costParams.hourlyRate.developer * 4 : 0), 0), 0),
       get totalCost() {
-        return this.weeklyMeetingCost + this.communicationCost;
+        return this.monthlyMeetingCost + this.communicationCost;
       }
     };
 
@@ -121,12 +121,15 @@
     const baseLeadTime = teamParams.baseLeadTime;
     const leadTime = baseLeadTime * (1 + (avgDependencyStrength * 0.5));
 
+    // Calculate service efficiency
+    const serviceEfficiency = Math.max(50, 85 - (avgDependencyStrength * 7));
+
     return {
       costs,
       flowEfficiency,
       leadTime,
       utilizationRate: 90 - (avgDependencyStrength * 5),
-      serviceEfficiency: 85 - (avgDependencyStrength * 7)
+      serviceEfficiency
     };
   }
 
@@ -283,7 +286,7 @@
   }
 
   // Add canvas binding at the top of the script section
-  let costChartCanvas: HTMLCanvasElement | undefined;
+  let costChartCanvas: HTMLCanvasElement;
   let costDistributionChart: Chart | null = null;
 
   // Update the CostAnalysis interface
@@ -847,7 +850,8 @@
       costs: independentCosts,
       flowEfficiency: 95,
       leadTime: teamParams.baseLeadTime,
-      utilizationRate: 90
+      utilizationRate: 90,
+      serviceEfficiency: 95
     };
   }
 
@@ -1745,10 +1749,10 @@
   {teamParams}
   {costParams}
   {calculateCosts}
-  bind:costChartCanvas
+  bind:costChartCanvas={costChartCanvas as HTMLCanvasElement}
 />
 
-<!-- Replace the "Here is the ImpactAnalysis.svelte" comment with this component -->
+<!-- Impact Analysis Component -->
 <ImpactAnalysis
   {nodes}
   {edges}
@@ -1760,6 +1764,8 @@
   bind:dependencyAdjustment
   {calculateCosts}
   {calculateComparisonMetrics}
+  {costParams}
+  {teamParams}
 />
 
 </div>

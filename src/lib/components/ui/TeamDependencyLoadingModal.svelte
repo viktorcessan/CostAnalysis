@@ -64,7 +64,7 @@
             <div class="bg-gray-50/50 rounded-xl p-4 space-y-2">
               {#each params.teams as team}
                 <div class="text-sm text-gray-600">
-                  • {team.name} (Size: {team.size}, Base Capacity: {team.baseCapacity})
+                  • {team.name} (Size: {team.size}, Efficiency: {team.efficiency})
                 </div>
               {/each}
             </div>

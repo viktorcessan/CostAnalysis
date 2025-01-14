@@ -1,7 +1,6 @@
 export interface Team {
   name: string;
   size: number;
-  baseCapacity: number;
   efficiency: number;
 }
 

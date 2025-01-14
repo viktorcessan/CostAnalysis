@@ -3,7 +3,6 @@ import { writable } from 'svelte/store';
 interface Team {
   name: string;
   size: number;
-  baseCapacity: number;
   efficiency: number;
 }
 
@@ -109,7 +108,6 @@ Cost Parameters:
 Teams:
 ${teams.map(team => `- ${team.name}:
   * Team Size: ${team.size}
-  * Base Capacity: ${team.baseCapacity} items per week
   * Team Efficiency: ${team.efficiency * 100}%`).join('\n')}
 
 Team Performance Metrics:
@@ -142,7 +140,7 @@ Cost Analysis:
 
 Formulas Used:
 1. Dependency Factor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))
-2. Throughput = baseCapacity * dependencyFactor
+2. Throughput = (team.size * 8 * team.efficiency) * dependencyFactor
 3. Monthly Meeting Cost = duration * getMonthlyMeetingMultiplier(recurrence) * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
 4. Communication Cost = (totalConnections * communicationOverhead * hourlyRate * baselineCommunicationHours) + (dependencyStrength * dependencyHoursRate * hourlyRate)
 5. Lead Time = waitTime + processingTime

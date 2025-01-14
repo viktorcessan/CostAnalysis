@@ -136,7 +136,6 @@
   interface Team {
     name: string;
     size: number;
-    baseCapacity: number;
     efficiency: number;
   }
 
@@ -173,7 +172,6 @@
     teams: Array(10).fill(null).map((_, i) => ({
       name: `Team ${i + 1}`,
       size: 5,
-      baseCapacity: 8,  // Base items per person per week
       efficiency: 1.0   // Team efficiency multiplier
     })) as Team[],
     baseLeadTime: 3,          // Base lead time in days
@@ -515,9 +513,9 @@
     
     const dependencyFactor = Math.max(0.5, 1 - (totalDependencyStrength * teamParams.dependencyImpact));
     
-    // Calculate throughput
+    // Calculate throughput based on team size and efficiency only
     const team = teams[teamIndex];
-    const baseCapacity = team.size * team.baseCapacity * team.efficiency;
+    const baseCapacity = team.size * 8 * team.efficiency; // 8 story points per person
     const throughput = baseCapacity * dependencyFactor;
     
     // Calculate lead time
@@ -889,14 +887,12 @@
           return {
             name: sharedConfig.teams[i].name,
             size: sharedConfig.teams[i].size || 5,
-            baseCapacity: sharedConfig.teams[i].baseCapacity || 8,
             efficiency: sharedConfig.teams[i].efficiency || 1.0
           };
         } else {
           return {
             name: `Team ${i + 1}`,
             size: 5,
-            baseCapacity: 8,
             efficiency: 1.0
           };
         }
@@ -1331,7 +1327,6 @@
                 <tr>
                   <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Team</th>
                   <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Size</th>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Cap</th>
                   <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Eff</th>
                 </tr>
               </thead>
@@ -1367,16 +1362,6 @@
                     <td class="px-2 py-2">
                       <input
                         type="number"
-                        min="1"
-                        max="20"
-                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
-                        value={team.baseCapacity}
-                        on:input={(e) => updateTeamParam(i, 'baseCapacity', parseInt(e.currentTarget.value) || 1)}
-                      />
-                    </td>
-                    <td class="px-2 py-2">
-                      <input
-                        type="number"
                         min="0.1"
                         max="2"
                         step="0.1"
@@ -1394,10 +1379,6 @@
             <div class="flex gap-2">
               <span class="font-medium">Size:</span>
               <span>Number of team members</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="font-medium">Cap:</span>
-              <span>Base capacity (story points/sprint)</span>
             </div>
             <div class="flex gap-2">
               <span class="font-medium">Eff:</span>

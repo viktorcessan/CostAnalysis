@@ -64,15 +64,10 @@ export function initTutorial() {
   tour.addStep({
     id: 'welcome',
     text: createCardContent(
-      'Welcome to Team Dependencies Analysis',
-      `<p class="text-slate-600 leading-relaxed">Discover how to optimize your organizational structure through data-driven analysis. This tool helps you understand team interactions, evaluate coordination costs, and make informed decisions about your team structure.</p>`
+      'Welcome to the Team Dependency Cost Calculator',
+      `<p class="text-slate-600 leading-relaxed">This tool is designed to help you uncover and understand the hidden costs of team dependencies. Let's walk through the process together.</p>`
     ),
     buttons: [
-      {
-        text: 'Skip',
-        action: tour.cancel,
-        classes: getButtonClasses(false)
-      },
       {
         text: 'Start Tour',
         action: tour.next,
@@ -84,24 +79,9 @@ export function initTutorial() {
   tour.addStep({
     id: 'distribution-pattern',
     text: createCardContent(
-      'Team Structure Patterns',
-      `<p class="text-slate-600 mb-3">Choose how your teams will interact and coordinate:</p>
-      <ul class="space-y-3 text-slate-600">
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Even Distribution:</strong>
-            <p class="mt-1">Teams work collaboratively with balanced dependencies, promoting equal participation.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Hub & Spoke:</strong>
-            <p class="mt-1">A central team coordinates activities with satellite teams.</p>
-          </div>
-        </li>
-      </ul>`
+      'Step 1: Define Your Team Structure',
+      `<p class="text-slate-600 mb-3">Start by selecting the team structure pattern that best represents how your teams collaborate today. You'll choose from options like evenly balanced teams, hub-and-spoke models, hierarchical setups, and more. This helps us establish a baseline for understanding your dependencies.</p>
+      <p class="text-slate-600">Choose the structure that feels the closest fit to your current setup.</p>`
     ),
     attachTo: {
       element: '#distribution-pattern-section',
@@ -124,24 +104,23 @@ export function initTutorial() {
   tour.addStep({
     id: 'team-params',
     text: createCardContent(
-      'Team Parameters',
-      `<p class="text-slate-600 mb-3">Configure your team structure:</p>
+      'Step 2: Provide Team Details',
+      `<p class="text-slate-600 mb-3">Next, input some basic information about your teams:</p>
       <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Number of Teams:</strong>
-            <p class="mt-1">Set how many teams are in your organization (3-10).</p>
-          </div>
+          <div>How many teams are involved?</div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Dev Rate:</strong>
-            <p class="mt-1">Average hourly rate including benefits ($20-$200/hr).</p>
-          </div>
+          <div>What's the average hourly cost per employee?</div>
         </li>
-      </ul>`
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>How large is each team?</div>
+        </li>
+      </ul>
+      <p class="text-slate-600 mt-3">This step allows us to understand your team composition and cost structure. You can name your teams in this step if you'd like.</p>`
     ),
     attachTo: {
       element: '#team-params-section',
@@ -162,80 +141,11 @@ export function initTutorial() {
   });
 
   tour.addStep({
-    id: 'team-details',
-    text: createCardContent(
-      'Team Details',
-      `<p class="text-slate-600 mb-3">Configure individual team characteristics:</p>
-      <ul class="space-y-3 text-slate-600">
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Team Size & Capacity:</strong>
-            <p class="mt-1">Set team members (1-20) and story points per sprint.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Efficiency:</strong>
-            <p class="mt-1">Adjust team performance multipliers (0.1-2.0).</p>
-          </div>
-        </li>
-      </ul>`
-    ),
-    attachTo: {
-      element: '#team-details-table',
-      on: 'right'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action: tour.back,
-        classes: getButtonClasses(false)
-      },
-      {
-        text: 'Next',
-        action: tour.next,
-        classes: getButtonClasses(true)
-      }
-    ]
-  });
-
-  tour.addStep({
     id: 'dependency-params',
     text: createCardContent(
-      'Dependency Parameters',
-      `<p class="text-slate-600 mb-3">Configure team dependencies and their relationships:</p>
-      <ul class="space-y-3 text-slate-600">
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Dependency Level:</strong>
-            <p class="mt-1">Set overall dependency strength between teams (1-5).</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Strong Dependencies (4-5):</strong>
-            <p class="mt-1">Teams require frequent communication and tight coordination.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Moderate Dependencies (2-3):</strong>
-            <p class="mt-1">Regular alignment and information sharing needed.</p>
-          </div>
-        </li>
-        <li class="flex items-start">
-          <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Light Dependencies (0-1):</strong>
-            <p class="mt-1">Teams operate mostly independently.</p>
-          </div>
-        </li>
-      </ul>`
+      'Step 3: Map Team Dependencies',
+      `<p class="text-slate-600 mb-3">Once your team details are set, you'll map the dependencies between teams. Specify the strength of your dependencies e.g., high, medium, or low, or input exact dependencies between teams in the dependency table.</p>
+      <p class="text-slate-600">This step helps visualize how teams rely on each other and where potential bottlenecks exist.</p>`
     ),
     attachTo: {
       element: '#dependency-params-section',
@@ -258,31 +168,23 @@ export function initTutorial() {
   tour.addStep({
     id: 'meeting-params',
     text: createCardContent(
-      'Meeting Parameters',
-      `<p class="text-slate-600 mb-3">Configure meeting and communication costs:</p>
+      'Step 4: Account for Communication Costs',
+      `<p class="text-slate-600 mb-3">Communication plays a significant role in dependency costs. You'll provide details like:</p>
       <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Meeting Duration:</strong>
-            <p class="mt-1">Monthly meeting hours per team.</p>
-          </div>
+          <div>The average duration and frequency of cross-team meetings</div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Attendees:</strong>
-            <p class="mt-1">Average number of attendees per team.</p>
-          </div>
+          <div>The number of attendees per meeting</div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Communication Overhead:</strong>
-            <p class="mt-1">Additional time for preparation and follow-up.</p>
-          </div>
+          <div>Any additional overhead, such as preparation or follow-up time</div>
         </li>
-      </ul>`
+      </ul>
+      <p class="text-slate-600 mt-3">This ensures a complete picture of the costs associated with collaboration.</p>`
     ),
     attachTo: {
       element: '#meeting-params-section',
@@ -305,22 +207,20 @@ export function initTutorial() {
   tour.addStep({
     id: 'visualization',
     text: createCardContent(
-      'Interactive Visualization',
-      `<p class="text-slate-600 mb-3">Explore your team structure through an interactive diagram:</p>
+      'Step 5: Visualize Your Dependencies',
+      `<p class="text-slate-600 mb-3">After entering the data, you'll see an interactive visualization of your team's dependencies. This diagram shows:</p>
       <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Dependency Strength:</strong>
-            <p class="mt-1">Line thickness shows how closely teams work together.</p>
-          </div>
+          <div>How closely teams work together</div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Team Relationships:</strong>
-            <p class="mt-1">Identify key collaboration patterns and potential bottlenecks.</p>
-          </div>
+          <div>Where dependencies are strongest</div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>Potential bottlenecks or inefficiencies</div>
         </li>
       </ul>`
     ),
@@ -345,22 +245,20 @@ export function initTutorial() {
   tour.addStep({
     id: 'cost-analysis',
     text: createCardContent(
-      'Cost Analysis',
-      `<p class="text-slate-600 mb-3">Understand the financial impact of team interactions:</p>
+      'Step 6: Analyze the Costs',
+      `<p class="text-slate-600 mb-3">With everything mapped, the tool calculates the costs of your team dependencies. You'll see a breakdown of:</p>
       <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Coordination Costs:</strong>
-            <p class="mt-1">See how team dependencies affect overall operational costs.</p>
-          </div>
+          <div>Total costs related to meetings and communication</div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Efficiency Metrics:</strong>
-            <p class="mt-1">Track how team structure impacts productivity and resource utilization.</p>
-          </div>
+          <div>The impact of dependencies on team efficiency</div>
+        </li>
+        <li class="flex items-start">
+          <span class="text-orange-500 mr-2">•</span>
+          <div>Opportunities for cost reduction</div>
         </li>
       </ul>`
     ),
@@ -385,24 +283,19 @@ export function initTutorial() {
   tour.addStep({
     id: 'impact-analysis',
     text: createCardContent(
-      'Impact Analysis',
-      `<p class="text-slate-600 mb-3">Make informed decisions about your team structure:</p>
+      'Step 7: Explore Alternative Scenarios',
+      `<p class="text-slate-600 mb-3">Finally, you'll evaluate potential changes to your team structure. Compare your current setup with optimized configurations to:</p>
       <ul class="space-y-3 text-slate-600">
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Structure Comparison:</strong>
-            <p class="mt-1">Compare different team configurations to find the optimal setup.</p>
-          </div>
+          <div>Identify ways to reduce costs and improve efficiency</div>
         </li>
         <li class="flex items-start">
           <span class="text-orange-500 mr-2">•</span>
-          <div>
-            <strong class="text-slate-900">Optimization Insights:</strong>
-            <p class="mt-1">Get recommendations for improving team efficiency and reducing coordination overhead.</p>
-          </div>
+          <div>Align team structures with your product and organizational goals</div>
         </li>
-      </ul>`
+      </ul>
+      <p class="text-slate-600 mt-3">Ready to Begin?</p>`
     ),
     attachTo: {
       element: '.impact-analysis-section',

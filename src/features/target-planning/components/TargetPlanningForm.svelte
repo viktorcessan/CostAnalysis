@@ -18,6 +18,7 @@
   import { goto } from '$app/navigation';
   import { exportToExcel } from '$lib/utils/exportUtils';
   import html2canvas from 'html2canvas';
+  import ExpertConsultationCard from '$lib/components/ui/ExpertConsultationCard.svelte';
 
   // Modal state
   let showLLMTemplate = false;
@@ -1507,84 +1508,14 @@
 <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-8 mt-8">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Expert Consultation Card -->
-    <div class="lg:col-span-2 bg-white rounded-xl p-6 border border-secondary/20 relative overflow-hidden">
-      <!-- Background Pattern -->
-      <div class="absolute inset-0 opacity-[0.02] pointer-events-none">
-        <svg class="w-full h-full" viewBox="0 0 100 100">
-          <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5"/>
-          </pattern>
-          <rect width="100" height="100" fill="url(#grid)"/>
-        </svg>
-      </div>
-      
-      <!-- Content -->
-      <div class="flex flex-col relative">
-        <div class="text-center mb-6">
-          <h3 class="text-2xl font-semibold text-gray-900 mb-2">Get Expert Guidance</h3>
-          <p class="text-gray-600">Validate your target goals and develop a concrete implementation plan with our Operations Costs expert.</p>
-        </div>
-
-        <div class="flex flex-col md:flex-row items-center gap-8">
-          <!-- Expert Image -->
-          <div class="flex-shrink-0 order-1 md:order-2">
-            <div class="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-secondary/10 shadow-xl">
-              <img src="{base}/viktor2.jpeg" alt="Viktor Cessan" class="w-full h-full object-cover" />
-            </div>
-          </div>
-
-          <!-- Features List -->
-          <div class="flex-grow order-2 md:order-1">
-            <ul class="space-y-3">
-              <li class="flex items-center text-gray-700 gap-3">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <span>Validate target goals and timelines</span>
-              </li>
-              <li class="flex items-center text-gray-700 gap-3">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <span>Detailed implementation strategy</span>
-              </li>
-              <li class="flex items-center text-gray-700 gap-3">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <span>ROI optimization recommendations</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- CTA Button -->
-        <div class="mt-8 text-center">
-          <button
-            on:click={() => showExpertModal = true}
-            class="inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow-lg hover:shadow-xl transition-all duration-200"
-          >
-            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Schedule Free Consultation
-          </button>
-        </div>
-      </div>
-    </div>
+    <ExpertConsultationCard {base} bind:showExpertModal />
 
     <!-- Analysis Options Card -->
     <div class="space-y-4">
       <!-- ChatGPT Analysis -->
       <div class="bg-white rounded-xl p-6 border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
-        <p class="text-gray-600 mb-4">Get instant AI insights about your target goals and implementation plan.</p>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</h3>
+        <p class="text-gray-600 mb-4">Generate a customized prompt to explore your results using AI tools, such as large language models, for deeper analysis and actionable recommendations.</p>
         <button
           on:click={() => showLLMTemplate = true}
           class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"

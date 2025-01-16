@@ -79,46 +79,8 @@
   <!-- Napkin section-->
   <Napkin />
   
-  <!-- Features Section -->
-  <div class="py-24">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">
-         What would you like to do?
-        </h2>
-        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-          Choose the specific type of analysis you need, and we'll guide you step-by-step:
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {#each features as feature}
-          <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div class="flex items-center gap-4 mb-6">
-              {@html feature.icon}
-              <h3 class="text-xl font-semibold text-gray-900">{feature.title}</h3>
-            </div>
-            <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
-            <ul class="space-y-3">
-              {#each feature.details as detail}
-                <li class="flex items-center text-gray-700">
-                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  {detail}
-                </li>
-              {/each}
-            </ul>
-          </div>
-        {/each}
-      </div>
-    </div>
-  </div>
-
   <!-- How It Works -->
-  <div class="py-24 bg-gradient-to-br from-gray-50 via-white to-gray-50">
+  <div class="py-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
         <h2 class="text-3xl font-bold text-gray-900 mb-4">
@@ -153,6 +115,44 @@
           </div>
           <p class="text-gray-600 leading-relaxed">Get clear, actionable recommendations tailored to your operations.</p>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="py-24 bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">
+         What would you like to do?
+        </h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          Choose the specific type of analysis you need, and we'll guide you step-by-step:
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {#each features as feature}
+          <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex items-center gap-4 mb-6">
+              {@html feature.icon}
+              <h3 class="text-xl font-semibold text-gray-900">{feature.title}</h3>
+            </div>
+            <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
+            <ul class="space-y-3">
+              {#each feature.details as detail}
+                <li class="flex items-center text-gray-700">
+                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  {detail}
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/each}
       </div>
     </div>
   </div>

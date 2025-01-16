@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { Chart, type Plugin } from 'chart.js/auto';
-  import type { ChartConfiguration, ChartData, ChartOptions, DoughnutControllerChartOptions } from 'chart.js';
   import ChartDataLabels from 'chartjs-plugin-datalabels';
   import tippy from 'tippy.js';
   import 'tippy.js/dist/tippy.css';
@@ -11,22 +10,16 @@
   import TeamDependencyLoadingModal from '$lib/components/ui/TeamDependencyLoadingModal.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
   import { teamDependencyTemplateStore } from '$lib/stores/teamDependencyTemplateStore';
-  import { page } from '$app/stores';
   import { base } from '$app/paths';
   import { validateShareParams, parseShareLink } from '$lib/utils/teamDependencyShare';
   import type { TeamDependencyParams } from '$lib/utils/teamDependencyShare';
-  import { exportToExcel } from '$lib/utils/exportUtils';
-  import html2canvas from 'html2canvas';
   import { exportTeamDependencyToExcel, exportTeamDependencyToPNG } from '$lib/utils/teamDependencyExport';
   import { initTutorial } from '$lib/utils/tutorial';
   import type { Tour } from 'shepherd.js';
   import { calculatorStore } from '$lib/stores/calculatorStore';
   import type { TeamInputs } from '$lib/types/calculator';
-  // Add this import at the top with other imports
   import MatrixDesign from './MatrixDesign.svelte';
-  // Add this import at the top with other imports
   import CostAnalysisVisualization from './CostAnalysisVisualization.svelte';
-  // Add this import at the top with other imports
   import ImpactAnalysis from './ImpactAnalysis.svelte';
   import ExpertConsultationCard from '$lib/components/ui/ExpertConsultationCard.svelte';
 
@@ -383,62 +376,72 @@
     totalCost: number;
   }
 
-  // Update the cost chart initialization
   function createCostDistributionChart(costs: CostAnalysis) {
-    if (!costChartCanvas) return;
-    
-    if (costDistributionChart) {
-      costDistributionChart.destroy();
-    }
+  if (!costChartCanvas) return;
+  
+  if (costDistributionChart) {
+    costDistributionChart.destroy();
+  }
 
-    const data = [
-      costs.monthlyMeetingCost,
-      costs.communicationCost
-    ];
+  const data = [
+    costs.directMeetingCost,
+    costs.communicationOverhead,
+    costs.opportunityCost,
+    costs.flowEfficiencyCost
+  ];
 
-    const total = costs.totalCost;
-    const percentages = data.map(value => ((value / total) * 100).toFixed(1));
+  const total = costs.totalCost;
+  const percentages = data.map(value => ((value / total) * 100).toFixed(0));
 
-    costDistributionChart = new Chart(costChartCanvas, {
-      type: 'doughnut',
-      data: {
-        labels: ['Monthly Meetings', 'Communication'],
-        datasets: [{
-          data,
-          backgroundColor: [
-            'rgb(14, 165, 233)',
-            'rgb(245, 158, 11)'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              usePointStyle: true,
-              padding: 20,
-              font: {
-                size: 12
-              }
+  costDistributionChart = new Chart(costChartCanvas, {
+    type: 'doughnut',
+    data: {
+      labels: [
+        'Direct Meeting Costs',
+        'Communication Overhead',
+        'Opportunity Cost',
+        'Flow Efficiency Impact'
+      ],
+      datasets: [{
+        data,
+        backgroundColor: [
+          'rgb(14, 165, 233)',  // sky-500 - matches sky gradient
+          'rgb(245, 158, 11)',  // amber-500 - matches amber gradient
+          'rgb(16, 185, 129)',  // emerald-500 - matches emerald gradient
+          'rgb(244, 63, 94)'    // rose-500 - matches rose gradient
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: {
+              size: 12
             }
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const value = context.raw as number;
-                const percentage = percentages[context.dataIndex];
-                return `$${value.toFixed(2)} (${percentage}%)`;
-              }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.raw as number;
+              const percentage = percentages[context.dataIndex];
+              return `$${value.toLocaleString('en-US', {
+                maximumFractionDigits: 0
+              })} (${percentage}%)`;
             }
           }
         }
       }
-    });
-  }
+    }
+  });
+}
 
   // Add onMount initialization
   onMount(() => {
@@ -763,41 +766,44 @@
     const totalConnections = edges.length;
     const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
     
-    // Calculate monthly meeting cost based on:
-    // - Meeting duration per session
-    // - Number of meetings per month (based on recurrence)
-    // - Number of attendees per team
-    // - Developer hourly rate
-    // - Number of team connections
-    // - Communication overhead
-    const monthlyMeetingCost = 
+    // Calculate direct meeting costs
+    const directMeetingCost = 
       costParams.meetings.duration * 
       getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
       costParams.meetings.attendeesPerTeam * 
       costParams.hourlyRate.developer * 
-      totalConnections * 
-      costParams.meetings.communicationOverhead;
+      totalConnections;
 
-    // Calculate communication costs based on:
-    // - Base communication hours
-    // - Dependency strength
-    // - Developer hourly rate
-    // - Communication overhead
-    const communicationCost =
+    // Calculate communication overhead
+    const communicationOverhead =
       totalConnections * 
       costParams.meetings.communicationOverhead *
       costParams.hourlyRate.developer * 
-      costParams.overhead.baselineCommunicationHours +
-      edges.reduce((sum, edge) => 
-        sum + (edge.data.strength * 
-        costParams.overhead.dependencyHoursRate * 
-        costParams.hourlyRate.developer * 
-        costParams.meetings.attendeesPerTeam), 0);
+      costParams.overhead.baselineCommunicationHours;
+
+    // Calculate opportunity cost from context switching
+    const contextSwitchingHours = edges.reduce((sum, edge) => 
+      sum + (edge.data.strength * 2), 0); // 2 hours per dependency strength level
+    const opportunityCost = 
+      contextSwitchingHours * 
+      costParams.hourlyRate.developer * 
+      costParams.meetings.attendeesPerTeam;
+
+    // Calculate flow efficiency impact cost
+    const avgDependencyStrength = edges.reduce((sum, edge) => 
+      sum + edge.data.strength, 0) / (edges.length || 1);
+    const waitTimeHours = totalConnections * avgDependencyStrength * 4; // 4 hours of wait time per dependency strength
+    const flowEfficiencyCost = 
+      waitTimeHours * 
+      costParams.hourlyRate.developer * 
+      costParams.overhead.waitTimeMultiplier;
 
     return {
-      monthlyMeetingCost,
-      communicationCost,
-      totalCost: monthlyMeetingCost + communicationCost
+      directMeetingCost,
+      communicationOverhead,
+      opportunityCost,
+      flowEfficiencyCost,
+      totalCost: directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost
     };
   }
 

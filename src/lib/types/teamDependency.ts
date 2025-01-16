@@ -45,7 +45,9 @@ export interface Metrics {
 }
 
 export interface CostAnalysis {
-  monthlyMeetingCost: number;
-  communicationCost: number;
+  directMeetingCost: number;
+  communicationOverhead: number;
+  opportunityCost: number;
+  flowEfficiencyCost: number;
   totalCost: number;
 } 

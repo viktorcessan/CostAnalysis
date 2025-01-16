@@ -21,8 +21,10 @@
     };
   };
   export let calculateCosts: () => {
-    monthlyMeetingCost: number;
-    communicationCost: number;
+    directMeetingCost: number;
+    communicationOverhead: number;
+    opportunityCost: number;
+    flowEfficiencyCost: number;
     totalCost: number;
   };
   export let costChartCanvas: HTMLCanvasElement;
@@ -83,26 +85,46 @@
               {#if costs}
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
-                  <div class="text-sm font-medium text-gray-600">Monthly Meetings</div>
+                  <div class="text-sm font-medium text-gray-600">Direct Meeting Costs</div>
                   <div class="text-xl font-bold text-sky-500 mt-1">
-                    ${costs.monthlyMeetingCost.toFixed(0)}
+                    ${costs.directMeetingCost.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
                     Based on {costParams.meetings.duration}hr meetings {getRecurrenceText(costParams.meetings.recurrence)} × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
                   </div>
                 </div>
-  
+
                 <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
-                  <div class="text-sm font-medium text-gray-600">Communication</div>
+                  <div class="text-sm font-medium text-gray-600">Communication Overhead</div>
                   <div class="text-xl font-bold text-amber-500 mt-1">
-                    ${costs.communicationCost.toFixed(0)}
+                    ${costs.communicationOverhead.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Includes {costParams.meetings.communicationOverhead}x overhead and additional communication
+                    Async coordination and additional communication costs
+                  </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
+                  <div class="text-sm font-medium text-gray-600">Opportunity Cost</div>
+                  <div class="text-xl font-bold text-emerald-500 mt-1">
+                    ${costs.opportunityCost.toFixed(0)}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    Lost productivity from context switching and coordination
+                  </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-rose-50 to-white p-4 rounded-lg border border-rose-200">
+                  <div class="text-sm font-medium text-gray-600">Flow Efficiency Impact</div>
+                  <div class="text-xl font-bold text-rose-500 mt-1">
+                    ${costs.flowEfficiencyCost.toFixed(0)}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    Cost of delays and waiting time from dependencies
                   </div>
                 </div>
               </div>
-  
+
               <!-- Cost Insights -->
               <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <h5 class="text-sm font-medium text-gray-900 mb-3">Cost Distribution Insights</h5>
@@ -115,11 +137,11 @@
                       </svg>
                     </div>
                     <div>
-                      <h6 class="text-sm font-medium text-gray-900">Synchronous Coordination</h6>
+                      <h6 class="text-sm font-medium text-gray-900">Direct Coordination</h6>
                       <p class="text-sm text-gray-600 mt-1">
-                        {#if (costs.monthlyMeetingCost / costs.totalCost) > 0.6}
-                          High meeting costs indicate significant time spent in synchronous coordination. Consider reducing meeting frequency or attendee count.
-                        {:else if (costs.monthlyMeetingCost / costs.totalCost) > 0.4}
+                        {#if (costs.directMeetingCost / costs.totalCost) > 0.4}
+                          High direct meeting costs indicate significant time in synchronous coordination. Consider reducing meeting frequency or attendee count.
+                        {:else if (costs.directMeetingCost / costs.totalCost) > 0.25}
                           Moderate meeting overhead. Review meeting structures for potential optimization.
                         {:else}
                           Efficient meeting structure with balanced synchronous coordination.
@@ -127,8 +149,8 @@
                       </p>
                     </div>
                   </div>
-  
-                  <!-- Communication Costs Insight -->
+
+                  <!-- Communication Overhead Insight -->
                   <div class="flex items-start gap-3">
                     <div class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                       <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,35 +158,56 @@
                       </svg>
                     </div>
                     <div>
-                      <h6 class="text-sm font-medium text-gray-900">Asynchronous Communication</h6>
+                      <h6 class="text-sm font-medium text-gray-900">Communication Overhead</h6>
                       <p class="text-sm text-gray-600 mt-1">
-                        {#if (costs.communicationCost / costs.totalCost) > 0.6}
-                          High communication overhead suggests complex dependencies. Consider streamlining team interfaces and documentation.
-                        {:else if (costs.communicationCost / costs.totalCost) > 0.4}
-                          Moderate communication costs. Look for opportunities to improve async communication channels.
+                        {#if (costs.communicationOverhead / costs.totalCost) > 0.35}
+                          High communication overhead suggests complex coordination patterns. Consider streamlining team interfaces.
+                        {:else if (costs.communicationOverhead / costs.totalCost) > 0.25}
+                          Moderate communication costs. Look for opportunities to improve async communication.
                         {:else}
-                          Well-managed async communication with effective coordination patterns.
+                          Well-managed communication overhead with effective coordination patterns.
                         {/if}
                       </p>
                     </div>
                   </div>
-  
-                  <!-- Overall Efficiency -->
+
+                  <!-- Opportunity Cost Insight -->
                   <div class="flex items-start gap-3">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
-                      <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <h6 class="text-sm font-medium text-gray-900">Cost Efficiency</h6>
+                      <h6 class="text-sm font-medium text-gray-900">Lost Productivity</h6>
                       <p class="text-sm text-gray-600 mt-1">
-                        {#if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 40)}
-                          Total coordination costs are high relative to team size. Consider reviewing team structure and dependency patterns.
-                        {:else if costs.totalCost > (teamCount * teamParams.teams[0].size * costParams.hourlyRate.developer * 20)}
-                          Moderate overall costs. Monitor trends and optimize where possible.
+                        {#if (costs.opportunityCost / costs.totalCost) > 0.3}
+                          Significant productivity loss from context switching. Consider reducing cross-team dependencies.
+                        {:else if (costs.opportunityCost / costs.totalCost) > 0.2}
+                          Moderate productivity impact. Review team boundaries and responsibilities.
                         {:else}
-                          Cost-efficient team structure with well-managed coordination overhead.
+                          Good productivity maintenance with minimal context switching overhead.
+                        {/if}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Flow Efficiency Impact -->
+                  <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h6 class="text-sm font-medium text-gray-900">Flow Efficiency</h6>
+                      <p class="text-sm text-gray-600 mt-1">
+                        {#if (costs.flowEfficiencyCost / costs.totalCost) > 0.3}
+                          High dependency-related delays affecting flow efficiency. Focus on reducing wait times and dependencies.
+                        {:else if (costs.flowEfficiencyCost / costs.totalCost) > 0.2}
+                          Moderate flow efficiency impact. Look for opportunities to optimize handoffs.
+                        {:else}
+                          Good flow efficiency with well-managed dependencies and minimal waiting time.
                         {/if}
                       </p>
                     </div>

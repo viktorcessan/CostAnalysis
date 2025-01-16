@@ -76,15 +76,19 @@
   function calculateModeMetrics(mode: ComparisonMode) {
     if (mode === 'topology') {
       // For topology mode, use independent team metrics (minimal dependencies)
+      const baseMeetingCost = costParams.meetings.duration * 
+        getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
+        costParams.meetings.attendeesPerTeam * 
+        costParams.hourlyRate.developer * 
+        nodes.length;
+
       return {
         costs: {
-          monthlyMeetingCost: costParams.meetings.duration * 
-            getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
-            costParams.meetings.attendeesPerTeam * 
-            costParams.hourlyRate.developer * 
-            nodes.length,
-          communicationCost: nodes.length * costParams.hourlyRate.developer * 5,
-          totalCost: 0
+          directMeetingCost: baseMeetingCost,
+          communicationOverhead: nodes.length * costParams.hourlyRate.developer * 2,
+          opportunityCost: 0, // No context switching in independent teams
+          flowEfficiencyCost: 0, // No dependency-related delays
+          totalCost: baseMeetingCost + (nodes.length * costParams.hourlyRate.developer * 2)
         },
         flowEfficiency: 95,
         leadTime: teamParams.baseLeadTime,
@@ -103,40 +107,51 @@
 
       // Calculate costs with adjusted dependencies
       const totalConnections = adjustedEdges.length;
-      const monthlyMeetingCost = 
+      
+      // Direct meeting costs
+      const directMeetingCost = 
         costParams.meetings.duration * 
         getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
         costParams.meetings.attendeesPerTeam * 
         costParams.hourlyRate.developer * 
-        totalConnections * 
-        costParams.meetings.communicationOverhead;
+        totalConnections;
 
-      const communicationCost =
+      // Communication overhead
+      const communicationOverhead =
         totalConnections * 
         costParams.meetings.communicationOverhead *
         costParams.hourlyRate.developer * 
-        costParams.overhead.baselineCommunicationHours +
-        adjustedEdges.reduce((sum, edge) => 
-          sum + (edge.data.strength * 
-          costParams.overhead.dependencyHoursRate * 
-          costParams.hourlyRate.developer * 
-          costParams.meetings.attendeesPerTeam), 0);
+        costParams.overhead.baselineCommunicationHours;
 
-      const totalCost = monthlyMeetingCost + communicationCost;
-      
-      // Adjust metrics based on dependency changes
-      const baseEfficiency = metrics.flowEfficiency;
-      const efficiencyImpact = dependencyAdjustment * 5; // 5% impact per level
-      const leadTimeImpact = dependencyAdjustment * 2; // 2 days impact per level
+      // Opportunity cost from context switching
+      const contextSwitchingHours = adjustedEdges.reduce((sum, edge) => 
+        sum + (edge.data.strength * 2), 0);
+      const opportunityCost = 
+        contextSwitchingHours * 
+        costParams.hourlyRate.developer * 
+        costParams.meetings.attendeesPerTeam;
+
+      // Flow efficiency impact cost
+      const avgDependencyStrength = adjustedEdges.reduce((sum, edge) => 
+        sum + edge.data.strength, 0) / (adjustedEdges.length || 1);
+      const waitTimeHours = totalConnections * avgDependencyStrength * 4;
+      const flowEfficiencyCost = 
+        waitTimeHours * 
+        costParams.hourlyRate.developer * 
+        costParams.overhead.waitTimeMultiplier;
+
+      const totalCost = directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost;
 
       return {
         costs: {
-          monthlyMeetingCost,
-          communicationCost,
+          directMeetingCost,
+          communicationOverhead,
+          opportunityCost,
+          flowEfficiencyCost,
           totalCost
         },
-        flowEfficiency: Math.max(0, Math.min(100, baseEfficiency - efficiencyImpact)),
-        leadTime: Math.max(1, metrics.avgLeadTime + leadTimeImpact),
+        flowEfficiency: Math.max(0, Math.min(100, metrics.flowEfficiency - (dependencyAdjustment * 5))),
+        leadTime: Math.max(1, metrics.avgLeadTime + (dependencyAdjustment * 2)),
         utilizationRate: 85 - (dependencyAdjustment * 5),
         serviceEfficiency: 90 - (dependencyAdjustment * 5)
       };
@@ -145,39 +160,51 @@
       const totalConnections = targetDependencyMatrix.reduce((sum, row, i) => 
         sum + row.reduce((rowSum, val, j) => i !== j ? rowSum + (val > 0 ? 1 : 0) : rowSum, 0), 0);
       
-      const monthlyMeetingCost = 
+      // Direct meeting costs
+      const directMeetingCost = 
         costParams.meetings.duration * 
         getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
         costParams.meetings.attendeesPerTeam * 
         costParams.hourlyRate.developer * 
-        totalConnections * 
-        costParams.meetings.communicationOverhead;
+        totalConnections;
 
-      const communicationCost =
+      // Communication overhead
+      const communicationOverhead =
         totalConnections * 
         costParams.meetings.communicationOverhead *
         costParams.hourlyRate.developer * 
-        costParams.overhead.baselineCommunicationHours +
-        targetDependencyMatrix.reduce((sum, row, i) => 
-          sum + row.reduce((rowSum, val, j) => 
-            i !== j ? rowSum + (val * 
-              costParams.overhead.dependencyHoursRate * 
-              costParams.hourlyRate.developer * 
-              costParams.meetings.attendeesPerTeam) : rowSum, 0), 0);
+        costParams.overhead.baselineCommunicationHours;
 
-      const totalCost = monthlyMeetingCost + communicationCost;
+      // Opportunity cost from context switching
+      const totalDependencyStrength = targetDependencyMatrix.reduce((sum, row, i) => 
+        sum + row.reduce((rowSum, val, j) => i !== j ? rowSum + val : rowSum, 0), 0);
+      const contextSwitchingHours = totalDependencyStrength * 2;
+      const opportunityCost = 
+        contextSwitchingHours * 
+        costParams.hourlyRate.developer * 
+        costParams.meetings.attendeesPerTeam;
+
+      // Flow efficiency impact cost
+      const avgDependencyStrength = totalDependencyStrength / (totalConnections || 1);
+      const waitTimeHours = totalConnections * avgDependencyStrength * 4;
+      const flowEfficiencyCost = 
+        waitTimeHours * 
+        costParams.hourlyRate.developer * 
+        costParams.overhead.waitTimeMultiplier;
+
+      const totalCost = directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost;
 
       // Calculate average dependency level
-      const avgDependencyLevel = targetDependencyMatrix.reduce((sum, row, i) => 
-        sum + row.reduce((rowSum, val, j) => i !== j ? rowSum + val : rowSum, 0), 0) / totalConnections;
-      
-      const efficiencyImpact = (avgDependencyLevel - 2) * 5; // 5% impact per level above/below baseline
-      const leadTimeImpact = (avgDependencyLevel - 2) * 2; // 2 days impact per level
+      const avgDependencyLevel = totalDependencyStrength / (totalConnections || 1);
+      const efficiencyImpact = (avgDependencyLevel - 2) * 5;
+      const leadTimeImpact = (avgDependencyLevel - 2) * 2;
 
       return {
         costs: {
-          monthlyMeetingCost,
-          communicationCost,
+          directMeetingCost,
+          communicationOverhead,
+          opportunityCost,
+          flowEfficiencyCost,
           totalCost
         },
         flowEfficiency: Math.max(0, Math.min(100, metrics.flowEfficiency - efficiencyImpact)),

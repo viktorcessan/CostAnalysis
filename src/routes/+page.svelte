@@ -2,6 +2,7 @@
 <script lang="ts">
   import { base } from '$app/paths';
   import '@fontsource/caveat';
+  import Napkin from './napkin.svelte';
 
   const features = [
     {
@@ -75,151 +76,9 @@
     </div>
   </div>
 
-  <!-- Napkin Analysis Section -->
-  <div class="py-24 bg-gradient-to-br from-gray-50 via-white to-gray-50 relative overflow-hidden">
-    <!-- Background decorative elements -->
-    <div class="absolute top-0 left-0 w-full h-full">
-      <div class="absolute top-10 left-10 w-32 h-32 bg-secondary/5 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-10 right-10 w-48 h-48 bg-secondary/5 rounded-full blur-3xl"></div>
-    </div>
-    
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-      <!-- Section Title -->
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold text-gray-900 mb-4">
-          Quick Analysis, Real Insights
-        </h2>
-        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-          Start with a napkin calculation, end with actionable insights
-        </p>
-      </div>
-
-      <div class="flex flex-col md:flex-row items-center gap-16">
-        <!-- Left side: Napkin -->
-        <div class="flex-1 transform hover:scale-105 transition-transform duration-300">
-          <div class="relative w-full max-w-md mx-auto group">
-            <!-- Napkin shadow for depth -->
-            <div class="absolute inset-0 bg-gray-900/5 rounded-lg transform translate-x-2 translate-y-2 -rotate-1"></div>
-            
-            <!-- Main napkin -->
-            <div class="bg-[#f7f4eb] p-8 rounded-lg shadow-lg transform rotate-2 relative backdrop-blur-sm backdrop-filter">
-              <!-- Napkin texture -->
-              <div class="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-lg"></div>
-              
-              <!-- Napkin border -->
-              <div class="absolute top-0 left-0 w-full h-full border-t-4 border-l-4 border-gray-300/50 rounded-lg"></div>
-              
-              <!-- Content container -->
-              <div class="space-y-6 transform -rotate-2 relative">
-                <div class="font-handwriting text-2xl mb-2 text-secondary">Operations Analysis</div>
-                
-                <!-- Team Cost Analysis -->
-                <div class="space-y-2 font-handwriting">
-                  <div class="text-gray-700 text-lg">Team Structure:</div>
-                  <div class="pl-4 space-y-1">
-                    <div class="flex justify-between">
-                      <span>Dev Team: 8 ppl</span>
-                      <span class="text-secondary">×</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Avg Cost: $8k/mo</span>
-                      <span class="text-secondary">=</span>
-                    </div>
-                    <div class="border-t border-gray-400 mt-2 pt-2">
-                      <span class="font-bold text-lg">Total: $64k/mo</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Platform Costs -->
-                <div class="space-y-2 font-handwriting">
-                  <div class="text-gray-700 text-lg">Platform Costs:</div>
-                  <div class="pl-4 space-y-1">
-                    <div class="flex justify-between">
-                      <span>Infrastructure</span>
-                      <span>$12k</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Tools & Licenses</span>
-                      <span>$3k</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Support</span>
-                      <span>$5k</span>
-                    </div>
-                    <div class="border-t border-gray-400 mt-2 pt-2">
-                      <span class="font-bold text-lg">Monthly: $20k</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Quick Analysis -->
-                <div class="mt-6 pt-4 border-t-2 border-dashed border-gray-400">
-                  <div class="font-handwriting space-y-2">
-                    <div class="flex justify-between text-lg">
-                      <span>Total Monthly:</span>
-                      <span class="font-bold">~$84k</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Per Developer:</span>
-                      <span>$10.5k</span>
-                    </div>
-                    <div class="mt-3 text-secondary font-bold text-lg">
-                      Optimization Target: -15%
-                      <div class="inline-block ml-2 transform -rotate-12">→</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Coffee stain effects -->
-                <div class="absolute -bottom-4 -right-4 w-16 h-16 rounded-full bg-[#C8A484] opacity-10 transform rotate-12"></div>
-                <div class="absolute top-8 -right-2 w-10 h-10 rounded-full bg-[#C8A484] opacity-5"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right side: Text -->
-        <div class="flex-1 text-center md:text-left">
-          <div class="space-y-6 max-w-lg">
-            <h3 class="text-3xl font-bold text-gray-900 mb-4">
-              Back-of-Napkin Operations Analysis
-            </h3>
-            <p class="text-xl text-gray-600 leading-relaxed">
-              Sometimes the best operational insights start with a quick calculation. Our tool brings this intuitive approach to life, helping you rapidly evaluate costs and opportunities.
-            </p>
-            <div class="space-y-4 text-gray-600">
-              <div class="flex items-start gap-3">
-                <div class="mt-1">
-                  <svg class="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-                <p>Quick calculations to validate your operational decisions</p>
-              </div>
-              <div class="flex items-start gap-3">
-                <div class="mt-1">
-                  <svg class="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-                <p>Instant visibility into team and platform costs</p>
-              </div>
-              <div class="flex items-start gap-3">
-                <div class="mt-1">
-                  <svg class="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-                <p>Clear optimization targets to guide your decisions</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- Napkin section-->
+  <Napkin />
+  
   <!-- Features Section -->
   <div class="py-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

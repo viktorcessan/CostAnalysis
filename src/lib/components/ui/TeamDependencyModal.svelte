@@ -2,13 +2,11 @@
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
   import { clickOutside } from '$lib/actions/clickOutside';
-  import ExpertModal from './ExpertModal.svelte';
 
   export let show = false;
   export let template = '';
 
   let copied = false;
-  let showExpertModal = false;
 
   function copyToClipboard() {
     navigator.clipboard.writeText(template);
@@ -20,10 +18,6 @@
 
   function openChatGPT() {
     window.open('https://chat.openai.com', '_blank');
-  }
-
-  function openExpertModal() {
-    showExpertModal = true;
   }
 
   function handleModalClick(event: MouseEvent) {
@@ -97,22 +91,11 @@
             </svg>
             Open ChatGPT
           </button>
-          <button
-            on:click={openExpertModal}
-            class="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 flex items-center justify-center gap-2 focus:ring-2 focus:ring-offset-2 focus:ring-primary/50"
-          >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Schedule Expert Call
-          </button>
         </div>
       </div>
     </div>
   </div>
 {/if}
-
-<ExpertModal bind:show={showExpertModal} />
 
 <style>
   pre {

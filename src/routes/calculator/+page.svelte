@@ -134,10 +134,12 @@
                 on:click={() => handleGoalSelect(goal)}
               >
                 <div class="p-8">
-                  <div class="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300">
-                    {@html goal.icon}
+                  <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                      {@html goal.icon}
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 ml-4">{goal.name}</h3>
                   </div>
-                  <h3 class="text-xl font-semibold text-gray-900 mb-3">{goal.name}</h3>
                   <p class="text-sm text-gray-600 mb-6 leading-relaxed">{goal.description}</p>
                   <div class="space-y-3">
                     {#each goal.benefits as benefit}

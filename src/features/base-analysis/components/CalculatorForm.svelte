@@ -14,46 +14,10 @@
   import 'tippy.js/dist/tippy.css';
   import 'tippy.js/themes/light-border.css';
 
-  let model: CalculatorModel;
+  // Initialize variables before store subscription
+  let model: CalculatorModel = 'team';
   let solution: SolutionType = 'platform';
   
-  // Subscribe to store changes and sync local state
-  calculatorStore.subscribe(state => {
-    model = state.model;
-    solution = state.solution;
-    
-    // Sync form state with store
-    const currentState = calculatorStore.getCurrentState();
-    if (currentState.baseInputs) {
-      if ('teamSize' in currentState.baseInputs) {
-        teamSize = currentState.baseInputs.teamSize;
-        hourlyRate = currentState.baseInputs.hourlyRate;
-        serviceEfficiency = currentState.baseInputs.serviceEfficiency;
-        operationalOverhead = currentState.baseInputs.operationalOverhead;
-      } else {
-        monthlyTickets = currentState.baseInputs.monthlyTickets;
-        hoursPerTicket = currentState.baseInputs.hoursPerTicket;
-        peoplePerTicket = currentState.baseInputs.peoplePerTicket;
-        slaCompliance = currentState.baseInputs.slaCompliance;
-      }
-    }
-    
-    if (currentState.solutionInputs) {
-      const { type, platform, outsource, hybrid } = currentState.solutionInputs;
-      solution = type;
-      
-      if (platform) {
-        platformInputs = { ...platformInputs, ...platform };
-      }
-      if (outsource) {
-        outsourceInputs = { ...outsourceInputs, ...outsource };
-      }
-      if (hybrid) {
-        hybridInputs = { ...hybridInputs, ...hybrid };
-      }
-    }
-  });
-
   // Team model inputs
   let teamSize = 5;
   let hourlyRate = 75;
@@ -107,6 +71,15 @@
     transitionCost: 30000
   };
 
+  // Local state for percentage values (0-100 integers)
+  let serviceEfficiencyPercent = Math.round(serviceEfficiency * 100);
+  let operationalOverheadPercent = Math.round(operationalOverhead * 100);
+  let teamReductionPercent = Math.round(platformInputs.teamReduction * 100);
+  let processEfficiencyPercent = Math.round(platformInputs.processEfficiency * 100);
+  let managementOverheadPercent = Math.round(outsourceInputs.managementOverhead * 100);
+  let qualityImpactPercent = Math.round(outsourceInputs.qualityImpact * 100);
+  let knowledgeLossPercent = Math.round(outsourceInputs.knowledgeLoss * 100);
+
   // Input constraints
   const constraints = {
     teamSize: { min: 1, max: 15, step: 1 },
@@ -129,6 +102,43 @@
     transitionCost: { min: 0, max: 100000, step: 1000 },
     portion: { min: 0, max: 100, step: 5 }
   };
+
+  // Subscribe to store changes and sync local state
+  calculatorStore.subscribe(state => {
+    model = state.model;
+    solution = state.solution;
+    
+    // Sync form state with store
+    const currentState = calculatorStore.getCurrentState();
+    if (currentState.baseInputs) {
+      if ('teamSize' in currentState.baseInputs) {
+        teamSize = currentState.baseInputs.teamSize;
+        hourlyRate = currentState.baseInputs.hourlyRate;
+        serviceEfficiency = currentState.baseInputs.serviceEfficiency;
+        operationalOverhead = currentState.baseInputs.operationalOverhead;
+      } else {
+        monthlyTickets = currentState.baseInputs.monthlyTickets;
+        hoursPerTicket = currentState.baseInputs.hoursPerTicket;
+        peoplePerTicket = currentState.baseInputs.peoplePerTicket;
+        slaCompliance = currentState.baseInputs.slaCompliance;
+      }
+    }
+    
+    if (currentState.solutionInputs) {
+      const { type, platform, outsource, hybrid } = currentState.solutionInputs;
+      solution = type;
+      
+      if (platform) {
+        platformInputs = { ...platformInputs, ...platform };
+      }
+      if (outsource) {
+        outsourceInputs = { ...outsourceInputs, ...outsource };
+      }
+      if (hybrid) {
+        hybridInputs = { ...hybridInputs, ...hybrid };
+      }
+    }
+  });
 
   // Handle team inputs
   function handleTeamInputs() {
@@ -217,16 +227,6 @@
     hybridInputs = { ...hybridInputs }; // Force reactivity
     updateSolutionInputs();
   }
-
-  // Add these at the top of the script section
-  // Local state for percentage values (0-100 integers)
-  let serviceEfficiencyPercent = Math.round(serviceEfficiency * 100);
-  let operationalOverheadPercent = Math.round(operationalOverhead * 100);
-  let teamReductionPercent = Math.round(platformInputs.teamReduction * 100);
-  let processEfficiencyPercent = Math.round(platformInputs.processEfficiency * 100);
-  let managementOverheadPercent = Math.round(outsourceInputs.managementOverhead * 100);
-  let qualityImpactPercent = Math.round(outsourceInputs.qualityImpact * 100);
-  let knowledgeLossPercent = Math.round(outsourceInputs.knowledgeLoss * 100);
 
   // Simple function to handle percentage inputs
   function handlePercentageChange(e: Event, field: string) {
@@ -388,6 +388,7 @@
 
 <div class="bg-white rounded-xl shadow-lg p-6 space-y-8">
   <!-- Header Section -->
+  <!--
   <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-2 rounded-lg border border-secondary/20">
     <p class="text-secondary text-xs leading-relaxed">
       {#if model === 'team'}
@@ -399,6 +400,7 @@
       {/if}
     </p>
   </div>
+  -->
    
   <!-- Solution Selection Section -->
   <div class="space-y-4">
@@ -419,48 +421,50 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       {#each ['platform', 'outsource', 'hybrid'] as solutionType}
         <button
-          class="solution-card relative p-4 rounded-lg border transition-all transform {
+          class="solution-card relative p-3 rounded-lg border transition-all min-h-[90px] {
             solution === solutionType
               ? 'active bg-gradient-to-br from-secondary to-secondary text-white shadow-md'
               : 'bg-white text-gray-900 shadow hover:shadow-md'
           }"
           on:click={() => updateSolution(solutionType)}>
-          <!-- Solution Icon and Title in one row -->
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-md bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
-              {#if solutionType === 'platform'}
-                <svg class="w-5 h-5 {solution === solutionType ? 'text-white' : 'text-secondary'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                </svg>
-              {:else if solutionType === 'outsource'}
-                <svg class="w-5 h-5 {solution === solutionType ? 'text-white' : 'text-secondary'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              {:else}
-                <svg class="w-5 h-5 {solution === solutionType ? 'text-white' : 'text-secondary'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          <div class="flex flex-col h-full">
+            <!-- Solution Icon and Title in one row -->
+            <div class="flex items-start gap-2 mb-2">
+              <div class="w-8 h-8 rounded-md bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
+                {#if solutionType === 'platform'}
+                  <svg class="w-5 h-5 {solution === solutionType ? 'text-white' : 'text-secondary'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  </svg>
+                {:else if solutionType === 'outsource'}
+                  <svg class="w-5 h-5 {solution === solutionType ? 'text-white' : 'text-secondary'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                {:else}
+                  <svg class="w-5 h-5 {solution === solutionType ? 'text-white' : 'text-secondary'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                {/if}
+              </div>
+              
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-medium truncate">
+                  {solutionType === 'platform' ? 'Platform Solution' :
+                   solutionType === 'outsource' ? 'Outsourcing Solution' :
+                   'Hybrid Solution'}
+                </h3>
+                <p class="text-xs mt-0.5 {solution === solutionType ? 'text-white text-opacity-90' : 'text-gray-600'}">
+                  {solutionType === 'platform' ? 'Automate Operations Costs through platform investment' :
+                   solutionType === 'outsource' ? 'Transfer Operations Costs to external providers' :
+                   'Combine platform automation with outsourcing'}
+                </p>
+              </div>
+              
+              {#if solution === solutionType}
+                <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
               {/if}
             </div>
-            
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base font-medium truncate">
-                {solutionType === 'platform' ? 'Platform Solution' :
-                 solutionType === 'outsource' ? 'Outsourcing Solution' :
-                 'Hybrid Solution'}
-              </h3>
-              <p class="text-xs mt-0.5 {solution === solutionType ? 'text-white text-opacity-90' : 'text-gray-600'}">
-                {solutionType === 'platform' ? 'Automate Operations Costs through platform investment' :
-                 solutionType === 'outsource' ? 'Transfer Operations Costs to external providers' :
-                 'Combine platform automation with outsourcing'}
-              </p>
-            </div>
-            
-            {#if solution === solutionType}
-              <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            {/if}
           </div>
         </button>
       {/each}
@@ -850,7 +854,7 @@
     </div>
 
     <!-- Solution Configuration -->
-    <div class="section-container mt-4">
+    <div class="section-container mt-4" style="min-height: 400px; display: flex; flex-direction: column;">
       <div class="section-header">
         <div>
           <h3 class="section-title">Solution Configuration</h3>
@@ -2083,6 +2087,9 @@
   .section-container {
     @apply bg-gray-50 p-4 rounded-xl border border-gray-200 hover:border-secondary/20 
            transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden;
+    min-height: 400px; 
+    display: flex; 
+    flex-direction: column;
   }
 
   /* Section header styles */
@@ -2109,8 +2116,7 @@
 
   /* Hybrid section styles */
   .hybrid-section {
-    @apply bg-white p-3 rounded-lg border-l-2 border shadow-sm hover:shadow-md 
-           transition-all duration-300 mb-4 overflow-hidden;
+    @apply bg-white p-3 rounded-lg border border-gray-100 mt-4;
   }
 
   .hybrid-platform {

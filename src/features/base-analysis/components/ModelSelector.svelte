@@ -25,12 +25,11 @@
             </svg>
           </div>
         </div>
-        <h3 class="text-xl font-semibold text-gray-900">Team-Based Model</h3>
+        <h3 class="text-xl font-semibold text-gray-900">Head-Count Based Tracking</h3>
       </div>
       <div class="flex-1 w-full">
         <p class="text-sm text-gray-600 mb-6 leading-relaxed">
-          Your Operations Costs is organized around dedicated teams that handle various types of work. 
-          This model focuses on team capacity, utilization, and operational efficiency.
+        Select this if you track costs based on team capacity and employee allocation. This model focuses on workforce efficiency and operational utilization.
         </p>
         <div class="space-y-3">
           <div class="flex items-center text-sm text-gray-700">
@@ -39,7 +38,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            Fixed team size with defined roles
+            Costs are tied to employee time and resource usage
           </div>
           <div class="flex items-center text-sm text-gray-700">
             <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
@@ -47,7 +46,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            Focus on team utilization and efficiency
+            Emphasizes team-based productivity and performance
           </div>
           <div class="flex items-center text-sm text-gray-700">
             <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
@@ -55,7 +54,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            Stable resource allocation
+            Supports predictable cost allocation for stable teams
           </div>
         </div>
       </div>
@@ -80,8 +79,7 @@
       </div>
       <div class="flex-1 w-full">
         <p class="text-sm text-gray-600 mb-6 leading-relaxed">
-          Your Operations Costs is organized around individual tickets or work items. 
-          This model focuses on throughput, processing time, and resource allocation per ticket.
+          Select this if you track costs based on individual tickets or work items. This model emphasizes throughput, processing time, and per-ticket resource allocation.
         </p>
         <div class="space-y-3">
           <div class="flex items-center text-sm text-gray-700">
@@ -90,7 +88,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            Variable resource allocation
+            Costs are calculated per ticket or task completed
           </div>
           <div class="flex items-center text-sm text-gray-700">
             <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
@@ -98,7 +96,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            Focus on throughput and SLAs
+            Focuses on improving throughput and meeting SLAs
           </div>
           <div class="flex items-center text-sm text-gray-700">
             <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
@@ -106,7 +104,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            Flexible team scaling
+            Enables flexible resource scaling based on demand
           </div>
         </div>
       </div>

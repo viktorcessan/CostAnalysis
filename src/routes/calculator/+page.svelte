@@ -171,8 +171,9 @@
               </svg>
             </button>
             <div>
-              <h2 class="text-3xl font-bold text-gray-900">How do you work today?</h2>
-              <p class="text-lg text-gray-600 mt-2">Select your current Operations Costs model to get started.</p>
+              <h2 class="text-3xl font-bold text-gray-900">How do you track operational costs?
+              </h2>
+              <p class="text-lg text-gray-600 mt-2">Choose the model that best represents how your organization measures and allocates operational costs. This impacts how you approach building a business case or identifying your platform budget.</p>
             </div>
           </div>
           <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />

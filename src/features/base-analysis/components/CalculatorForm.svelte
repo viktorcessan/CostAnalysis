@@ -233,7 +233,12 @@
     const target = e.target as HTMLInputElement;
     if (!target) return;
 
-    const value = Math.max(0, Math.min(100, Math.round(+target.value)));
+    let value;
+    if (field === 'qualityImpact') {
+      value = Math.max(-50, Math.min(50, Math.round(+target.value)));
+    } else {
+      value = Math.max(0, Math.min(100, Math.round(+target.value)));
+    }
     target.value = value.toString();
 
     switch (field) {
@@ -1419,7 +1424,7 @@
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the time required for the transition to outsourcing. This helps calculate the total time to transition.
+                      Estimate the time required for the transition to outsourcing. This helps calculate the total transition period and associated costs.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1464,7 +1469,7 @@
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the one-time cost for transitioning to the outsourced solution. This helps calculate the total cost of transitioning.
+                      Estimate the one-time cost for transitioning to the outsourced solution. This helps calculate the total investment required.
                     </p>
                   </div>
                   <div class="input-group">

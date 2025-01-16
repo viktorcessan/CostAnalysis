@@ -410,9 +410,9 @@
         <p class="text-sm text-gray-600 mt-1">Select the approach that best aligns with your goals</p>
       </div>
       <button 
-        class="tooltip bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition-colors" 
+        class="tooltip bg-gray-100 p-1.5 rounded-full hover:bg-gray-200 transition-colors" 
         data-tippy-content="Choose between platform automation, outsourcing, or a hybrid approach">
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </button>
@@ -429,7 +429,7 @@
           on:click={() => updateSolution(solutionType)}>
           <div class="flex flex-col h-full">
             <!-- Solution Icon and Title in one row -->
-            <div class="flex items-start gap-2 mb-2">
+            <div class="flex items-center gap-2 mb-2">
               <div class="w-8 h-8 rounded-md bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
                 {#if solutionType === 'platform'}
                   <svg class="w-5 h-5 {solution === solutionType ? 'text-white' : 'text-secondary'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -445,7 +445,6 @@
                   </svg>
                 {/if}
               </div>
-              
               <div class="flex-1 min-w-0">
                 <h3 class="text-base font-medium truncate">
                   {solutionType === 'platform' ? 'Platform Solution' :
@@ -458,12 +457,13 @@
                    'Combine platform automation with outsourcing'}
                 </p>
               </div>
-              
-              {#if solution === solutionType}
-                <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              {/if}
+              <div>
+                {#if solution === solutionType}
+                  <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                {/if}
+              </div>
             </div>
           </div>
         </button>
@@ -1760,7 +1760,6 @@
               </div>
               <div class="input-group">
                 <div class="relative">
-                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                   <input
                     type="number"
                     id="outsourceVendorRate"
@@ -1986,7 +1985,6 @@
               </div>
               <div class="input-group">
                 <div class="relative">
-                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                   <input
                     type="number"
                     id="transitionCost"

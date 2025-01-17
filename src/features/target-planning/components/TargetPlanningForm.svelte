@@ -154,6 +154,18 @@
     return typeof value === 'string' ? parseFloat(value) : value;
   }
 
+  // Add function to calculate crossover point
+  function calculateCrossoverPoint(monthlySavings: number, platformCost: number): number {
+    if (monthlySavings <= 0) return 0;
+    return Math.ceil(platformCost / monthlySavings);
+  }
+
+  // Add function to calculate break-even point
+  function calculateBreakEvenPoint(monthlySavings: number, platformCost: number): number {
+    if (monthlySavings <= 0) return 0;
+    return Math.ceil((platformCost * 2) / monthlySavings);
+  }
+
   // Update reactive calculation
   $: {
     // Calculate base costs
@@ -174,17 +186,17 @@
     const monthlySavings = monthlyBaseCost - monthlyOperatingCost - monthlyPlatformCost;
     const annualSavings = monthlySavings * 12;
 
-    // Calculate required platform investment to achieve break-even
-    const totalSavingsAtTarget = monthlySavings * breakEvenMonths;
-    const platformInvestment = Math.max(
-      totalSavingsAtTarget, // Minimum investment needed to break even
-      monthlyPlatformCost * implementationMonths // Minimum investment based on implementation time
-    );
+    // Calculate platform investment based on break-even target
+    const platformInvestment = monthlySavings * breakEvenMonths / 2; // Divide by 2 since break-even is when we recover twice the investment
+
+    // Calculate actual crossover and break-even points
+    const crossoverPoint = calculateCrossoverPoint(monthlySavings, platformInvestment);
+    const breakEvenPoint = calculateBreakEvenPoint(monthlySavings, platformInvestment);
 
     // Update results
     results = {
-      platformCost: platformInvestment, // Total platform investment
-      platformMaintenance: monthlyPlatformCost, // Monthly maintenance cost
+      platformCost: platformInvestment,
+      platformMaintenance: monthlyPlatformCost,
       timeToBuild: implementationMonths,
       teamReduction: teamTarget,
       processEfficiency: efficiencyTarget,
@@ -194,7 +206,9 @@
       targetValue: breakEvenMonths,
       timeframe: breakEvenMonths,
       monthlyBaseCost,
-      monthlyOperatingCostReduction: monthlySavings
+      monthlyOperatingCostReduction: monthlySavings,
+      crossoverPoint,
+      breakEvenPoint
     };
 
     // Update calculator store
@@ -221,29 +235,10 @@
     { id: 'costs', label: 'Cost Analysis' }
   ];
 
-  // Add function to find actual break-even point
-  function findBreakEvenPoint(baselineCosts: number[], platformCosts: number[]): number {
-    for (let i = 1; i < baselineCosts.length; i++) {
-      if (platformCosts[i] <= baselineCosts[i] && platformCosts[i-1] > baselineCosts[i-1]) {
-        // Linear interpolation for more accurate break-even point
-        const x1 = i - 1;
-        const x2 = i;
-        const y1 = platformCosts[i-1] - baselineCosts[i-1];
-        const y2 = platformCosts[i] - baselineCosts[i];
-        const breakEven = x1 + (0 - y1) * (x2 - x1) / (y2 - y1);
-        return Math.round(breakEven);
-      }
-    }
-    return -1; // No break-even found
-  }
-
-  // Update chart data generation to match base analysis
+  // Update chart data generation
   function generateTimelineData(results: TargetBasedPlanningResults) {
-    const months = Math.max(60, results.timeframe + 24); // Show at least target + 2 years
+    const months = Math.max(60, results.timeframe + 24);
     const monthlyBaseline = results.monthlyBaseCost;
-    const targetBreakEvenMonths = results.timeframe;
-    
-    // Calculate monthly values
     const monthlyOperatingCost = monthlyBaseline - results.monthlyOperatingCostReduction;
     const monthlyPlatformCost = results.platformMaintenance;
     const implementationCost = results.platformCost / results.timeToBuild;
@@ -252,10 +247,8 @@
     const baselineCosts: number[] = Array.from({length: months + 1}, (_, i) => monthlyBaseline * i);
     const platformCosts: number[] = Array.from({length: months + 1}, (_, i) => {
       if (i <= results.timeToBuild) {
-        // During implementation: Platform investment (spread evenly) + maintenance
         return (implementationCost * i) + (monthlyPlatformCost * i);
       } else {
-        // After implementation: Total platform cost + cumulative operating costs
         const implementationTotal = results.platformCost;
         const operatingMonths = i - results.timeToBuild;
         return implementationTotal + 
@@ -270,13 +263,16 @@
       return monthlyBaseline - monthlyOperatingCost - monthlyPlatformCost;
     });
 
-    // Add break-even point marker
-    const breakEvenPoint = findBreakEvenPoint(baselineCosts, platformCosts);
-    const breakEvenMarker: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
-      return i === breakEvenPoint ? baselineCosts[i] : null;
+    // Add crossover and break-even point markers
+    const crossoverMarker: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
+      return i === results.crossoverPoint ? platformCosts[i] : null;
     });
 
-    const data = {
+    const breakEvenMarker: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
+      return i === results.breakEvenPoint ? platformCosts[i] : null;
+    });
+
+    return {
       labels: Array.from({length: months + 1}, (_, i) => `Month ${i}`),
       datasets: [
         {
@@ -286,7 +282,7 @@
           backgroundColor: '#94a3b880',
           fill: true,
           pointRadius: 0,
-          order: 4
+          order: 5
         },
         {
           label: 'Platform Solution',
@@ -295,7 +291,7 @@
           backgroundColor: '#dd993380',
           fill: true,
           pointRadius: 0,
-          order: 3
+          order: 4
         },
         {
           label: 'Monthly Savings',
@@ -305,6 +301,16 @@
           borderDash: [5, 5],
           fill: true,
           pointRadius: 0,
+          order: 3
+        },
+        {
+          label: 'Cost Savings Crossover',
+          data: crossoverMarker,
+          borderColor: '#dd9933',
+          backgroundColor: '#dd9933',
+          pointRadius: 8,
+          pointStyle: 'rectRot',
+          showLine: false,
           order: 2
         },
         {
@@ -315,17 +321,10 @@
           pointRadius: 8,
           pointStyle: 'rectRot',
           showLine: false,
-          order: 1,
-          pointLabels: {
-            display: false
-          },
-          datalabels: {
-            display: false
-          }
+          order: 1
         }
       ]
     };
-    return data;
   }
 
   // Update chart rendering
@@ -1122,14 +1121,14 @@
               <button 
                 class="tooltip ml-1"
                 aria-label="Help information" 
-                data-tippy-content="Target months to break even on investment">
+                data-tippy-content="Target months to fully recover the investment and gain up to the investment cost">
                 <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
             </label>
             <p class="input-description">
-              Target number of months to break even on the platform investment.
+              Target number of months to recover the full investment and gain up to the investment cost. The cost savings crossover will occur at approximately half this time.
             </p>
           </div>
           <div class="input-group">
@@ -1457,6 +1456,53 @@
 <!-- Results Container -->
 {#if results}
   <div class="space-y-6">
+    <!-- Metrics Display -->
+    <div class="space-y-4">
+      <!-- Platform Budget Box -->
+      <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h4 class="text-lg font-semibold text-green-800">Projected Platform Budget</h4>
+            <p class="text-sm text-green-600 mt-1">Total investment required for implementation and operation</p>
+          </div>
+          <p class="text-3xl font-bold text-green-700">${results.platformCost.toLocaleString()}</p>
+        </div>
+      </div>
+
+      <!-- Additional Metrics Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Monthly Savings -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div class="flex flex-col">
+            <p class="text-gray-500 text-sm">Monthly Savings</p>
+            <p class="text-xl font-semibold text-green-600 mt-1">
+              ${results.monthlyOperatingCostReduction.toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <!-- Cost Savings Crossover -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div class="flex flex-col">
+            <p class="text-gray-500 text-sm">Cost Savings Crossover</p>
+            <p class="text-xl font-semibold text-orange-600 mt-1">
+              {results.crossoverPoint} months
+            </p>
+          </div>
+        </div>
+
+        <!-- Break-Even Point -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div class="flex flex-col">
+            <p class="text-gray-500 text-sm">Break-Even Point</p>
+            <p class="text-xl font-semibold text-green-600 mt-1">
+              {results.breakEvenPoint} months
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Cost Analysis Chart -->
     <div class="bg-white rounded-lg shadow-sm p-6">
       <h3 class="text-sm font-semibold text-gray-900 mb-4">Cost Analysis</h3>
@@ -1477,27 +1523,12 @@
           <span>Monthly Savings</span>
         </div>
         <div class="flex items-center">
+          <span class="inline-block w-4 h-4 bg-[#dd9933] transform rotate-45 mr-2"></span>
+          <span>Crossover: {results.crossoverPoint} months</span>
+        </div>
+        <div class="flex items-center">
           <span class="inline-block w-4 h-4 bg-[#22c55e] transform rotate-45 mr-2"></span>
-          <span>Break-Even: {results.timeframe} months</span>
-        </div>
-      </div>
-      <!-- Additional Metrics -->
-      <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div class="p-3 bg-gray-50 rounded-lg">
-          <p class="text-gray-500">Monthly Cost</p>
-          <p class="text-lg font-semibold text-gray-900">${results.monthlyBaseCost.toLocaleString()}</p>
-        </div>
-        <div class="p-3 bg-gray-50 rounded-lg">
-          <p class="text-gray-500">Monthly Savings</p>
-          <p class="text-lg font-semibold text-green-600">${results.monthlyOperatingCostReduction.toLocaleString()}</p>
-        </div>
-        <div class="p-3 bg-gray-50 rounded-lg">
-          <p class="text-gray-500">Platform Cost</p>
-          <p class="text-lg font-semibold text-gray-900">${results.platformCost.toLocaleString()}</p>
-        </div>
-        <div class="p-3 bg-gray-50 rounded-lg">
-          <p class="text-gray-500">ROI Period</p>
-          <p class="text-lg font-semibold text-gray-900">{results.timeframe} months</p>
+          <span>Break-Even: {results.breakEvenPoint} months</span>
         </div>
       </div>
     </div>

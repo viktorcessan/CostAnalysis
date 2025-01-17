@@ -505,14 +505,14 @@
                   Team Size
                   <button 
                     class="tooltip ml-1" 
-                    data-tippy-content="Number of full-time employees on the team">
+                    data-tippy-content="Specify the total number of employees assigned to operations costs tasks. This helps calculate the workforce costs involved.">
                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
                 <p class="input-description">
-                  Define the number of employees currently working on Operations Costs. This helps calculate baseline operational costs.
+                  Define the number of employees currently working on operational tasks.
                 </p>
               </div>
               <div class="input-group">
@@ -547,14 +547,14 @@
                   Hourly Rate
                   <button 
                     class="tooltip ml-1" 
-                    data-tippy-content="Average hourly cost per team member">
+                    data-tippy-content="Include all direct and indirect costs associated with each employee, such as salaries, benefits, and operational overhead.">
                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
                 <p class="input-description">
-                  Estimate the average hourly cost per employee. This helps calculate total operational costs.
+                  Input the average hourly cost per team member, including salary, benefits, and overhead.
                 </p>
               </div>
               <div class="input-group">
@@ -592,14 +592,14 @@
                   Service Efficiency
                   <button 
                     class="tooltip ml-1" 
-                    data-tippy-content="Percentage of time spent on productive work [0-100%]">
+                    data-tippy-content="This is the proportion of employee time dedicated to productive, value-adding tasks. It excludes time spent on meetings, idle time, or administrative overhead.">
                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
                 <p class="input-description">
-                  Estimate the percentage of time spent on productive work. This helps calculate the number of productive hours.
+                  Estimate the percentage of time employees spend on productive work.
                 </p>
               </div>
               <div class="input-group">
@@ -637,14 +637,14 @@
                   Operational Overhead
                   <button 
                     class="tooltip ml-1" 
-                    data-tippy-content="Additional costs as a percentage of base costs [0-100%]">
+                    data-tippy-content="Include expenses such as tools, software, office costs, and utilities that contribute to overall operational expenses.">
                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
                 <p class="input-description">
-                  Estimate the percentage of additional costs beyond base costs. This helps calculate total operational costs.
+                  Specify the percentage of additional costs beyond base salaries.
                 </p>
               </div>
               <div class="input-group">
@@ -857,7 +857,7 @@
     <div class="section-container mt-4" style="min-height: 400px; display: flex; flex-direction: column;">
       <div class="section-header">
         <div>
-          <h3 class="section-title">Solution Configuration</h3>
+          <h3 class="section-title">Approach Configuration</h3>
           <p class="section-subtitle">
             {#if solution === 'platform'}
               Configure platform automation parameters
@@ -870,135 +870,7 @@
         </div>
       </div>
 
-      {#if solution === 'hybrid'}
-        <div class="space-y-4">
-          <!-- Work Distribution -->
-          <div class="bg-white p-3 rounded-lg border border-gray-200">
-            <h4 class="input-section-title">Work Distribution</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <!-- Platform Portion -->
-              <div class="field-container">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <label class="field-label" for="platformPortion">
-                      Platform Portion
-                      <button 
-                        class="tooltip ml-1" 
-                        data-tippy-content="Percentage of work handled by the platform">
-                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                    </label>
-                    <p class="input-description">
-                      Determine the percentage of work handled by the platform. This helps calculate the platform's contribution to Operations Costs.
-                    </p>
-                  </div>
-                  <div class="input-group">
-                    <div class="relative">
-                      <input
-                        type="number"
-                        id="platformPortion"
-                        bind:value={hybridInputs.platformPortion}
-                        on:input={(e) => updateHybridPortions('platform', e)}
-                        min={constraints.portion.min}
-                        max={constraints.portion.max}
-                        step={constraints.portion.step}
-                        class="number-input pr-8"
-                      />
-                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
-                    </div>
-                    <input
-                      type="range"
-                      bind:value={hybridInputs.platformPortion}
-                      on:input={(e) => updateHybridPortions('platform', e)}
-                      min={constraints.portion.min}
-                      max={constraints.portion.max}
-                      step={constraints.portion.step}
-                      class="slider-input"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Vendor Portion -->
-              <div class="field-container">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <label class="field-label" for="vendorPortion">
-                      Vendor Portion
-                      <button 
-                        class="tooltip ml-1" 
-                        data-tippy-content="Percentage of work handled by vendors">
-                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                    </label>
-                    <p class="input-description">
-                      Determine the percentage of work handled by external vendors. This helps calculate the vendor's contribution to Operations Costs.
-                    </p>
-                  </div>
-                  <div class="input-group">
-                    <div class="relative">
-                      <input
-                        type="number"
-                        id="vendorPortion"
-                        bind:value={hybridInputs.vendorPortion}
-                        on:input={(e) => updateHybridPortions('vendor', e)}
-                        min={constraints.portion.min}
-                        max={constraints.portion.max}
-                        step={constraints.portion.step}
-                        class="number-input pr-8"
-                      />
-                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
-                    </div>
-                    <input
-                      type="range"
-                      bind:value={hybridInputs.vendorPortion}
-                      on:input={(e) => updateHybridPortions('vendor', e)}
-                      min={constraints.portion.min}
-                      max={constraints.portion.max}
-                      step={constraints.portion.step}
-                      class="slider-input"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Distribution Visualization -->
-              <div class="col-span-full mt-4">
-                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden flex">
-                  <div
-                    class="h-full bg-secondary transition-all duration-300"
-                    style="width: {hybridInputs.platformPortion}%"
-                    title="Platform: {hybridInputs.platformPortion}%"
-                  ></div>
-                  <div
-                    class="h-full bg-green-500 transition-all duration-300"
-                    style="width: {hybridInputs.vendorPortion}%"
-                    title="Vendor: {hybridInputs.vendorPortion}%"
-                  ></div>
-                  <div
-                    class="h-full bg-gray-300 transition-all duration-300"
-                    style="width: {100 - hybridInputs.platformPortion - hybridInputs.vendorPortion}%"
-                    title="Remaining: {100 - hybridInputs.platformPortion - hybridInputs.vendorPortion}%"
-                  ></div>
-                </div>
-                <div class="flex justify-between mt-2">
-                  <span class="text-xs text-secondary">Platform: {hybridInputs.platformPortion}%</span>
-                  <span class="text-xs text-green-600">Vendor: {hybridInputs.vendorPortion}%</span>
-                  <span class="text-xs text-gray-500">
-                    Remaining: {100 - hybridInputs.platformPortion - hybridInputs.vendorPortion}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Platform Component -->
-          <div class="hybrid-section hybrid-platform">
-            <h4 class="input-section-title text-secondary">Platform Parameters</h4>
+      {#if solution === 'platform'}
             <div class="grid grid-cols-1 gap-2">
               <!-- Platform Cost -->
               <div class="field-container">
@@ -1008,14 +880,14 @@
                       Platform Investment
                       <button 
                         class="tooltip ml-1" 
-                        data-tippy-content="Initial investment required for platform development (P_i)">
+                    data-tippy-content="This is the one-time upfront cost for platform design, development, and implementation. Include any associated infrastructure or software expenses.">
                         <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the initial investment required for platform development. This helps calculate the total cost of the platform.
+                  Input the estimated initial investment required to develop or implement the platform.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1053,14 +925,14 @@
                       Monthly Maintenance
                       <button 
                         class="tooltip ml-1" 
-                        data-tippy-content="Monthly cost to maintain the platform (P_m)">
+                    data-tippy-content="Include costs for updates, hosting, technical support, and other ongoing expenses necessary to keep the platform functional.">
                         <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the monthly cost to maintain the platform. This helps calculate the total cost of platform maintenance.
+                  Estimate the recurring monthly cost to maintain the platform.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1090,8 +962,7 @@
                 </div>
               </div>
 
-              <!-- Time to Build (only for platform solution) -->
-              {#if isPlatformSolution(solution)}
+          <!-- Time to Build -->
                 <div class="field-container">
                   <div class="flex items-start justify-between">
                     <div>
@@ -1099,14 +970,14 @@
                         Time to Build
                         <button 
                           class="tooltip ml-1" 
-                          data-tippy-content="Time required to build the platform in months (T_b)">
+                    data-tippy-content="Input the estimated time in months for platform development, testing, and deployment to ensure it's fully operational.">
                           <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </button>
                       </label>
                       <p class="input-description">
-                        Estimate the time required to build the platform. This helps calculate the total time to market.
+                  Specify the estimated time it takes to develop and deploy the platform from when a team starts working on the platform.
                       </p>
                     </div>
                     <div class="input-group">
@@ -1141,17 +1012,17 @@
                   <div class="flex items-start justify-between">
                     <div>
                       <label class="field-label" for="teamReduction">
-                        Team Reduction
+                  Time Freed Up
                         <button 
                           class="tooltip ml-1" 
-                          data-tippy-content="Expected reduction in team size through automation [0-100%]">
+                    data-tippy-content="Provide how much of the teams time you anticipate will be freed up due to improved efficiency from automation.">
                           <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </button>
                       </label>
                       <p class="input-description">
-                        Estimate the expected reduction in team size through automation. This helps calculate the number of employees that can be reduced.
+                  Estimate the percentage of the original teams time that will be freed up once the platform is developed.
                       </p>
                     </div>
                     <div class="input-group">
@@ -1180,7 +1051,6 @@
                     </div>
                   </div>
                 </div>
-              {/if}
 
               <!-- Process Efficiency -->
               <div class="field-container">
@@ -1190,14 +1060,14 @@
                       Process Efficiency
                       <button 
                         class="tooltip ml-1" 
-                        data-tippy-content="Expected improvement in process efficiency [0-100%]">
+                    data-tippy-content="This percentage reflects the productivity gain from implementing the platform. Consider reduced idle time, faster workflows, or improved accuracy.">
                         <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the expected improvement in process efficiency. This helps calculate the potential increase in productivity.
+                  Define the expected improvement in process efficiency as a result of automation. I.e. how much more effective will the original team get, alternatively how much faster will they be able to complete the same work once the platform is completed.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1227,17 +1097,13 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- Outsourcing Component -->
-          <div class="hybrid-section hybrid-outsource">
-            <h4 class="input-section-title text-green-600">Outsourcing Parameters</h4>
+      {:else if solution === 'outsource'}
             <div class="grid grid-cols-1 gap-2">
               <!-- Vendor Rate -->
               <div class="field-container">
                 <div class="flex items-start justify-between">
                   <div>
-                    <label class="field-label" for="hybridVendorRate">
+                <label class="field-label" for="outsourceVendorRate">
                       Vendor Rate
                       <button 
                         class="tooltip ml-1" 
@@ -1248,15 +1114,19 @@
                       </button>
                     </label>
                     <p class="input-description">
+                  {#if model === 'team'}
                       Specify the hourly rate charged by external vendors. This is used to calculate outsourced Operations Costs costs.
+                  {:else}
+                    Specify the hourly rate charged by external vendors for ticket processing.
+                  {/if}
                     </p>
                   </div>
                   <div class="input-group">
                     <div class="relative">
                       <input
                         type="number"
-                        id="hybridVendorRate"
-                        bind:value={hybridInputs.vendorRate}
+                    id="outsourceVendorRate"
+                    bind:value={outsourceInputs.vendorRate}
                         on:input={(e) => handleNumericInput(e, 'vendorRate')}
                         min={constraints.vendorRate.min}
                         max={constraints.vendorRate.max}
@@ -1267,7 +1137,7 @@
                     </div>
                     <input
                       type="range"
-                      bind:value={hybridInputs.vendorRate}
+                  bind:value={outsourceInputs.vendorRate}
                       on:input={(e) => handleNumericInput(e, 'vendorRate')}
                       min={constraints.vendorRate.min}
                       max={constraints.vendorRate.max}
@@ -1383,7 +1253,7 @@
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the expected knowledge loss during the transition to outsourcing. This helps calculate the potential loss of expertise.
+                  Estimate the expected knowledge loss during transition. This helps calculate the impact on service quality over time.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1421,14 +1291,14 @@
                       Transition Time
                       <button 
                         class="tooltip ml-1" 
-                        data-tippy-content="Time required for transition in months (T_t)">
+                    data-tippy-content="Time required for transition in months">
                         <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the time required for the transition to outsourcing. This helps calculate the total transition period and associated costs.
+                  Estimate the time required for transition. This helps calculate the total transition period and associated costs.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1436,22 +1306,22 @@
                       <input
                         type="number"
                         id="transitionTime"
-                        value={hybridInputs.transitionTime}
+                    value={outsourceInputs.transitionTime}
                         on:input={(e) => handleNumericInput(e, 'transitionTime')}
-                        min={1}
-                        max={12}
-                        step={1}
+                    min={constraints.transitionTime.min}
+                    max={constraints.transitionTime.max}
+                    step={constraints.transitionTime.step}
                         class="number-input pr-8"
                       />
                       <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">mo</span>
                     </div>
                     <input
                       type="range"
-                      value={hybridInputs.transitionTime}
+                  value={outsourceInputs.transitionTime}
                       on:input={(e) => handleNumericInput(e, 'transitionTime')}
-                      min={1}
-                      max={12}
-                      step={1}
+                  min={constraints.transitionTime.min}
+                  max={constraints.transitionTime.max}
+                  step={constraints.transitionTime.step}
                       class="slider-input"
                     />
                   </div>
@@ -1466,14 +1336,14 @@
                       Transition Cost
                       <button 
                         class="tooltip ml-1" 
-                        data-tippy-content="One-time cost for transitioning to outsourced solution (O_t)">
+                    data-tippy-content="One-time cost for transitioning to outsourced solution">
                         <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </button>
                     </label>
                     <p class="input-description">
-                      Estimate the one-time cost for transitioning to the outsourced solution. This helps calculate the total investment required.
+                  Estimate the one-time cost for transitioning. This helps calculate the total investment required.
                     </p>
                   </div>
                   <div class="input-group">
@@ -1481,31 +1351,157 @@
                       <input
                         type="number"
                         id="transitionCost"
-                        value={hybridInputs.transitionCost}
+                    value={outsourceInputs.transitionCost}
                         on:input={(e) => handleNumericInput(e, 'transitionCost')}
-                        min={0}
-                        max={100000}
-                        step={1000}
+                    min={constraints.transitionCost.min}
+                    max={constraints.transitionCost.max}
+                    step={constraints.transitionCost.step}
                         class="number-input"
                       />
                       <span class="unit-suffix">$</span>
                     </div>
                     <input
                       type="range"
-                      value={hybridInputs.transitionCost}
+                  value={outsourceInputs.transitionCost}
                       on:input={(e) => handleNumericInput(e, 'transitionCost')}
-                      min={0}
-                      max={100000}
-                      step={1000}
+                  min={constraints.transitionCost.min}
+                  max={constraints.transitionCost.max}
+                  step={constraints.transitionCost.step}
                       class="slider-input"
                     />
                   </div>
                 </div>
               </div>
             </div>
+      {:else if solution === 'hybrid'}
+        <div class="space-y-4">
+          <!-- Work Distribution -->
+          <div class="bg-white p-3 rounded-lg border border-gray-200">
+            <h4 class="input-section-title">Work Distribution</h4>
+            <div class="grid grid-cols-1 gap-2">
+              <!-- Platform Portion -->
+              <div class="field-container">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <label class="field-label" for="platformPortion">
+                      Platform Portion
+                      <button 
+                        class="tooltip ml-1" 
+                        data-tippy-content="Percentage of work handled by the platform">
+                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </label>
+                    <p class="input-description">
+                      Determine the percentage of work handled by the platform. This helps calculate the platform's contribution to Operations Costs.
+                    </p>
           </div>
+                  <div class="input-group">
+                    <div class="relative">
+                      <input
+                        type="number"
+                        id="platformPortion"
+                        bind:value={hybridInputs.platformPortion}
+                        on:input={(e) => updateHybridPortions('platform', e)}
+                        min={constraints.portion.min}
+                        max={constraints.portion.max}
+                        step={constraints.portion.step}
+                        class="number-input pr-8"
+                      />
+                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
         </div>
-      {:else if solution === 'platform'}
+                    <input
+                      type="range"
+                      bind:value={hybridInputs.platformPortion}
+                      on:input={(e) => updateHybridPortions('platform', e)}
+                      min={constraints.portion.min}
+                      max={constraints.portion.max}
+                      step={constraints.portion.step}
+                      class="slider-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vendor Portion -->
+              <div class="field-container">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <label class="field-label" for="vendorPortion">
+                      Vendor Portion
+                      <button 
+                        class="tooltip ml-1" 
+                        data-tippy-content="Percentage of work handled by vendors">
+                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                    </label>
+                    <p class="input-description">
+                      Determine the percentage of work handled by external vendors. This helps calculate the vendor's contribution to Operations Costs.
+                    </p>
+                  </div>
+                  <div class="input-group">
+                    <div class="relative">
+                      <input
+                        type="number"
+                        id="vendorPortion"
+                        bind:value={hybridInputs.vendorPortion}
+                        on:input={(e) => updateHybridPortions('vendor', e)}
+                        min={constraints.portion.min}
+                        max={constraints.portion.max}
+                        step={constraints.portion.step}
+                        class="number-input pr-8"
+                      />
+                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">%</span>
+                    </div>
+                    <input
+                      type="range"
+                      bind:value={hybridInputs.vendorPortion}
+                      on:input={(e) => updateHybridPortions('vendor', e)}
+                      min={constraints.portion.min}
+                      max={constraints.portion.max}
+                      step={constraints.portion.step}
+                      class="slider-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Distribution Visualization -->
+              <div class="col-span-full mt-4">
+                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden flex">
+                  <div
+                    class="h-full bg-secondary transition-all duration-300"
+                    style="width: {hybridInputs.platformPortion}%"
+                    title="Platform: {hybridInputs.platformPortion}%"
+                  ></div>
+                  <div
+                    class="h-full bg-green-500 transition-all duration-300"
+                    style="width: {hybridInputs.vendorPortion}%"
+                    title="Vendor: {hybridInputs.vendorPortion}%"
+                  ></div>
+                  <div
+                    class="h-full bg-gray-300 transition-all duration-300"
+                    style="width: {100 - hybridInputs.platformPortion - hybridInputs.vendorPortion}%"
+                    title="Remaining: {100 - hybridInputs.platformPortion - hybridInputs.vendorPortion}%"
+                  ></div>
+                </div>
+                <div class="flex justify-between mt-2">
+                  <span class="text-xs text-secondary">Platform: {hybridInputs.platformPortion}%</span>
+                  <span class="text-xs text-green-600">Vendor: {hybridInputs.vendorPortion}%</span>
+                  <span class="text-xs text-gray-500">
+                    Remaining: {100 - hybridInputs.platformPortion - hybridInputs.vendorPortion}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Platform Component -->
+          <div class="hybrid-section hybrid-platform">
+            <h4 class="input-section-title text-secondary">Platform Parameters</h4>
         <div class="grid grid-cols-1 gap-2">
           <!-- Platform Cost -->
           <div class="field-container">
@@ -1734,13 +1730,17 @@
             </div>
           </div>
         </div>
-      {:else if solution === 'outsource'}
+          </div>
+
+          <!-- Outsourcing Component -->
+          <div class="hybrid-section hybrid-outsource">
+            <h4 class="input-section-title text-green-600">Outsourcing Parameters</h4>
         <div class="grid grid-cols-1 gap-2">
           <!-- Vendor Rate -->
           <div class="field-container">
             <div class="flex items-start justify-between">
               <div>
-                <label class="field-label" for="outsourceVendorRate">
+                    <label class="field-label" for="hybridVendorRate">
                   Vendor Rate
                   <button 
                     class="tooltip ml-1" 
@@ -1751,19 +1751,15 @@
                   </button>
                 </label>
                 <p class="input-description">
-                  {#if model === 'team'}
                     Specify the hourly rate charged by external vendors. This is used to calculate outsourced Operations Costs costs.
-                  {:else}
-                    Specify the hourly rate charged by external vendors for ticket processing.
-                  {/if}
                 </p>
               </div>
               <div class="input-group">
                 <div class="relative">
                   <input
                     type="number"
-                    id="outsourceVendorRate"
-                    bind:value={outsourceInputs.vendorRate}
+                        id="hybridVendorRate"
+                        bind:value={hybridInputs.vendorRate}
                     on:input={(e) => handleNumericInput(e, 'vendorRate')}
                     min={constraints.vendorRate.min}
                     max={constraints.vendorRate.max}
@@ -1774,7 +1770,7 @@
                 </div>
                 <input
                   type="range"
-                  bind:value={outsourceInputs.vendorRate}
+                      bind:value={hybridInputs.vendorRate}
                   on:input={(e) => handleNumericInput(e, 'vendorRate')}
                   min={constraints.vendorRate.min}
                   max={constraints.vendorRate.max}
@@ -1890,7 +1886,7 @@
                   </button>
                 </label>
                 <p class="input-description">
-                  Estimate the expected knowledge loss during transition. This helps calculate the impact on service quality over time.
+                      Estimate the expected knowledge loss during the transition to outsourcing. This helps calculate the potential loss of expertise.
                 </p>
               </div>
               <div class="input-group">
@@ -1928,14 +1924,14 @@
                   Transition Time
                   <button 
                     class="tooltip ml-1" 
-                    data-tippy-content="Time required for transition in months">
+                        data-tippy-content="Time required for transition in months (T_t)">
                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
                 <p class="input-description">
-                  Estimate the time required for transition. This helps calculate the total transition period and associated costs.
+                      Estimate the time required for the transition to outsourcing. This helps calculate the total transition period and associated costs.
                 </p>
               </div>
               <div class="input-group">
@@ -1943,22 +1939,22 @@
                   <input
                     type="number"
                     id="transitionTime"
-                    value={outsourceInputs.transitionTime}
+                        value={hybridInputs.transitionTime}
                     on:input={(e) => handleNumericInput(e, 'transitionTime')}
-                    min={constraints.transitionTime.min}
-                    max={constraints.transitionTime.max}
-                    step={constraints.transitionTime.step}
+                        min={1}
+                        max={12}
+                        step={1}
                     class="number-input pr-8"
                   />
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">mo</span>
                 </div>
                 <input
                   type="range"
-                  value={outsourceInputs.transitionTime}
+                      value={hybridInputs.transitionTime}
                   on:input={(e) => handleNumericInput(e, 'transitionTime')}
-                  min={constraints.transitionTime.min}
-                  max={constraints.transitionTime.max}
-                  step={constraints.transitionTime.step}
+                      min={1}
+                      max={12}
+                      step={1}
                   class="slider-input"
                 />
               </div>
@@ -1973,14 +1969,14 @@
                   Transition Cost
                   <button 
                     class="tooltip ml-1" 
-                    data-tippy-content="One-time cost for transitioning to outsourced solution">
+                        data-tippy-content="One-time cost for transitioning to outsourced solution (O_t)">
                     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </label>
                 <p class="input-description">
-                  Estimate the one-time cost for transitioning. This helps calculate the total investment required.
+                      Estimate the one-time cost for transitioning to the outsourced solution. This helps calculate the total investment required.
                 </p>
               </div>
               <div class="input-group">
@@ -1988,24 +1984,26 @@
                   <input
                     type="number"
                     id="transitionCost"
-                    value={outsourceInputs.transitionCost}
+                        value={hybridInputs.transitionCost}
                     on:input={(e) => handleNumericInput(e, 'transitionCost')}
-                    min={constraints.transitionCost.min}
-                    max={constraints.transitionCost.max}
-                    step={constraints.transitionCost.step}
+                        min={0}
+                        max={100000}
+                        step={1000}
                     class="number-input"
                   />
                   <span class="unit-suffix">$</span>
                 </div>
                 <input
                   type="range"
-                  value={outsourceInputs.transitionCost}
+                      value={hybridInputs.transitionCost}
                   on:input={(e) => handleNumericInput(e, 'transitionCost')}
-                  min={constraints.transitionCost.min}
-                  max={constraints.transitionCost.max}
-                  step={constraints.transitionCost.step}
+                      min={0}
+                      max={100000}
+                      step={1000}
                   class="slider-input"
                 />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

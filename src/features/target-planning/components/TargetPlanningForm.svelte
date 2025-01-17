@@ -186,12 +186,18 @@
     const monthlySavings = monthlyBaseCost - monthlyOperatingCost - monthlyPlatformCost;
     const annualSavings = monthlySavings * 12;
 
-    // Calculate platform investment based on break-even target
-    const platformInvestment = monthlySavings * breakEvenMonths / 2; // Divide by 2 since break-even is when we recover twice the investment
+    // Calculate maximum possible investment based on savings
+    const maxPossibleInvestment = monthlySavings > 0 ? monthlySavings * breakEvenMonths : 0;
 
-    // Calculate actual crossover and break-even points
-    const crossoverPoint = calculateCrossoverPoint(monthlySavings, platformInvestment);
-    const breakEvenPoint = calculateBreakEvenPoint(monthlySavings, platformInvestment);
+    // If monthly savings is negative or zero, solution is not viable
+    const isViable = monthlySavings > 0;
+
+    // Calculate platform investment based on break-even target
+    const platformInvestment = isViable ? maxPossibleInvestment : 0;
+
+    // Calculate actual crossover and break-even points only if viable
+    const crossoverPoint = isViable ? calculateCrossoverPoint(monthlySavings, platformInvestment) : 0;
+    const breakEvenPoint = isViable ? calculateBreakEvenPoint(monthlySavings, platformInvestment) : 0;
 
     // Update results
     results = {
@@ -208,7 +214,8 @@
       monthlyBaseCost,
       monthlyOperatingCostReduction: monthlySavings,
       crossoverPoint,
-      breakEvenPoint
+      breakEvenPoint,
+      isViable
     };
 
     // Update calculator store
@@ -742,14 +749,14 @@
                 <button 
                   class="tooltip ml-1"
                   aria-label="Help information" 
-                  data-tippy-content="Number of full-time employees on the team">
+                  data-tippy-content="Input the total number of team members contributing to operational work. This helps calculate the baseline workforce costs.">
                   <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
               </label>
               <p class="input-description">
-                Define the number of employees currently working on Operations Costs.
+                Define the number of employees currently working on operational tasks.
               </p>
             </div>
             <div>
@@ -785,14 +792,14 @@
                 <button 
                   class="tooltip ml-1"
                   aria-label="Help information" 
-                  data-tippy-content="Average hourly cost per team member">
+                  data-tippy-content="Include all costs associated with each employee, such as compensation, benefits, and operational expenses.">
                   <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
               </label>
               <p class="input-description">
-                Average hourly cost per team member including benefits and overhead.
+                Input the average hourly cost per team member, including salary, benefits, and overhead.
               </p>
             </div>
             <div>
@@ -833,14 +840,14 @@
                 <button 
                   class="tooltip ml-1"
                   aria-label="Help information" 
-                  data-tippy-content="Percentage of time spent on productive work">
+                  data-tippy-content="Specify the proportion of employee time spent on tasks that directly contribute to value delivery, excluding idle or administrative time.">
                   <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
               </label>
               <p class="input-description">
-                Percentage of time spent on productive Operations Costs work.
+                Estimate the percentage of time spent on productive work.
               </p>
             </div>
             <div>
@@ -879,14 +886,14 @@
                 <button 
                   class="tooltip ml-1"
                   aria-label="Help information" 
-                  data-tippy-content="Additional costs as percentage of base costs">
+                  data-tippy-content="Include costs like software, tools, and utilities that contribute to the total operational expenses.">
                   <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
               </label>
               <p class="input-description">
-                Additional operational costs as a percentage of base costs.
+                Define the percentage of additional costs beyond salaries.
               </p>
             </div>
             <div>
@@ -1121,14 +1128,14 @@
               <button 
                 class="tooltip ml-1"
                 aria-label="Help information" 
-                data-tippy-content="Target months to fully recover the investment and gain up to the investment cost">
+                data-tippy-content="Input the timeframe for the platform to recoup its investment costs through efficiency gains or cost savings.">
                 <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
             </label>
             <p class="input-description">
-              Target number of months to recover the full investment and gain up to the investment cost. The cost savings crossover will occur at approximately half this time.
+              Specify the target number of months to break even on the platform investment.
             </p>
           </div>
           <div class="input-group">
@@ -1166,18 +1173,18 @@
           <div>
             <div class="field-info">
               <label class="field-label" for="teamReductionTarget">
-                Team Reduction
+                Time Freed Up
                 <button 
                   class="tooltip ml-1"
                   aria-label="Help information" 
-                  data-tippy-content="Target percentage reduction in team size">
+                  data-tippy-content="Provide how much of the teams time you hope to freed up due to improved efficiency from automation.">
                   <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
               </label>
               <p class="input-description">
-                Target percentage reduction in team size after platform implementation.
+                Specify how much time that you want to free up once the platform is developed.
               </p>
             </div>
             <div class="input-group">
@@ -1218,14 +1225,14 @@
                 <button 
                   class="tooltip ml-1"
                   aria-label="Help information" 
-                  data-tippy-content="Target improvement in process efficiency">
+                  data-tippy-content="Enter the percentage gain in productivity or performance you want to see from the platform.">
                   <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
               </label>
               <p class="input-description">
-                Target improvement in process efficiency after platform implementation.
+                Define the desired improvement in process efficiency.
               </p>
             </div>
             <div class="input-group">
@@ -1363,14 +1370,14 @@
               <button 
                 class="tooltip ml-1"
                 aria-label="Help information" 
-                data-tippy-content="Target monthly cost for the platform solution">
+                data-tippy-content="Include expenses for updates, hosting, and support needed to keep the platform operational.">
                 <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
             </label>
             <p class="input-description">
-              Expected monthly cost for the platform solution including maintenance.
+              Specify the expected monthly cost for maintaining your platform.
             </p>
           </div>
           <div class="input-group">
@@ -1411,14 +1418,14 @@
               <button 
                 class="tooltip ml-1"
                 aria-label="Help information" 
-                data-tippy-content="Target time to implement the platform">
+                data-tippy-content="Input the number of months it will take to deploy the platform and realize its benefits.">
                 <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
             </label>
             <p class="input-description">
-              Target time required to implement the platform solution.
+              Estimate the time required to implement the platform solution.
             </p>
           </div>
           <div class="input-group">
@@ -1463,9 +1470,19 @@
         <div class="flex justify-between items-center">
           <div>
             <h4 class="text-lg font-semibold text-green-800">Projected Platform Budget</h4>
-            <p class="text-sm text-green-600 mt-1">Total investment required for implementation and operation</p>
+            <p class="text-sm text-green-600 mt-1">
+              {#if results.isViable}
+                Total investment required for implementation and operation
+              {:else}
+                Target not possible - Monthly costs exceed potential savings
+              {/if}
+            </p>
           </div>
-          <p class="text-3xl font-bold text-green-700">${results.platformCost.toLocaleString()}</p>
+          {#if results.isViable}
+            <p class="text-3xl font-bold text-green-700">${results.platformCost.toLocaleString()}</p>
+          {:else}
+            <p class="text-3xl font-bold text-red-600">Not Viable</p>
+          {/if}
         </div>
       </div>
 
@@ -1475,9 +1492,15 @@
         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div class="flex flex-col">
             <p class="text-gray-500 text-sm">Monthly Savings</p>
-            <p class="text-xl font-semibold text-green-600 mt-1">
-              ${results.monthlyOperatingCostReduction.toLocaleString()}
-            </p>
+            {#if results.isViable}
+              <p class="text-xl font-semibold text-green-600 mt-1">
+                ${results.monthlyOperatingCostReduction.toLocaleString()}
+              </p>
+            {:else}
+              <p class="text-xl font-semibold text-red-600 mt-1">
+                Negative (${Math.abs(results.monthlyOperatingCostReduction).toLocaleString()})
+              </p>
+            {/if}
           </div>
         </div>
 
@@ -1485,9 +1508,13 @@
         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div class="flex flex-col">
             <p class="text-gray-500 text-sm">Cost Savings Crossover</p>
-            <p class="text-xl font-semibold text-orange-600 mt-1">
-              {results.crossoverPoint} months
-            </p>
+            {#if results.isViable}
+              <p class="text-xl font-semibold text-orange-600 mt-1">
+                {results.crossoverPoint} months
+              </p>
+            {:else}
+              <p class="text-xl font-semibold text-red-600 mt-1">N/A</p>
+            {/if}
           </div>
         </div>
 
@@ -1495,9 +1522,13 @@
         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div class="flex flex-col">
             <p class="text-gray-500 text-sm">Break-Even Point</p>
-            <p class="text-xl font-semibold text-green-600 mt-1">
-              {results.breakEvenPoint} months
-            </p>
+            {#if results.isViable}
+              <p class="text-xl font-semibold text-green-600 mt-1">
+                {results.breakEvenPoint} months
+              </p>
+            {:else}
+              <p class="text-xl font-semibold text-red-600 mt-1">N/A</p>
+            {/if}
           </div>
         </div>
       </div>

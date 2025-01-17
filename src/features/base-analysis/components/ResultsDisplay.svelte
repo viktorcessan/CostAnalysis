@@ -88,6 +88,35 @@
     };
   }
 
+  // Calculate crossover point
+  function calculateCrossoverPoint(): number {
+    if (!results?.monthlySavings || !currentState.solutionInputs) return 0;
+    
+    const initialCost = getInitialCost($calculatorStore);
+    const monthlySavings = results.monthlySavings;
+    
+    // If no savings or negative savings, no crossover point
+    if (monthlySavings <= 0) return 0;
+    
+    // Calculate when cumulative savings offset the initial investment
+    return Math.ceil(initialCost / monthlySavings);
+  }
+
+  // Calculate break even point
+  function calculateBreakEvenPoint(): number {
+    if (!results?.monthlySavings || !currentState.solutionInputs) return 0;
+    
+    const initialCost = getInitialCost($calculatorStore);
+    const monthlySavings = results.monthlySavings;
+    
+    // If no savings or negative savings, no break-even point
+    if (monthlySavings <= 0) return 0;
+    
+    // Calculate when total accumulated savings equal twice the initial investment
+    // (to recover the investment and gain up to the investment cost)
+    return Math.ceil((initialCost * 2) / monthlySavings);
+  }
+
   // Initialize chart
   function initChart() {
     if (!chartCanvas) return;
@@ -95,7 +124,8 @@
     const ctx = chartCanvas.getContext('2d');
     if (!ctx) return;
 
-    const breakEvenPoint = results?.breakEvenMonths || 0;
+    const breakEvenPoint = calculateBreakEvenPoint();
+    const crossoverPoint = calculateCrossoverPoint();
 
     const config = {
       type: 'line' as const,
@@ -105,7 +135,7 @@
           {
             label: 'Current Cost',
             data: [],
-            borderColor: '#6B7280', // Gray-500
+            borderColor: '#6B7280',
             backgroundColor: 'rgba(107, 114, 128, 0.05)',
             fill: true,
             pointRadius: 0,
@@ -115,7 +145,7 @@
           {
             label: 'Solution Cost',
             data: [],
-            borderColor: '#dd9933', // Theme orange
+            borderColor: '#dd9933',
             backgroundColor: 'rgba(221, 153, 51, 0.05)',
             fill: true,
             pointRadius: 0,
@@ -160,15 +190,7 @@
                 const value = context.parsed.y;
                 return `${context.dataset.label}: ${formatCurrency(value)}`;
               }
-            },
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            titleColor: '#1f2937',
-            bodyColor: '#1f2937',
-            borderColor: '#e5e7eb',
-            borderWidth: 1,
-            padding: 10,
-            boxPadding: 4,
-            displayColors: true
+            }
           },
           legend: {
             display: true,
@@ -184,31 +206,42 @@
             }
           },
           annotation: {
-            clip: false,
             common: {
-              drawTime: 'afterDraw'
+              drawTime: 'afterDatasetsDraw'
             },
             annotations: {
-              breakEven: {
+              crossover: {
                 type: 'line',
-                scaleID: 'x',
-                value: breakEvenPoint,
+                xMin: crossoverPoint,
+                xMax: crossoverPoint,
                 borderColor: '#dd9933',
                 borderWidth: 2,
                 borderDash: [6, 6],
-                drawTime: 'afterDraw',
-                display: breakEvenPoint > 0,
                 label: {
                   display: true,
-                  content: `Break-even Point (Month ${breakEvenPoint})`,
+                  content: `Cost Savings Crossover (Month ${crossoverPoint})`,
                   position: 'start',
                   backgroundColor: '#dd9933',
                   color: 'white',
-                  font: {
-                    size: 12,
-                    weight: 'bold'
-                  },
-                  rotation: 0,
+                  font: { size: 12 },
+                  padding: 8,
+                  yAdjust: -40
+                }
+              },
+              breakEven: {
+                type: 'line',
+                xMin: breakEvenPoint,
+                xMax: breakEvenPoint,
+                borderColor: '#10B981',
+                borderWidth: 2,
+                borderDash: [6, 6],
+                label: {
+                  display: true,
+                  content: `Break-even (Month ${breakEvenPoint})`,
+                  position: 'start',
+                  backgroundColor: '#10B981',
+                  color: 'white',
+                  font: { size: 12 },
                   padding: 8,
                   yAdjust: -20
                 }
@@ -226,13 +259,6 @@
                 size: 12,
                 weight: 'bold' as const
               }
-            },
-            grid: {
-              display: true,
-              drawBorder: true,
-              drawOnChartArea: true,
-              drawTicks: true,
-              color: 'rgba(0, 0, 0, 0.05)'
             }
           },
           y: {
@@ -247,13 +273,6 @@
             },
             ticks: {
               callback: (value: any) => formatCurrency(value)
-            },
-            grid: {
-              display: true,
-              drawBorder: true,
-              drawOnChartArea: true,
-              drawTicks: true,
-              color: 'rgba(0, 0, 0, 0.05)'
             }
           }
         }
@@ -690,10 +709,18 @@
     </div>
     {#if results?.solution}
       <div class="bg-gray-50 rounded-lg p-4">
-        <h4 class="text-sm font-medium text-gray-500">Break-even Point</h4>
-        <p class="mt-1 text-2xl font-semibold {results?.breakEvenMonths ? 'text-gray-900' : 'text-red-600'}">
-          {results?.breakEvenMonths ? `${results.breakEvenMonths} months` : 'Not achievable'}
+        <h4 class="text-sm font-medium text-gray-500">Cost Savings Crossover</h4>
+        <p class="mt-1 text-2xl font-semibold {calculateCrossoverPoint() ? 'text-gray-900' : 'text-red-600'}">
+          {calculateCrossoverPoint() ? `${calculateCrossoverPoint()} months` : 'Not achievable'}
         </p>
+        <p class="text-xs text-gray-600 mt-1">When cumulative savings offset initial investment</p>
+      </div>
+      <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-gray-500">Break-even Point</h4>
+        <p class="mt-1 text-2xl font-semibold {calculateBreakEvenPoint() ? 'text-gray-900' : 'text-red-600'}">
+          {calculateBreakEvenPoint() ? `${calculateBreakEvenPoint()} months` : 'Not achievable'}
+        </p>
+        <p class="text-xs text-gray-600 mt-1">When total savings equal initial investment</p>
       </div>
     {/if}
   </div>
@@ -866,13 +893,31 @@
                   scenario === 'pessimistic' ? 'text-red-600' :
                   scenario === 'base' ? 'text-blue-600' :
                   'text-green-600'
+                }">Crossover Period</div>
+                <div class="text-xl font-semibold {
+                  scenario === 'pessimistic' ? 'text-red-800' :
+                  scenario === 'base' ? 'text-blue-800' :
+                  'text-green-800'
+                }">
+                  {Math.ceil(calculateCrossoverPoint() * (
+                    scenario === 'pessimistic' ? 1.2 :
+                    scenario === 'optimistic' ? 0.8 :
+                    1
+                  ))} months
+                </div>
+              </div>
+              <div>
+                <div class="text-sm {
+                  scenario === 'pessimistic' ? 'text-red-600' :
+                  scenario === 'base' ? 'text-blue-600' :
+                  'text-green-600'
                 }">Break-even Period</div>
                 <div class="text-xl font-semibold {
                   scenario === 'pessimistic' ? 'text-red-800' :
                   scenario === 'base' ? 'text-blue-800' :
                   'text-green-800'
                 }">
-                  {Math.ceil(results.breakEvenMonths * (
+                  {Math.ceil(calculateBreakEvenPoint() * (
                     scenario === 'pessimistic' ? 1.2 :
                     scenario === 'optimistic' ? 0.8 :
                     1

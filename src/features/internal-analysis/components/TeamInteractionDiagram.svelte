@@ -188,6 +188,10 @@
   let companyDependencyLevel = 3; // Scale of 1-5 for overall company dependency level
   let dependencyMatrix = initializeDependencyMatrix(teamCount);
 
+  // Add these near the top with other state variables
+  let hierarchyLevels = 3;
+  let childrenPerNode = 2;
+
   function initializeDependencyMatrix(size: number): DependencyMatrix {
     // Create teams array using current team names if available
     const teams = teamParams.teams.slice(0, size).map(team => team.name);
@@ -277,17 +281,17 @@
         break;
         
       case 'hierarchical':
-        // Binary tree structure
+        // Calculate parent-child relationships
         for (let i = 0; i < size; i++) {
-          const leftChild = 2 * i + 1;
-          const rightChild = 2 * i + 2;
-          if (leftChild < size) {
-            dependencies[i][leftChild] = Math.max(1, Math.min(5, companyDependencyLevel));
-            dependencies[leftChild][i] = Math.max(1, Math.min(5, companyDependencyLevel));
-          }
-          if (rightChild < size) {
-            dependencies[i][rightChild] = Math.max(1, Math.min(5, companyDependencyLevel));
-            dependencies[rightChild][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+          // For each node, calculate its children indices
+          const childStartIndex = i * childrenPerNode + 1;
+          for (let j = 0; j < childrenPerNode; j++) {
+            const childIndex = childStartIndex + j;
+            if (childIndex < size) {
+              // Create bidirectional dependency
+              dependencies[i][childIndex] = Math.max(1, Math.min(5, companyDependencyLevel));
+              dependencies[childIndex][i] = Math.max(1, Math.min(5, companyDependencyLevel));
+            }
           }
         }
         break;
@@ -1426,22 +1430,26 @@
         </button>
 
         <!-- Hierarchical -->
-        <button
+        <div
           class="relative p-4 border-2 rounded-lg transition-all {
             distributionMode === 'hierarchical'
               ? 'border-secondary bg-secondary/10'
               : 'border-gray-200 hover:border-gray-300'
           }"
-          on:click={() => {
-            distributionMode = 'hierarchical';
-            const currentTeams = [...dependencyMatrix.teams];
-            const currentTeamParams = [...teamParams.teams];
-            dependencyMatrix = initializeDependencyMatrix(teamCount);
-            dependencyMatrix.teams = currentTeams;
-            teamParams.teams = currentTeamParams;
-            generateNodes();
-          }}
         >
+          <div 
+            class="w-full h-full absolute inset-0 cursor-pointer"
+            on:click={() => {
+              distributionMode = 'hierarchical';
+              const currentTeams = [...dependencyMatrix.teams];
+              const currentTeamParams = [...teamParams.teams];
+              dependencyMatrix = initializeDependencyMatrix(teamCount);
+              dependencyMatrix.teams = currentTeams;
+              teamParams.teams = currentTeamParams;
+              generateNodes();
+            }}
+          />
+          
           <div class="flex items-center gap-3 mb-2">
             <div class="w-4 h-4 rounded-full border-2 {
               distributionMode === 'hierarchical'
@@ -1456,27 +1464,91 @@
             </div>
             <span class="font-medium text-gray-900">Hierarchical</span>
           </div>
-          <p class="text-sm text-gray-600 mb-3">Teams organized in a binary tree</p>
-          <svg class="w-full h-32" viewBox="0 0 200 100">
-            <!-- Root -->
-            <circle cx="100" cy="20" r="5" class="fill-secondary"/>
-            <!-- Level 1 -->
-            <circle cx="70" cy="50" r="5" class="fill-secondary"/>
-            <circle cx="130" cy="50" r="5" class="fill-secondary"/>
-            <!-- Level 2 -->
-            <circle cx="55" cy="80" r="5" class="fill-secondary"/>
-            <circle cx="85" cy="80" r="5" class="fill-secondary"/>
-            <circle cx="115" cy="80" r="5" class="fill-secondary"/>
-            <circle cx="145" cy="80" r="5" class="fill-secondary"/>
-            <!-- Connections -->
-            <line x1="100" y1="20" x2="70" y2="50" class="stroke-secondary" stroke-width="1"/>
-            <line x1="100" y1="20" x2="130" y2="50" class="stroke-secondary" stroke-width="1"/>
-            <line x1="70" y1="50" x2="55" y2="80" class="stroke-secondary" stroke-width="1"/>
-            <line x1="70" y1="50" x2="85" y2="80" class="stroke-secondary" stroke-width="1"/>
-            <line x1="130" y1="50" x2="115" y2="80" class="stroke-secondary" stroke-width="1"/>
-            <line x1="130" y1="50" x2="145" y2="80" class="stroke-secondary" stroke-width="1"/>
-          </svg>
-        </button>
+          <p class="text-sm text-gray-600 mb-3">Teams organized in a tree structure</p>
+          <div class="space-y-2">
+            <svg class="w-full h-24" viewBox="0 0 200 100">
+              <!-- Root -->
+              <circle cx="100" cy="20" r="5" class="fill-secondary"/>
+              <!-- Level 1 -->
+              <circle cx="70" cy="50" r="5" class="fill-secondary"/>
+              <circle cx="130" cy="50" r="5" class="fill-secondary"/>
+              <!-- Level 2 -->
+              <circle cx="55" cy="80" r="5" class="fill-secondary"/>
+              <circle cx="85" cy="80" r="5" class="fill-secondary"/>
+              <circle cx="115" cy="80" r="5" class="fill-secondary"/>
+              <circle cx="145" cy="80" r="5" class="fill-secondary"/>
+              <!-- Connections -->
+              <line x1="100" y1="20" x2="70" y2="50" class="stroke-secondary" stroke-width="1"/>
+              <line x1="100" y1="20" x2="130" y2="50" class="stroke-secondary" stroke-width="1"/>
+              <line x1="70" y1="50" x2="55" y2="80" class="stroke-secondary" stroke-width="1"/>
+              <line x1="70" y1="50" x2="85" y2="80" class="stroke-secondary" stroke-width="1"/>
+              <line x1="130" y1="50" x2="115" y2="80" class="stroke-secondary" stroke-width="1"/>
+              <line x1="130" y1="50" x2="145" y2="80" class="stroke-secondary" stroke-width="1"/>
+            </svg>
+            <div class="flex items-center justify-center gap-4 relative z-10">
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                  on:click|stopPropagation={() => {
+                    if (hierarchyLevels > 2) {
+                      hierarchyLevels--;
+                      dependencyMatrix = initializeDependencyMatrix(teamCount);
+                      generateNodes();
+                    }
+                  }}
+                >
+                  -
+                </button>
+                <span class="text-sm text-gray-600">{hierarchyLevels} Levels</span>
+                <button
+                  type="button"
+                  class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                  on:click|stopPropagation={() => {
+                    const maxLevels = Math.floor(Math.log(teamCount) / Math.log(childrenPerNode)) + 1;
+                    if (hierarchyLevels < maxLevels) {
+                      hierarchyLevels++;
+                      dependencyMatrix = initializeDependencyMatrix(teamCount);
+                      generateNodes();
+                    }
+                  }}
+                >
+                  +
+                </button>
+              </div>
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                  on:click|stopPropagation={() => {
+                    if (childrenPerNode > 2) {
+                      childrenPerNode--;
+                      dependencyMatrix = initializeDependencyMatrix(teamCount);
+                      generateNodes();
+                    }
+                  }}
+                >
+                  -
+                </button>
+                <span class="text-sm text-gray-600">{childrenPerNode} Children</span>
+                <button
+                  type="button"
+                  class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                  on:click|stopPropagation={() => {
+                    const maxChildren = Math.floor(Math.sqrt(teamCount));
+                    if (childrenPerNode < maxChildren) {
+                      childrenPerNode++;
+                      dependencyMatrix = initializeDependencyMatrix(teamCount);
+                      generateNodes();
+                    }
+                  }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Clustered -->
         <div
@@ -2043,6 +2115,9 @@
   bind:dependencyMatrix
   bind:costParams
   bind:companyDependencyLevel
+  {distributionMode}
+  {hierarchyLevels}
+  {childrenPerNode}
   on:applyMatrix={applyMatrix}
 />
 

@@ -27,9 +27,52 @@
     };
   };
   export let companyDependencyLevel: number;
+  export let distributionMode: 'even' | 'hub-spoke' | 'sequential' | 'mesh' | 'hierarchical' | 'clustered';
+  export let hierarchyLevels: number;
+  export let childrenPerNode: number;
 
   function applyMatrix() {
     dispatch('applyMatrix');
+  }
+
+  function calculateCircularPosition(index: number, totalNodes: number) {
+    const angleStep = (2 * Math.PI) / totalNodes;
+    const angle = angleStep * index - Math.PI / 2;
+    const horizontalScale = 1.4;
+    const radiusX = Math.min(450, Math.max(350, 1000 / totalNodes));
+    const radiusY = Math.min(350, Math.max(300, 800 / totalNodes));
+    
+    return {
+      x: 500 + radiusX * Math.cos(angle) * horizontalScale,
+      y: 400 + radiusY * Math.sin(angle)
+    };
+  }
+
+  function calculateHierarchicalPosition(index: number, totalNodes: number) {
+    // Calculate the level of this node
+    let level = 0;
+    let nodesInPreviousLevels = 0;
+    let nodesInCurrentLevel = 1;
+    
+    while (nodesInPreviousLevels + nodesInCurrentLevel <= index) {
+      nodesInPreviousLevels += nodesInCurrentLevel;
+      level++;
+      nodesInCurrentLevel = Math.pow(childrenPerNode, level);
+    }
+    
+    // Calculate position within level
+    const positionInLevel = index - nodesInPreviousLevels;
+    const totalNodesInLevel = Math.min(Math.pow(childrenPerNode, level), totalNodes - nodesInPreviousLevels);
+    
+    // Calculate x and y coordinates
+    const levelHeight = 800 / (hierarchyLevels + 1);
+    const levelWidth = 900;
+    const nodeSpacing = levelWidth / (totalNodesInLevel + 1);
+    
+    return {
+      x: 50 + nodeSpacing * (positionInLevel + 1),
+      y: 50 + levelHeight * level
+    };
   }
 </script>
 
@@ -152,31 +195,32 @@
         {@const targetNode = nodes.find(n => n.id === edge.target)}
         {@const sourceIndex = nodes.findIndex(n => n.id === edge.source)}
         {@const targetIndex = nodes.findIndex(n => n.id === edge.target)}
-        {@const angleStep = (2 * Math.PI) / nodes.length}
-        {@const sourceAngle = angleStep * sourceIndex - Math.PI / 2}
-        {@const targetAngle = angleStep * targetIndex - Math.PI / 2}
-          {@const horizontalScale = 1.4}
-          {@const radiusX = Math.min(450, Math.max(350, 1000 / (nodes.length)))}
-          {@const radiusY = Math.min(350, Math.max(300, 800 / (nodes.length)))}
-        {@const x1 = 500 + radiusX * Math.cos(sourceAngle) * horizontalScale}
-          {@const y1 = 400 + radiusY * Math.sin(sourceAngle)}
-        {@const x2 = 500 + radiusX * Math.cos(targetAngle) * horizontalScale}
-          {@const y2 = 400 + radiusY * Math.sin(targetAngle)}
+        
+        {@const sourcePos = distributionMode === 'hierarchical' 
+          ? calculateHierarchicalPosition(sourceIndex, nodes.length)
+          : calculateCircularPosition(sourceIndex, nodes.length)}
+        {@const targetPos = distributionMode === 'hierarchical'
+          ? calculateHierarchicalPosition(targetIndex, nodes.length)
+          : calculateCircularPosition(targetIndex, nodes.length)}
         
         {#if visualizationMode === 'weighted'}
           <!-- Single weighted line -->
-          {@const midX = (x1 + x2) / 2}
-          {@const midY = (y1 + y2) / 2}
-          {@const dx = x2 - x1}
-          {@const dy = y2 - y1}
-            {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * 40}
-            {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * 40}
-            {@const nodeRadius = 75}
+          {@const midX = (sourcePos.x + targetPos.x) / 2}
+          {@const midY = (sourcePos.y + targetPos.y) / 2}
+          {@const dx = targetPos.x - sourcePos.x}
+          {@const dy = targetPos.y - sourcePos.y}
+          {@const normalX = distributionMode === 'hierarchical' 
+            ? 0 
+            : -dy / Math.sqrt(dx * dx + dy * dy) * 40}
+          {@const normalY = distributionMode === 'hierarchical'
+            ? 0
+            : dx / Math.sqrt(dx * dx + dy * dy) * 40}
+          {@const nodeRadius = 75}
           {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
-          {@const endX = x2 - (dx * nodeRadius / totalLength)}
-          {@const endY = y2 - (dy * nodeRadius / totalLength)}
-          {@const startX = x1 + (dx * nodeRadius / totalLength)}
-          {@const startY = y1 + (dy * nodeRadius / totalLength)}
+          {@const endX = targetPos.x - (dx * nodeRadius / totalLength)}
+          {@const endY = targetPos.y - (dy * nodeRadius / totalLength)}
+          {@const startX = sourcePos.x + (dx * nodeRadius / totalLength)}
+          {@const startY = sourcePos.y + (dy * nodeRadius / totalLength)}
           {@const strength = edge.data.strength}
           {@const strokeWidth = 1 + (strength - 1) * 0.8}
           {@const color = strength <= 1 ? '#22c55e' : 
@@ -196,19 +240,23 @@
         {:else}
           <!-- Multiple lines based on dependency strength -->
           {#each Array(edge.data.strength) as _, lineIndex}
-              {@const offset = (lineIndex - (edge.data.strength - 1) / 2) * 30}
-            {@const midX = (x1 + x2) / 2}
-            {@const midY = (y1 + y2) / 2}
-            {@const dx = x2 - x1}
-            {@const dy = y2 - y1}
-              {@const normalX = -dy / Math.sqrt(dx * dx + dy * dy) * (80 + offset)}
-              {@const normalY = dx / Math.sqrt(dx * dx + dy * dy) * (80 + offset)}
-              {@const nodeRadius = 75}
+            {@const offset = (lineIndex - (edge.data.strength - 1) / 2) * (distributionMode === 'hierarchical' ? 15 : 30)}
+            {@const midX = (sourcePos.x + targetPos.x) / 2}
+            {@const midY = (sourcePos.y + targetPos.y) / 2}
+            {@const dx = targetPos.x - sourcePos.x}
+            {@const dy = targetPos.y - sourcePos.y}
+            {@const normalX = distributionMode === 'hierarchical'
+              ? offset
+              : -dy / Math.sqrt(dx * dx + dy * dy) * (80 + offset)}
+            {@const normalY = distributionMode === 'hierarchical'
+              ? 0
+              : dx / Math.sqrt(dx * dx + dy * dy) * (80 + offset)}
+            {@const nodeRadius = 75}
             {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
-            {@const endX = x2 - (dx * nodeRadius / totalLength)}
-            {@const endY = y2 - (dy * nodeRadius / totalLength)}
-            {@const startX = x1 + (dx * nodeRadius / totalLength)}
-            {@const startY = y1 + (dy * nodeRadius / totalLength)}
+            {@const endX = targetPos.x - (dx * nodeRadius / totalLength)}
+            {@const endY = targetPos.y - (dy * nodeRadius / totalLength)}
+            {@const startX = sourcePos.x + (dx * nodeRadius / totalLength)}
+            {@const startY = sourcePos.y + (dy * nodeRadius / totalLength)}
             {@const strength = edge.data.strength}
             {@const color = strength <= 1 ? '#22c55e' : 
                            strength <= 2 ? '#84cc16' :
@@ -229,16 +277,12 @@
 
       <!-- Draw nodes on top of edges -->
       {#each nodes as node, i}
-        {@const angleStep = (2 * Math.PI) / nodes.length}
-        {@const angle = angleStep * i - Math.PI / 2}
-          {@const horizontalScale = 1.4}
-          {@const radiusX = Math.min(450, Math.max(350, 1000 / (nodes.length)))}
-          {@const radiusY = Math.min(350, Math.max(300, 800 / (nodes.length)))}
-        {@const x = 500 + radiusX * Math.cos(angle) * horizontalScale}
-          {@const y = 400 + radiusY * Math.sin(angle)}
+        {@const position = distributionMode === 'hierarchical' 
+          ? calculateHierarchicalPosition(i, nodes.length)
+          : calculateCircularPosition(i, nodes.length)}
         
         <!-- Team Node -->
-        <g transform="translate({x}, {y})">
+        <g transform="translate({position.x}, {position.y})">
           <!-- Enhanced node shadow -->
           <rect
               x="-70"

@@ -99,6 +99,7 @@
     if (monthlySavings <= 0) return 0;
     
     // Calculate when cumulative savings offset the initial investment
+    // This is when the cumulative savings equals the initial cost
     return Math.ceil(initialCost / monthlySavings);
   }
 
@@ -112,8 +113,7 @@
     // If no savings or negative savings, no break-even point
     if (monthlySavings <= 0) return 0;
     
-    // Calculate when total accumulated savings equal twice the initial investment
-    // (to recover the investment and gain up to the investment cost)
+    // Calculate when total accumulated savings equal the initial investment
     return Math.ceil((initialCost * 2) / monthlySavings);
   }
 
@@ -211,7 +211,7 @@
             },
             annotations: {
               crossover: {
-                type: 'line',
+                type: 'line' as const,
                 xMin: crossoverPoint,
                 xMax: crossoverPoint,
                 borderColor: '#dd9933',
@@ -225,11 +225,11 @@
                   color: 'white',
                   font: { size: 12 },
                   padding: 8,
-                  yAdjust: -40
+                  yAdjust: -60
                 }
               },
               breakEven: {
-                type: 'line',
+                type: 'line' as const,
                 xMin: breakEvenPoint,
                 xMax: breakEvenPoint,
                 borderColor: '#10B981',
@@ -243,7 +243,7 @@
                   color: 'white',
                   font: { size: 12 },
                   padding: 8,
-                  yAdjust: -20
+                  yAdjust: -40
                 }
               }
             }
@@ -402,16 +402,20 @@
     // Update break-even annotation
     if (chart.options.plugins?.annotation?.annotations) {
       const annotations = chart.options.plugins.annotation.annotations as any;
-      const breakEvenPoint = results.breakEvenMonths || 0;
+      const crossoverPoint = calculateCrossoverPoint();
+      const breakEvenPoint = calculateBreakEvenPoint();
       
-      if (breakEvenPoint > 0) {
-        // Subtract 1 to align with 0-based month indexing
-        annotations.breakEven.value = breakEvenPoint - 1;
-        annotations.breakEven.display = true;
-        annotations.breakEven.label.content = `Break-even Point (Month ${Math.round(breakEvenPoint)})`;
-      } else {
-        annotations.breakEven.display = false;
-      }
+      // Update crossover point annotation
+      annotations.crossover.xMin = crossoverPoint;
+      annotations.crossover.xMax = crossoverPoint;
+      annotations.crossover.label.content = `Cost Savings Crossover (Month ${crossoverPoint})`;
+      annotations.crossover.display = crossoverPoint > 0;
+
+      // Update break-even point annotation
+      annotations.breakEven.xMin = breakEvenPoint;
+      annotations.breakEven.xMax = breakEvenPoint;
+      annotations.breakEven.label.content = `Break-even Point (Month ${breakEvenPoint})`;
+      annotations.breakEven.display = breakEvenPoint > 0;
     }
 
     // Update chart description

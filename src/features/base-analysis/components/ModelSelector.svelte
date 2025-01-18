@@ -75,7 +75,7 @@
             </svg>
           </div>
         </div>
-        <h3 class="text-xl font-semibold text-gray-900">Ticket-Based Model</h3>
+        <h3 class="text-xl font-semibold text-gray-900">Ticket-Based Tracking</h3>
       </div>
       <div class="flex-1 w-full">
         <p class="text-sm text-gray-600 mb-6 leading-relaxed">

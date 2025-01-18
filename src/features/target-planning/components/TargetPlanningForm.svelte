@@ -737,7 +737,7 @@
 
   <!-- Base Configuration -->
   <div>
-    <h3 class="text-sm font-semibold text-gray-900 mb-2">Current Configuration</h3>
+    <h3 class="text-sm font-semibold text-gray-900 mb-2">Baseline Parameters</h3>
     <div class="space-y-2">
       {#if model === 'team'}
         <!-- Team Model Fields -->

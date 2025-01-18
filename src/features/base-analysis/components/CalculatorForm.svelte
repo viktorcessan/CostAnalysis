@@ -406,8 +406,8 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-lg font-semibold text-gray-900">Solution Strategy</h3>
-        <p class="text-sm text-gray-600 mt-1">Select the approach that best aligns with your goals</p>
+        <h3 class="text-lg font-semibold text-gray-900">Operational Approach</h3>
+        <p class="text-sm text-gray-600 mt-1">Choose how you want to address your operational costs. Select the approach that best aligns with your goals</p>
       </div>
       <button 
         class="tooltip bg-gray-100 p-1.5 rounded-full hover:bg-gray-200 transition-colors" 
@@ -447,14 +447,14 @@
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="text-base font-medium truncate">
-                  {solutionType === 'platform' ? 'Platform Solution' :
-                   solutionType === 'outsource' ? 'Outsourcing Solution' :
-                   'Hybrid Solution'}
+                  {solutionType === 'platform' ? 'Platform' :
+                   solutionType === 'outsource' ? 'Outsourcing' :
+                   'Hybrid'}
                 </h3>
                 <p class="text-xs mt-0.5 {solution === solutionType ? 'text-white text-opacity-90' : 'text-gray-600'}">
-                  {solutionType === 'platform' ? 'Automate Operations Costs through platform investment' :
-                   solutionType === 'outsource' ? 'Transfer Operations Costs to external providers' :
-                   'Combine platform automation with outsourcing'}
+                  {solutionType === 'platform' ? 'Automate operational tasks by investing in a platform development.' :
+                   solutionType === 'outsource' ? 'Transfer operational tasks and costs to external providers.' :
+                   'Combine platform automation with outsourcing for a balanced solution.'}
                 </p>
               </div>
               <div>

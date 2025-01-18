@@ -55,7 +55,7 @@
       <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
         <div>
           <h2 class="text-xl font-semibold text-gray-900">Analysis Template</h2>
-          <p class="text-sm text-gray-500 mt-1">Copy this template to ChatGPT for detailed analysis</p>
+          <p class="text-sm text-gray-500 mt-1">Copy this prompt, and input it in your favorite LLM to continue a deeper and more detailed analysis</p>
         </div>
         <button
           on:click={() => show = false}

@@ -91,20 +91,33 @@
     if (urlGoal) {
       const goal = goals.find(g => g.id === urlGoal);
       if (goal) {
-        handleGoalSelect(goal);
+        selectedGoal = urlGoal;
+        if (goal.id === 'team-analysis') {
+          activeModel = 'team';
+          calculatorStore.updateModel(activeModel);
+          goto(`${base}/calculator/team_analysis/team_model`);
+        } else {
+          showModelSelection = true;
+        }
       }
     }
   });
 
-  function handleGoalSelect(goal: Goal) {
-    selectedGoal = goal.id;
-    
-    if (!goal.requiresModel) {
-      activeModel = goal.defaultModel!;
-      calculatorStore.updateModel(activeModel);
-      goto(`${base}/calculator/${goal.path}/team_model`);
-    } else {
-      showModelSelection = true;
+  // Subscribe to URL changes to update the selected goal
+  $: {
+    const urlGoal = $page.url.searchParams.get('goal');
+    if (urlGoal) {
+      const goal = goals.find(g => g.id === urlGoal);
+      if (goal) {
+        selectedGoal = urlGoal;
+        if (goal.id === 'team-analysis') {
+          activeModel = 'team';
+          calculatorStore.updateModel(activeModel);
+          goto(`${base}/calculator/team_analysis/team_model`);
+        } else {
+          showModelSelection = true;
+        }
+      }
     }
   }
 
@@ -113,9 +126,24 @@
     showModelSelection = false;
     calculatorStore.updateModel(activeModel);
     
-    const goal = goals.find(g => g.id === selectedGoal);
-    if (goal) {
-      goto(`${base}/calculator/${goal.path}/${activeModel}_model`);
+    const urlGoal = $page.url.searchParams.get('goal');
+    if (urlGoal === 'breakeven') {
+      goto(`${base}/calculator/base_analysis/${activeModel}_model`, { replaceState: false });
+    } else if (urlGoal === 'target') {
+      goto(`${base}/calculator/target_analysis/${activeModel}_model`, { replaceState: false });
+    }
+  }
+
+  function handleGoalSelect(goal: Goal) {
+    selectedGoal = goal.id;
+    if (goal.id === 'team-analysis') {
+      activeModel = 'team';
+      calculatorStore.updateModel(activeModel);
+      goto(`${base}/calculator/team_analysis/team_model`);
+    } else {
+      showModelSelection = true;
+      // Update URL with goal parameter
+      goto(`${base}/calculator?goal=${goal.id}`, { replaceState: true });
     }
   }
 

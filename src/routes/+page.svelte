@@ -141,15 +141,7 @@
                          feature.title === 'Find Platform Budget' ? 'target' : 'team-analysis'}
             on:click|preventDefault={(e) => {
               const analysis = e.currentTarget.getAttribute('data-analysis');
-              const path = analysis === 'breakeven' ? 'base_analysis' :
-                          analysis === 'target' ? 'target_analysis' : 'team_analysis';
-              const model = analysis === 'team-analysis' ? 'team' : null;
-              
-              if (model) {
-                goto(`${base}/calculator/${path}/${model}_model`);
-              } else {
-                goto(`${base}/calculator?goal=${analysis}`);
-              }
+              goto(`${base}/calculator?goal=${analysis}`);
             }}
           >
             <div class="flex items-center gap-4 mb-6">

@@ -153,28 +153,54 @@
     const initialCost = getInitialCost($calculatorStore);
     const buildPeriod = getBuildPeriod();
     
-    // Calculate cumulative costs for both scenarios
+    // First check if crossover is theoretically possible
+    // After build period, monthly cost should be less than current cost
+    const monthlyAfterBuild = results.totalCost - results.monthlySavings;
+    if (monthlyAfterBuild >= results.totalCost) {
+      return 0; // Truly not achievable if solution never becomes cheaper
+    }
+
+    // Calculate theoretical crossover point
+    const totalCostDuringBuild = buildPeriod * results.totalCost;
+    const solutionCostDuringBuild = (buildPeriod * results.totalCost) + initialCost;
+    const monthlyDifference = results.totalCost - monthlyAfterBuild;
+    const monthsNeededAfterBuild = Math.ceil((solutionCostDuringBuild - totalCostDuringBuild) / monthlyDifference);
+    const totalMonthsNeeded = buildPeriod + monthsNeededAfterBuild;
+
+    // If it's achievable but beyond our chart view, return a special value
+    if (totalMonthsNeeded > results.monthlyData.length) {
+      return totalMonthsNeeded; // Return actual months needed even if beyond chart
+    }
+    
+    // Otherwise calculate exact point using month-by-month calculation
     let currentCumulative = 0;
-    let solutionCumulative = initialCost; // Start with initial investment
+    let solutionCumulative = initialCost;
     
     for (let i = 0; i < results.monthlyData.length; i++) {
       currentCumulative += results.totalCost;
       
-      // During build period, add both current cost and implementation costs
       if (i < buildPeriod) {
-        solutionCumulative += results.totalCost; // Still paying full operational costs
+        solutionCumulative += results.totalCost;
       } else {
-        // After build period, only add reduced monthly cost
-        solutionCumulative += (results.totalCost - results.monthlySavings);
+        solutionCumulative += monthlyAfterBuild;
       }
       
-      // Check if lines have crossed (when solution becomes cheaper)
       if (solutionCumulative < currentCumulative) {
-        return i + 1; // Add 1 since we want 1-based month numbers
+        return i + 1;
       }
     }
     
-    return 0; // No crossover found
+    return totalMonthsNeeded;
+  }
+
+  // Get crossover display text
+  function getCrossoverDisplay(months: number): string {
+    if (months === 0) {
+      return 'Not achievable';
+    } else if (months > (results?.monthlyData?.length ?? 0)) {
+      return `${months} months (beyond chart horizon)`;
+    }
+    return `${months} months`;
   }
 
   // Calculate break even point
@@ -323,7 +349,8 @@
     let data1: ChartDataArray = [];
     let data2: ChartDataArray = [];
     let buildPeriod = getBuildPeriod();
-    let breakEvenPoint = results.breakEvenMonths || 0;
+    const crossoverPoint = calculateCrossoverPoint();
+    const breakEvenPoint = calculateBreakEvenPoint();
 
     // Update datasets based on chart type
     switch (activeChart) {
@@ -364,6 +391,54 @@
         chart.data.datasets[1].backgroundColor = 'rgba(221, 153, 51, 0.05)';
         chart.data.datasets[0].hidden = false;
         chart.data.datasets[1].hidden = false;
+
+        // Update annotations for cumulative view
+        if (chart.options.plugins?.annotation?.annotations) {
+          const annotations = chart.options.plugins.annotation.annotations as any;
+          
+          // Update crossover point annotation
+          annotations.crossover = {
+            type: 'line',
+            xMin: crossoverPoint - 1,
+            xMax: crossoverPoint - 1,
+            borderColor: '#dd9933',
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              content: 'Cost Savings Crossover',
+              position: 'start',
+              backgroundColor: '#dd9933',
+              color: 'white',
+              font: { size: 12 },
+              padding: 8,
+              yAdjust: -60
+            }
+          };
+
+          // Update break-even point annotation
+          annotations.breakEven = {
+            type: 'line',
+            xMin: breakEvenPoint - 1,
+            xMax: breakEvenPoint - 1,
+            borderColor: '#10B981',
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              content: 'Break-even Point',
+              position: 'start',
+              backgroundColor: '#10B981',
+              color: 'white',
+              font: { size: 12 },
+              padding: 8,
+              yAdjust: -40
+            }
+          };
+
+          // Remove build period marker in cumulative view
+          delete annotations.buildPeriod;
+        }
         break;
 
       case 'monthly':
@@ -387,6 +462,37 @@
         chart.data.datasets[1].backgroundColor = 'rgba(221, 153, 51, 0.05)';
         chart.data.datasets[0].hidden = false;
         chart.data.datasets[1].hidden = false;
+
+        // Remove crossover and break-even annotations
+        if (chart.options.plugins?.annotation?.annotations) {
+          const annotations = chart.options.plugins.annotation.annotations as any;
+          delete annotations.crossover;
+          delete annotations.breakEven;
+
+          // Add build period end annotation only for monthly and savings views
+          if (buildPeriod > 0) {
+            annotations.buildPeriod = {
+              type: 'line',
+              xMin: buildPeriod - 1,
+              xMax: buildPeriod - 1,
+              borderColor: '#6B7280',
+              borderWidth: 2,
+              borderDash: [4, 4],
+              label: {
+                display: true,
+                content: currentState.solutionInputs?.type === 'platform' ? 'End of Build' :
+                        currentState.solutionInputs?.type === 'outsource' ? 'End of Transition' :
+                        'End of Build/Transition',
+                position: 'start',
+                backgroundColor: '#6B7280',
+                color: 'white',
+                font: { size: 12 },
+                padding: 8,
+                yAdjust: -20
+              }
+            };
+          }
+        }
         break;
 
       case 'savings':
@@ -401,7 +507,6 @@
             return results.monthlySavings;
           }
         });
-        
         chart.data.datasets[0].label = 'Monthly Savings';
         chart.data.datasets[0].borderColor = '#dd9933';
         chart.data.datasets[0].backgroundColor = 'rgba(221, 153, 51, 0.05)';
@@ -410,26 +515,38 @@
         chart.data.datasets[1].data = [];
         chart.data.datasets[1].hidden = true;
         chart.data.datasets[1].label = '';
+
+        // Remove crossover and break-even annotations
+        if (chart.options.plugins?.annotation?.annotations) {
+          const annotations = chart.options.plugins.annotation.annotations as any;
+          delete annotations.crossover;
+          delete annotations.breakEven;
+
+          // Add build period end annotation only for monthly and savings views
+          if (buildPeriod > 0) {
+            annotations.buildPeriod = {
+              type: 'line',
+              xMin: buildPeriod - 1,
+              xMax: buildPeriod - 1,
+              borderColor: '#6B7280',
+              borderWidth: 2,
+              borderDash: [4, 4],
+              label: {
+                display: true,
+                content: currentState.solutionInputs?.type === 'platform' ? 'End of Build' :
+                        currentState.solutionInputs?.type === 'outsource' ? 'End of Transition' :
+                        'End of Build/Transition',
+                position: 'start',
+                backgroundColor: '#6B7280',
+                color: 'white',
+                font: { size: 12 },
+                padding: 8,
+                yAdjust: -20
+              }
+            };
+          }
+        }
         break;
-    }
-
-    // Update break-even annotation
-    if (chart.options.plugins?.annotation?.annotations) {
-      const annotations = chart.options.plugins.annotation.annotations as any;
-      const crossoverPoint = calculateCrossoverPoint();
-      const breakEvenPoint = calculateBreakEvenPoint();
-      
-      // Update crossover point annotation
-      annotations.crossover.xMin = crossoverPoint - 1;
-      annotations.crossover.xMax = crossoverPoint - 1;
-      annotations.crossover.label.content = `Cost Savings Crossover (Month ${crossoverPoint})`;
-      annotations.crossover.display = crossoverPoint > 0;
-
-      // Update break-even point annotation
-      annotations.breakEven.xMin = breakEvenPoint - 1;
-      annotations.breakEven.xMax = breakEvenPoint - 1;
-      annotations.breakEven.label.content = `Break-even Point (Month ${breakEvenPoint})`;
-      annotations.breakEven.display = breakEvenPoint > 0;
     }
 
     // Update chart description
@@ -739,7 +856,7 @@
       <div class="bg-gray-50 rounded-lg p-4">
         <h4 class="text-sm font-medium text-gray-500">Cost Savings Crossover</h4>
         <p class="mt-1 text-2xl font-semibold {calculateCrossoverPoint() ? 'text-gray-900' : 'text-red-600'}">
-          {calculateCrossoverPoint() ? `${calculateCrossoverPoint()} months` : 'Not achievable'}
+          {getCrossoverDisplay(calculateCrossoverPoint())}
         </p>
         <p class="text-xs text-gray-600 mt-1">When cumulative savings offset initial investment</p>
       </div>

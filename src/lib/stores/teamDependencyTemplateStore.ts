@@ -94,8 +94,6 @@ Dependency Level: ${companyDependencyLevel} (Scale 1-5, where 1 is Very Low and 
 
 Cost Parameters:
 - Dev Rate ($/hr): $${costParams.hourlyRate.developer.toFixed(2)}
-- Manager Rate ($/hr): $${costParams.hourlyRate.manager.toFixed(2)}
-- Team Lead Rate ($/hr): $${costParams.hourlyRate.teamLead.toFixed(2)}
 - Meeting Duration: ${costParams.meetings.duration}hr
 - Meeting Frequency: ${costParams.meetings.recurrence}
 - Meeting Attendees: ${costParams.meetings.attendeesPerTeam}
@@ -134,21 +132,42 @@ Key Metrics:
 - Overhead Ratio: ${(metrics.overheadRatio * 100).toFixed(2)}%
 
 Cost Analysis:
-- Monthly Meeting Cost: $${costs.monthlyMeetingCost.toFixed(2)}
-- Communication Cost: $${costs.communicationCost.toFixed(2)}
-- Total Monthly Cost: $${costs.totalCost.toFixed(2)}
+1. Direct Meeting Costs: $${costs.monthlyMeetingCost.toFixed(2)}
+   Formula: duration * meetingMultiplier * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead + 
+           (additionalHours * hourlyRate * totalTeams)
+   Where:
+   - meetingMultiplier: daily=20, weekly=4, biweekly=2, monthly=1
+   - totalConnections: number of team dependencies
+   - communicationOverhead: multiplier for meeting inefficiencies
 
-Formulas Used:
+2. Communication Overhead: $${costs.communicationCost.toFixed(2)}
+   Formula: baselineCost + dependencyBasedCost
+   Where:
+   - baselineCost = totalConnections * communicationOverhead * hourlyRate * baselineCommunicationHours
+   - dependencyBasedCost = sum(dependencyStrength * dependencyHoursRate * hourlyRate * waitTimeMultiplier)
+
+3. Opportunity Cost (Context Switching):
+   Formula: contextSwitchingHours * hourlyRate * attendeesPerTeam
+   Where:
+   - contextSwitchingHours = sum(dependencyStrength * 2) // 2 hours per dependency level
+
+4. Flow Efficiency Cost:
+   Formula: waitTimeHours * hourlyRate * waitTimeMultiplier
+   Where:
+   - waitTimeHours = totalConnections * avgDependencyStrength * 4
+   - avgDependencyStrength = totalDependencyStrength / totalConnections
+
+Total Monthly Cost: $${costs.totalCost.toFixed(2)}
+
+Additional Formulas:
 1. Dependency Factor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))
 2. Throughput = (team.size * 8 * team.efficiency) * dependencyFactor
-3. Monthly Meeting Cost = duration * getMonthlyMeetingMultiplier(recurrence) * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead
-4. Communication Cost = (totalConnections * communicationOverhead * hourlyRate * baselineCommunicationHours) + (dependencyStrength * dependencyHoursRate * hourlyRate)
-5. Lead Time = waitTime + processingTime
+3. Lead Time = waitTime + processingTime
    where:
    - waitTime = incomingDependencies.length * baseLeadTime * waitTimeMultiplier
    - processingTime = baseLeadTime * (1 + (outgoingDependencies.length * 0.3))
-6. Flow Efficiency = (processTime / (processTime + waitTime)) * 100
-7. Dependency Impact Score = (totalDependencies / maxPossibleDependencies) * 100
+4. Flow Efficiency = (processTime / (processTime + waitTime)) * 100
+5. Dependency Impact Score = (totalDependencies / maxPossibleDependencies) * 100
 
 Based on this data, please provide:
 1. Analysis of the current team structure and dependency patterns

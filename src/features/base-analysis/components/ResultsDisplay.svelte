@@ -12,6 +12,8 @@
   import BaseAnalysisShareModal from '$lib/components/ui/BaseAnalysisShareModal.svelte';
   import { base } from '$app/paths';
   import ExpertConsultationCard from '$lib/components/ui/ExpertConsultationCard.svelte';
+  import type { ChartConfiguration } from 'chart.js';
+  import type { AnnotationOptions } from 'chartjs-plugin-annotation';
 
   // Register the annotation plugin
   Chart.register(annotationPlugin);
@@ -30,10 +32,15 @@
 
   // Subscribe to the calculator store
   let results: CalculationResults;
-  let currentState: { baseInputs: any; solutionInputs: any; };
+  let currentState: { baseInputs: any; solutionInputs: SolutionInputs | undefined };
   calculatorStore.subscribe((value) => {
     results = value;
-    currentState = calculatorStore.getCurrentState();
+    const state = calculatorStore.getCurrentState();
+    // Convert null to undefined to match our type
+    currentState = {
+      baseInputs: state.baseInputs,
+      solutionInputs: state.solutionInputs || undefined
+    };
   });
 
   // Handle share button click
@@ -88,33 +95,132 @@
     };
   }
 
+  // Helper function to get build period
+  function getBuildPeriod(): number {
+    if (!currentState?.solutionInputs) return 0;
+    
+    const solutionInputs = currentState.solutionInputs;
+    
+    switch (solutionInputs.type) {
+      case 'platform': {
+        const platform = solutionInputs.platform as Required<PlatformInputs>;
+        return platform?.timeToBuild ?? 0;
+      }
+      case 'outsource': {
+        const outsource = solutionInputs.outsource as Required<OutsourceInputs>;
+        return outsource?.transitionTime ?? 0;
+      }
+      case 'hybrid': {
+        const hybrid = solutionInputs.hybrid as Required<HybridInputs>;
+        return Math.max(
+          hybrid?.timeToBuild ?? 0,
+          hybrid?.transitionTime ?? 0
+        );
+      }
+      default:
+        return 0;
+    }
+  }
+
+  // Helper function to get implementation cost
+  function getImplementationCost(): number {
+    if (!currentState?.solutionInputs) return 0;
+    
+    const solutionInputs = currentState.solutionInputs;
+    
+    switch (solutionInputs.type) {
+      case 'platform': {
+        const platform = solutionInputs.platform as Required<PlatformInputs>;
+        return platform?.platformCost ?? 0;
+      }
+      case 'outsource': {
+        const outsource = solutionInputs.outsource as Required<OutsourceInputs>;
+        return outsource?.transitionCost ?? 0;
+      }
+      case 'hybrid': {
+        const hybrid = solutionInputs.hybrid as Required<HybridInputs>;
+        return (hybrid?.platformCost ?? 0) + (hybrid?.transitionCost ?? 0);
+      }
+      default:
+        return 0;
+    }
+  }
+
   // Calculate crossover point
   function calculateCrossoverPoint(): number {
-    if (!results?.monthlySavings || !currentState.solutionInputs) return 0;
+    if (!results?.monthlyData || !currentState?.solutionInputs) return 0;
     
     const initialCost = getInitialCost($calculatorStore);
-    const monthlySavings = results.monthlySavings;
+    const buildPeriod = getBuildPeriod();
     
-    // If no savings or negative savings, no crossover point
-    if (monthlySavings <= 0) return 0;
+    // Calculate cumulative costs for both scenarios
+    let currentCumulative = 0;
+    let solutionCumulative = initialCost; // Start with initial investment
     
-    // Calculate when cumulative savings offset the initial investment
-    // This is when the cumulative savings equals the initial cost
-    return Math.ceil(initialCost / monthlySavings);
+    for (let i = 0; i < results.monthlyData.length; i++) {
+      currentCumulative += results.totalCost;
+      
+      // During build period, add both current cost and implementation costs
+      if (i < buildPeriod) {
+        solutionCumulative += results.totalCost; // Still paying full operational costs
+      } else {
+        // After build period, only add reduced monthly cost
+        solutionCumulative += (results.totalCost - results.monthlySavings);
+      }
+      
+      // Check if lines have crossed (when solution becomes cheaper)
+      if (solutionCumulative < currentCumulative) {
+        return i + 1; // Add 1 since we want 1-based month numbers
+      }
+    }
+    
+    return 0; // No crossover found
   }
 
   // Calculate break even point
   function calculateBreakEvenPoint(): number {
-    if (!results?.monthlySavings || !currentState.solutionInputs) return 0;
+    if (!results?.monthlyData || !currentState?.solutionInputs) return 0;
     
     const initialCost = getInitialCost($calculatorStore);
-    const monthlySavings = results.monthlySavings;
+    const buildPeriod = getBuildPeriod();
+    let totalSavings = -initialCost; // Start with negative initial investment
     
-    // If no savings or negative savings, no break-even point
-    if (monthlySavings <= 0) return 0;
+    // First check if break-even is theoretically possible
+    // After build period, we'll save monthlySavings each month
+    if (results.monthlySavings <= 0) {
+      return 0; // Truly not achievable if no monthly savings
+    }
+
+    // Calculate how many months needed after build period to break even
+    const totalCostDuringBuild = initialCost + (buildPeriod * results.totalCost);
+    const monthsNeededAfterBuild = Math.ceil(totalCostDuringBuild / results.monthlySavings);
+    const totalMonthsNeeded = buildPeriod + monthsNeededAfterBuild;
+
+    // If it's achievable but beyond our chart view, return a special value
+    if (totalMonthsNeeded > results.monthlyData.length) {
+      return totalMonthsNeeded; // Return actual months needed even if beyond chart
+    }
     
-    // Calculate when total accumulated savings equal the initial investment
-    return Math.ceil((initialCost * 2) / monthlySavings);
+    // Otherwise calculate exact point using month-by-month calculation
+    for (let i = 0; i < results.monthlyData.length; i++) {
+      if (i < buildPeriod) {
+        // During build period:
+        // 1. No operational savings (paying full costs)
+        // 2. Additional implementation costs
+        const implementationCostPerMonth = initialCost / buildPeriod;
+        totalSavings -= implementationCostPerMonth; // We're losing money during build
+      } else {
+        // After build period, accumulate monthly savings
+        totalSavings += results.monthlySavings;
+      }
+      
+      // Check if we've recovered the initial investment plus build period costs
+      if (totalSavings >= 0) {
+        return i + 1; // Add 1 since we want 1-based month numbers
+      }
+    }
+    
+    return totalMonthsNeeded; // Return calculated months needed
   }
 
   // Initialize chart
@@ -124,11 +230,11 @@
     const ctx = chartCanvas.getContext('2d');
     if (!ctx) return;
 
-    const breakEvenPoint = calculateBreakEvenPoint();
     const crossoverPoint = calculateCrossoverPoint();
+    const breakEvenPoint = calculateBreakEvenPoint();
 
-    const config = {
-      type: 'line' as const,
+    const config: ChartConfiguration<'line'> = {
+      type: 'line',
       data: {
         labels: [],
         datasets: [
@@ -158,62 +264,16 @@
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
-          mode: 'index' as const,
+          mode: 'index',
           intersect: false
         },
         plugins: {
-          title: {
-            display: true,
-            text: 'Cost Analysis Over Time',
-            font: {
-              size: 16,
-              weight: 'bold' as const
-            },
-            padding: 20
-          },
-          subtitle: {
-            display: true,
-            text: 'Compare costs between current operations and proposed solution',
-            font: {
-              size: 14
-            },
-            padding: {
-              bottom: 20
-            }
-          },
-          datalabels: {
-            display: false
-          },
-          tooltip: {
-            callbacks: {
-              label: (context: any) => {
-                const value = context.parsed.y;
-                return `${context.dataset.label}: ${formatCurrency(value)}`;
-              }
-            }
-          },
-          legend: {
-            display: true,
-            position: 'top' as const,
-            align: 'end' as const,
-            labels: {
-              padding: 20,
-              usePointStyle: true,
-              pointStyle: 'circle',
-              font: {
-                size: 12
-              }
-            }
-          },
           annotation: {
-            common: {
-              drawTime: 'afterDatasetsDraw'
-            },
             annotations: {
               crossover: {
-                type: 'line' as const,
-                xMin: crossoverPoint,
-                xMax: crossoverPoint,
+                type: 'line',
+                xMin: crossoverPoint - 1,
+                xMax: crossoverPoint - 1,
                 borderColor: '#dd9933',
                 borderWidth: 2,
                 borderDash: [6, 6],
@@ -229,15 +289,15 @@
                 }
               },
               breakEven: {
-                type: 'line' as const,
-                xMin: breakEvenPoint,
-                xMax: breakEvenPoint,
+                type: 'line',
+                xMin: breakEvenPoint - 1,
+                xMax: breakEvenPoint - 1,
                 borderColor: '#10B981',
                 borderWidth: 2,
                 borderDash: [6, 6],
                 label: {
                   display: true,
-                  content: `Break-even (Month ${breakEvenPoint})`,
+                  content: `Break-even Point (Month ${breakEvenPoint})`,
                   position: 'start',
                   backgroundColor: '#10B981',
                   color: 'white',
@@ -246,33 +306,6 @@
                   yAdjust: -40
                 }
               }
-            }
-          }
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Month',
-              padding: 10,
-              font: {
-                size: 12,
-                weight: 'bold' as const
-              }
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Cost',
-              padding: 10,
-              font: {
-                size: 12,
-                weight: 'bold' as const
-              }
-            },
-            ticks: {
-              callback: (value: any) => formatCurrency(value)
             }
           }
         }
@@ -289,27 +322,8 @@
     const labels = results.monthlyData.map(d => `Month ${d.month}`);
     let data1: ChartDataArray = [];
     let data2: ChartDataArray = [];
-    let buildPeriod = 0;
+    let buildPeriod = getBuildPeriod();
     let breakEvenPoint = results.breakEvenMonths || 0;
-
-    // Get build/transition period based on solution type
-    const currentState = calculatorStore.getCurrentState();
-    if (currentState.solutionInputs) {
-      switch (currentState.solutionInputs.type) {
-        case 'platform':
-          buildPeriod = currentState.solutionInputs.platform?.timeToBuild || 0;
-          break;
-        case 'outsource':
-          buildPeriod = currentState.solutionInputs.outsource?.transitionTime || 0;
-          break;
-        case 'hybrid':
-          buildPeriod = Math.max(
-            currentState.solutionInputs.hybrid?.timeToBuild || 0,
-            currentState.solutionInputs.hybrid?.transitionTime || 0
-          );
-          break;
-      }
-    }
 
     // Update datasets based on chart type
     switch (activeChart) {
@@ -330,7 +344,7 @@
             // During build period:
             // 1. Full current cost (as we're still operating normally)
             // 2. Plus the implementation cost spread over the build period
-            const implementationCost = currentState.solutionInputs?.platform?.platformCost || 0;
+            const implementationCost = getImplementationCost();
             monthlyCost = results.totalCost + (implementationCost / buildPeriod);
           } else {
             // After build period:
@@ -358,7 +372,7 @@
         data2 = results.monthlyData.map((d) => {
           if (d.month <= buildPeriod) {
             // During build period: current cost + implementation cost
-            const implementationCost = currentState.solutionInputs?.platform?.platformCost || 0;
+            const implementationCost = getImplementationCost();
             return results.totalCost + (implementationCost / buildPeriod);
           } else {
             // After build period: just the reduced monthly cost
@@ -380,7 +394,7 @@
         data1 = results.monthlyData.map((d) => {
           if (d.month <= buildPeriod) {
             // During build period: negative savings due to implementation costs
-            const implementationCost = currentState.solutionInputs?.platform?.platformCost || 0;
+            const implementationCost = getImplementationCost();
             return -(implementationCost / buildPeriod);
           } else {
             // After build period: constant monthly savings
@@ -406,14 +420,14 @@
       const breakEvenPoint = calculateBreakEvenPoint();
       
       // Update crossover point annotation
-      annotations.crossover.xMin = crossoverPoint;
-      annotations.crossover.xMax = crossoverPoint;
+      annotations.crossover.xMin = crossoverPoint - 1;
+      annotations.crossover.xMax = crossoverPoint - 1;
       annotations.crossover.label.content = `Cost Savings Crossover (Month ${crossoverPoint})`;
       annotations.crossover.display = crossoverPoint > 0;
 
       // Update break-even point annotation
-      annotations.breakEven.xMin = breakEvenPoint;
-      annotations.breakEven.xMax = breakEvenPoint;
+      annotations.breakEven.xMin = breakEvenPoint - 1;
+      annotations.breakEven.xMax = breakEvenPoint - 1;
       annotations.breakEven.label.content = `Break-even Point (Month ${breakEvenPoint})`;
       annotations.breakEven.display = breakEvenPoint > 0;
     }
@@ -642,6 +656,16 @@
     return baselineTotal - solutionTotal;
   }
 
+  // Get break-even display text
+  function getBreakEvenDisplay(months: number): string {
+    if (months === 0) {
+      return 'Not achievable';
+    } else if (months > (results?.monthlyData?.length ?? 0)) {
+      return `${months} months (beyond chart horizon)`;
+    }
+    return `${months} months`;
+  }
+
   // Add modal state
   let showLLMTemplate = false;
   let showExpertModal = false;
@@ -722,7 +746,7 @@
       <div class="bg-gray-50 rounded-lg p-4">
         <h4 class="text-sm font-medium text-gray-500">Break-even Point</h4>
         <p class="mt-1 text-2xl font-semibold {calculateBreakEvenPoint() ? 'text-gray-900' : 'text-red-600'}">
-          {calculateBreakEvenPoint() ? `${calculateBreakEvenPoint()} months` : 'Not achievable'}
+          {getBreakEvenDisplay(calculateBreakEvenPoint())}
         </p>
         <p class="text-xs text-gray-600 mt-1">When total savings equal initial investment</p>
       </div>

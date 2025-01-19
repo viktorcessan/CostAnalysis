@@ -2,9 +2,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { base } from '$app/paths';
+  import { page } from '$app/stores';
   import ModelSelector from '../../features/base-analysis/components/ModelSelector.svelte';
   import type { CalculatorModel } from '$lib/types/calculator';
   import { calculatorStore } from '$lib/stores/calculatorStore';
+  import { onMount } from 'svelte';
 
   type Mode = 'base' | 'solutions' | 'internal';
 
@@ -28,7 +30,7 @@
   const goals: Goal[] = [
     {
       id: 'breakeven',
-      name: 'Build a business case',
+      name: 'Build a Business Case',
       description: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point.',
       longDescription: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point to build a strong case for change. Put your existing data to work to uncover actionable insights and make better investment decisions. Perfect for analyzing, projecting, and comparing opportunities in platform automation and service outsourcing..',
       benefits: [
@@ -84,6 +86,16 @@
     }
   ];
 
+  onMount(() => {
+    const urlGoal = $page.url.searchParams.get('goal');
+    if (urlGoal) {
+      const goal = goals.find(g => g.id === urlGoal);
+      if (goal) {
+        handleGoalSelect(goal);
+      }
+    }
+  });
+
   function handleGoalSelect(goal: Goal) {
     selectedGoal = goal.id;
     
@@ -122,7 +134,7 @@
           <div class="max-w-3xl mx-auto text-center mb-12">
             <h2 class="text-3xl font-bold text-gray-900 mb-4">What would you like to do?</h2>
             <p class="text-lg text-gray-600">
-              Choose the specific type of cost analysis you need, and we’ll guide you step-by-step.
+              Choose the specific type of cost analysis you need, and we'll guide you step-by-step.
             </p>
           </div>
 
@@ -132,6 +144,7 @@
                 class="group relative bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-gray-200 hover:border-secondary/20 
                        transition-all duration-300 overflow-hidden hover:scale-[1.02]"
                 on:click={() => handleGoalSelect(goal)}
+                data-goal={goal.id}
               >
                 <div class="p-8">
                   <div class="flex items-center mb-6">

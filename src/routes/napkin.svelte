@@ -26,7 +26,7 @@
     {
       title: "Team Dependency Costs",
       content: {
-        teams: 3,
+        teams: 4,
         members: 21,
         avgCost: 75,
         formation: "Cluster"
@@ -158,29 +158,36 @@
                     <div class="border-2 border-dashed border-gray-400 p-4 rounded">
                       <div class="text-center mb-2 text-xl">Team Cluster Visualization</div>
                       <svg class="w-full h-48" viewBox="0 0 200 150">
-                        <!-- Hand-drawn style circles and connections -->
-                        <!-- Team A -->
-                        <circle cx="50" cy="75" r="25" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
-                        <!-- Team B -->
-                        <circle cx="150" cy="45" r="20" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
-                        <!-- Team C -->
-                        <circle cx="140" cy="115" r="22" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
-                        <!-- Team D -->
-                        <circle cx="100" cy="30" r="18" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
+                        <!-- Dependencies (drawn first) -->
+                        <g class="edges">
+                          <path d="M 75 75 Q 100 60 130 45" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                          <path d="M 75 75 Q 110 75 120 115" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                          <path d="M 75 75 Q 85 115 120 115" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                          <path d="M 140 65 Q 140 90 140 93" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                          <path d="M 70 65 Q 85 45 85 35" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                          <path d="M 118 35 Q 130 40 135 45" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                          <path d="M 100 48 Q 120 80 140 95" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                        </g>
                         
-                        <!-- Dependencies -->
-                        <path d="M 75 75 Q 100 60 130 45" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
-                        <path d="M 75 75 Q 100 95 118 115" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
-                        <path d="M 140 65 Q 140 90 140 93" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
-                        <path d="M 70 65 Q 85 45 85 35" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
-                        <path d="M 118 35 Q 130 40 135 45" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
-                        <path d="M 100 48 Q 120 80 140 95" class="stroke-gray-600" style="fill: none; stroke-width: 1.5; stroke-dasharray: 4"/>
+                        <!-- Nodes (drawn second) -->
+                        <g class="nodes">
+                          <!-- Team A -->
+                          <circle cx="50" cy="75" r="25" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
+                          <!-- Team B -->
+                          <circle cx="150" cy="45" r="20" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
+                          <!-- Team C -->
+                          <circle cx="140" cy="115" r="22" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
+                          <!-- Team D -->
+                          <circle cx="100" cy="30" r="18" class="fill-secondary/20 stroke-secondary" style="stroke-width: 2; stroke-dasharray: 4"/>
+                        </g>
                         
-                        <!-- Labels -->
-                        <text x="45" y="78" class="text-xs text-center">A</text>
-                        <text x="145" y="48" class="text-xs text-center">B</text>
-                        <text x="135" y="118" class="text-xs text-center">C</text>
-                        <text x="95" y="33" class="text-xs text-center">D</text>
+                        <!-- Labels (drawn last) -->
+                        <g class="labels">
+                          <text x="45" y="78" class="text-xs text-center">A</text>
+                          <text x="145" y="48" class="text-xs text-center">B</text>
+                          <text x="135" y="118" class="text-xs text-center">C</text>
+                          <text x="95" y="33" class="text-xs text-center">D</text>
+                        </g>
                       </svg>
                     </div>
 

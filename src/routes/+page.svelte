@@ -1,6 +1,7 @@
 <!-- Landing Page -->
 <script lang="ts">
   import { base } from '$app/paths';
+  import { goto } from '$app/navigation';
   import '@fontsource/caveat';
   import Napkin from './napkin.svelte';
 
@@ -133,7 +134,24 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         {#each features as feature}
-          <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <a
+            href="{base}/calculator"
+            class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+            data-analysis={feature.title === 'Build a Business Case' ? 'breakeven' : 
+                         feature.title === 'Find Platform Budget' ? 'target' : 'team-analysis'}
+            on:click|preventDefault={(e) => {
+              const analysis = e.currentTarget.getAttribute('data-analysis');
+              const path = analysis === 'breakeven' ? 'base_analysis' :
+                          analysis === 'target' ? 'target_analysis' : 'team_analysis';
+              const model = analysis === 'team-analysis' ? 'team' : null;
+              
+              if (model) {
+                goto(`${base}/calculator/${path}/${model}_model`);
+              } else {
+                goto(`${base}/calculator?goal=${analysis}`);
+              }
+            }}
+          >
             <div class="flex items-center gap-4 mb-6">
               {@html feature.icon}
               <h3 class="text-xl font-semibold text-gray-900">{feature.title}</h3>
@@ -151,7 +169,7 @@
                 </li>
               {/each}
             </ul>
-          </div>
+          </a>
         {/each}
       </div>
     </div>

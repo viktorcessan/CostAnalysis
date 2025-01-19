@@ -85,6 +85,10 @@
                 <span class="text-sm font-medium text-gray-900">{inputs.peoplePerTicket}</span>
               </div>
               <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Hourly Rate</span>
+                <span class="text-sm font-medium text-gray-900">${inputs.hourlyRate}</span>
+              </div>
+              <div class="col-span-2 flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">SLA Compliance</span>
                 <span class="text-sm font-medium text-gray-900">{inputs.slaCompliance}%</span>
               </div>

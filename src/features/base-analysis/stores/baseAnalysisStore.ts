@@ -27,7 +27,7 @@ function calculateTotalCost(inputs: TeamInputs | TicketInputs): number {
     return inputs.teamSize * inputs.hourlyRate * workingHoursPerMonth * 
            inputs.serviceEfficiency * (1 + inputs.operationalOverhead);
   } else if ('monthlyTickets' in inputs) {
-    return inputs.monthlyTickets * inputs.hoursPerTicket * inputs.peoplePerTicket * 75; // Default hourly rate
+    return inputs.monthlyTickets * inputs.hoursPerTicket * inputs.peoplePerTicket * inputs.hourlyRate;
   }
   return 0;
 }
@@ -39,7 +39,7 @@ function calculateCostPerTicket(inputs: TeamInputs | TicketInputs): number {
     const monthlyTickets = monthlyHours / 4;
     return calculateTotalCost(inputs) / monthlyTickets;
   } else {
-    return inputs.hoursPerTicket * inputs.peoplePerTicket * 75; // Default hourly rate
+    return inputs.hoursPerTicket * inputs.peoplePerTicket * inputs.hourlyRate;
   }
 }
 

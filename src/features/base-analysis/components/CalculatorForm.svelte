@@ -156,7 +156,8 @@
       monthlyTickets,
       hoursPerTicket,
       peoplePerTicket,
-      slaCompliance
+      slaCompliance,
+      hourlyRate
     });
   }
 
@@ -799,6 +800,51 @@
                   min={1}
                   max={10}
                   step={1}
+                  class="slider-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Hourly Rate -->
+          <div class="field-container">
+            <div class="flex items-start justify-between">
+              <div>
+                <label class="field-label" for="hourlyRate">
+                  Hourly Rate
+                  <button 
+                    class="tooltip ml-1" 
+                    data-tippy-content="Average hourly cost per person working on tickets">
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </label>
+                <p class="input-description">
+                  Set the average hourly rate for team members processing tickets. This helps calculate total operational costs.
+                </p>
+              </div>
+              <div class="input-group">
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="hourlyRate"
+                    bind:value={hourlyRate}
+                    on:input={handleTicketInputs}
+                    min={constraints.hourlyRate.min}
+                    max={constraints.hourlyRate.max}
+                    step={constraints.hourlyRate.step}
+                    class="number-input pr-8"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$/hr</span>
+                </div>
+                <input
+                  type="range"
+                  bind:value={hourlyRate}
+                  on:input={handleTicketInputs}
+                  min={constraints.hourlyRate.min}
+                  max={constraints.hourlyRate.max}
+                  step={constraints.hourlyRate.step}
                   class="slider-input"
                 />
               </div>

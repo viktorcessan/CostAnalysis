@@ -72,6 +72,7 @@ export interface TicketInputs {
   hoursPerTicket: number;
   peoplePerTicket: number;
   slaCompliance: number;
+  hourlyRate: number;
 }
 
 export interface PlatformInputs {

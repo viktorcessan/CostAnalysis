@@ -191,6 +191,7 @@ Current Configuration:
 - Monthly Tickets: ${inputs.monthlyTickets}
 - Hours per Ticket: ${inputs.hoursPerTicket}
 - People per Ticket: ${inputs.peoplePerTicket}
+- Hourly Rate: $${inputs.hourlyRate}/hour
 - SLA Compliance: ${Math.round(inputs.slaCompliance * 100)}%
 
 Platform Solution Details:
@@ -244,6 +245,7 @@ Current Configuration:
 - Monthly Tickets: ${inputs.monthlyTickets}
 - Hours per Ticket: ${inputs.hoursPerTicket}
 - People per Ticket: ${inputs.peoplePerTicket}
+- Hourly Rate: $${inputs.hourlyRate}/hour
 - SLA Compliance: ${Math.round(inputs.slaCompliance * 100)}%
 
 Outsourcing Solution Details:
@@ -296,6 +298,7 @@ Current Configuration:
 - Monthly Tickets: ${inputs.monthlyTickets}
 - Hours per Ticket: ${inputs.hoursPerTicket}
 - People per Ticket: ${inputs.peoplePerTicket}
+- Hourly Rate: $${inputs.hourlyRate}/hour
 - SLA Compliance: ${Math.round(inputs.slaCompliance * 100)}%
 
 Hybrid Solution Details:

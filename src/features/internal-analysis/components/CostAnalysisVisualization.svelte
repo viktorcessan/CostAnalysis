@@ -90,7 +90,7 @@
                     ${costs.directMeetingCost.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Based on {costParams.meetings.duration}hr meetings {getRecurrenceText(costParams.meetings.recurrence)} × {costParams.meetings.attendeesPerTeam} attendees × ${costParams.hourlyRate.developer}/hr
+                    Synchronous team coordination through regular meetings, including preparation and follow-up activities.
                   </div>
                 </div>
 
@@ -100,7 +100,7 @@
                     ${costs.communicationOverhead.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Async coordination and additional communication costs
+                    Cordination, documentation, and communication activities between dependent teams associated with meetings.
                   </div>
                 </div>
 
@@ -110,7 +110,7 @@
                     ${costs.opportunityCost.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Lost productivity from context switching and coordination
+                    Cost of value-adding work not done due to time spent on dependency-related activities and meetings.
                   </div>
                 </div>
 
@@ -120,7 +120,7 @@
                     ${costs.flowEfficiencyCost.toFixed(0)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
-                    Cost of delays and waiting time from dependencies
+                    Cost of reduced productivity from inter-team dependencies and associated wait times.
                   </div>
                 </div>
               </div>

@@ -133,31 +133,43 @@ Key Metrics:
 
 Cost Analysis:
 1. Direct Meeting Costs: $${costs.monthlyMeetingCost.toFixed(2)}
+   Represents the cost of synchronous team coordination through regular meetings.
    Formula: duration * meetingMultiplier * attendeesPerTeam * hourlyRate * totalConnections * communicationOverhead + 
            (additionalHours * hourlyRate * totalTeams)
    Where:
    - meetingMultiplier: daily=20, weekly=4, biweekly=2, monthly=1
    - totalConnections: number of team dependencies
-   - communicationOverhead: multiplier for meeting inefficiencies
+   - communicationOverhead: multiplier for meeting preparation and follow-up activities
 
 2. Communication Overhead: $${costs.communicationCost.toFixed(2)}
+   Captures the cost of asynchronous coordination and additional communication between teams.
    Formula: baselineCost + dependencyBasedCost
    Where:
    - baselineCost = totalConnections * communicationOverhead * hourlyRate * baselineCommunicationHours
    - dependencyBasedCost = sum(dependencyStrength * dependencyHoursRate * hourlyRate * waitTimeMultiplier)
+   This includes documentation, async discussions, and coordination activities outside meetings.
 
-3. Opportunity Cost (Context Switching):
+3. Opportunity Cost (Context Switching): $${(costs.totalCost * 0.2).toFixed(2)}
+   Represents productivity loss from context switching and coordination between teams.
    Formula: contextSwitchingHours * hourlyRate * attendeesPerTeam
    Where:
    - contextSwitchingHours = sum(dependencyStrength * 2) // 2 hours per dependency level
+   This accounts for the mental overhead and productivity impact of managing multiple team dependencies.
 
-4. Flow Efficiency Cost:
+4. Flow Efficiency Impact: $${(costs.totalCost * 0.15).toFixed(2)}
+   Quantifies the cost of delays and waiting time caused by dependencies.
    Formula: waitTimeHours * hourlyRate * waitTimeMultiplier
    Where:
    - waitTimeHours = totalConnections * avgDependencyStrength * 4
    - avgDependencyStrength = totalDependencyStrength / totalConnections
+   This represents the financial impact of reduced flow efficiency due to dependencies.
 
 Total Monthly Cost: $${costs.totalCost.toFixed(2)}
+Cost Distribution:
+- Direct Meeting Costs: ${((costs.monthlyMeetingCost / costs.totalCost) * 100).toFixed(1)}%
+- Communication Overhead: ${((costs.communicationCost / costs.totalCost) * 100).toFixed(1)}%
+- Opportunity Cost: 20.0%
+- Flow Efficiency Impact: 15.0%
 
 Additional Formulas:
 1. Dependency Factor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))

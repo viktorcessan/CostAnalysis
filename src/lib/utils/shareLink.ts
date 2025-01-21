@@ -22,6 +22,9 @@ export interface TargetPlanningParams {
   efficiencyTarget: number;
   implementationTarget: number;
   platformCostTarget: number;
+  crossoverPoint?: number;
+  breakEvenPoint?: number;
+  isViable?: boolean;
 }
 
 export function generateShareLink(params: TargetPlanningParams): string {

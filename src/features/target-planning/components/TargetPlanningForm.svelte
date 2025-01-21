@@ -163,6 +163,8 @@
   // Add function to calculate break-even point
   function calculateBreakEvenPoint(monthlySavings: number, platformCost: number): number {
     if (monthlySavings <= 0) return 0;
+    // Break-even is when we've saved an amount equal to the investment
+    // So it's double the crossover point (when we've paid off the investment)
     return Math.ceil((platformCost * 2) / monthlySavings);
   }
 
@@ -186,8 +188,9 @@
     const monthlySavings = monthlyBaseCost - monthlyOperatingCost - monthlyPlatformCost;
     const annualSavings = monthlySavings * 12;
 
-    // Calculate maximum possible investment based on savings
-    const maxPossibleInvestment = monthlySavings > 0 ? monthlySavings * breakEvenMonths : 0;
+    // Calculate maximum possible investment based on savings and break-even target
+    // Since break-even is when we've saved an amount equal to investment, we need half the time
+    const maxPossibleInvestment = monthlySavings > 0 ? monthlySavings * (breakEvenMonths / 2) : 0;
 
     // If monthly savings is negative or zero, solution is not viable
     const isViable = monthlySavings > 0;
@@ -249,6 +252,9 @@
     const monthlyOperatingCost = monthlyBaseline - results.monthlyOperatingCostReduction;
     const monthlyPlatformCost = results.platformMaintenance;
     const implementationCost = results.platformCost / results.timeToBuild;
+    
+    // Get break-even target from user input - this is fixed
+    const targetBreakEven = targets[0].value;
 
     // Generate arrays for different cost components
     const baselineCosts: number[] = Array.from({length: months + 1}, (_, i) => monthlyBaseline * i);
@@ -264,20 +270,46 @@
       }
     });
 
-    // Calculate monthly savings line
-    const monthlySavings: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
-      if (i <= results.timeToBuild) return null;
-      return monthlyBaseline - monthlyOperatingCost - monthlyPlatformCost;
-    });
+    // Calculate required monthly savings to achieve target break-even
+    const totalInvestment = results.platformCost;
+    const availableMonths = targetBreakEven - results.timeToBuild;
+    const requiredMonthlySavings = totalInvestment / availableMonths;
 
-    // Add crossover and break-even point markers
+    // Find earliest crossover point that would achieve target break-even
+    let crossoverPoint = results.timeToBuild;
+    let isViable = false;
+
+    // Try each possible crossover point
+    for (let tryPoint = results.timeToBuild; tryPoint < targetBreakEven; tryPoint++) {
+      let potentialSavings = 0;
+      // Calculate total savings from this crossover point to target break-even
+      for (let i = tryPoint + 1; i <= targetBreakEven; i++) {
+        const monthlySaving = (baselineCosts[i] - baselineCosts[i-1]) - 
+                            (platformCosts[i] - platformCosts[i-1]);
+        potentialSavings += monthlySaving;
+      }
+      
+      // If we can achieve enough savings by target break-even, this is our crossover point
+      if (potentialSavings >= totalInvestment) {
+        crossoverPoint = tryPoint;
+        isViable = true;
+        break;
+      }
+    }
+
+    // Create markers for crossover and break-even points
     const crossoverMarker: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
-      return i === results.crossoverPoint ? platformCosts[i] : null;
+      return i === crossoverPoint && isViable ? platformCosts[i] : null;
     });
 
     const breakEvenMarker: (number | null)[] = Array.from({length: months + 1}, (_, i) => {
-      return i === results.breakEvenPoint ? platformCosts[i] : null;
+      return i === targetBreakEven && isViable ? platformCosts[i] : null;
     });
+
+    // Update results with our calculated points
+    results.crossoverPoint = isViable ? crossoverPoint : null;
+    results.breakEvenPoint = isViable ? targetBreakEven : null;
+    results.isViable = isViable;
 
     return {
       labels: Array.from({length: months + 1}, (_, i) => `Month ${i}`),
@@ -289,7 +321,7 @@
           backgroundColor: '#94a3b880',
           fill: true,
           pointRadius: 0,
-          order: 5
+          order: 3
         },
         {
           label: 'Platform Solution',
@@ -298,37 +330,27 @@
           backgroundColor: '#dd993380',
           fill: true,
           pointRadius: 0,
-          order: 4
-        },
-        {
-          label: 'Monthly Savings',
-          data: monthlySavings,
-          borderColor: '#22c55e',
-          backgroundColor: '#22c55e20',
-          borderDash: [5, 5],
-          fill: true,
-          pointRadius: 0,
-          order: 3
+          order: 2
         },
         {
           label: 'Cost Savings Crossover',
           data: crossoverMarker,
           borderColor: '#dd9933',
           backgroundColor: '#dd9933',
-          pointRadius: 8,
+          pointRadius: 12,
           pointStyle: 'rectRot',
           showLine: false,
-          order: 2
+          order: 1
         },
         {
           label: 'Break-Even Point',
           data: breakEvenMarker,
           borderColor: '#22c55e',
           backgroundColor: '#22c55e',
-          pointRadius: 8,
+          pointRadius: 12,
           pointStyle: 'rectRot',
           showLine: false,
-          order: 1
+          order: 0
         }
       ]
     };
@@ -352,11 +374,7 @@
       type: 'line',
       data: {
         labels: data.labels,
-        datasets: data.datasets.map(dataset => ({
-          ...dataset,
-          pointRadius: dataset.label === 'Break-Even Point' ? 8 : 0,
-          pointLabels: { display: false }
-        }))
+        datasets: data.datasets
       },
       options: {
         responsive: true,
@@ -389,9 +407,6 @@
             }
           },
           legend: {
-            display: false
-          },
-          datalabels: {
             display: false
           }
         },
@@ -1113,18 +1128,18 @@
         <div>
           <div class="field-info">
             <label class="field-label" for="breakEvenTarget">
-              Break Even Time
+              Target Break Even Time
               <button 
                 class="tooltip ml-1"
                 aria-label="Help information" 
-                data-tippy-content="Input the timeframe for the platform to recoup its investment costs through efficiency gains or cost savings.">
+                data-tippy-content="Input the target timeframe for the platform to recoup its total investment through cumulative savings.">
                 <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
             </label>
             <p class="input-description">
-              Specify the target number of months to break even on the platform investment.
+              Specify the target number of months to recover the total platform investment through savings.
             </p>
           </div>
           <div class="input-group">
@@ -1529,26 +1544,22 @@
       <div class="h-80 relative">
         <canvas id="cumulativeCostChart"></canvas>
       </div>
-      <div class="mt-4 flex flex-wrap justify-between items-center text-sm text-gray-500 gap-4">
-        <div class="flex items-center">
-          <span class="inline-block w-3 h-3 bg-[#94a3b8] rounded-full mr-2"></span>
+      <div class="mt-4 flex flex-wrap gap-6 justify-center items-center text-sm text-gray-600">
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-3 h-3 bg-[#94a3b8] rounded-full"></span>
           <span>Current Solution</span>
         </div>
-        <div class="flex items-center">
-          <span class="inline-block w-3 h-3 bg-[#dd9933] rounded-full mr-2"></span>
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-3 h-3 bg-[#dd9933] rounded-full"></span>
           <span>Platform Solution</span>
         </div>
-        <div class="flex items-center">
-          <span class="inline-block w-3 h-3 bg-[#22c55e] rounded-full mr-2"></span>
-          <span>Monthly Savings</span>
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-4 h-4 bg-[#dd9933] transform rotate-45"></span>
+          <span>Crossover Point</span>
         </div>
-        <div class="flex items-center">
-          <span class="inline-block w-4 h-4 bg-[#dd9933] transform rotate-45 mr-2"></span>
-          <span>Crossover: {results.crossoverPoint} months</span>
-        </div>
-        <div class="flex items-center">
-          <span class="inline-block w-4 h-4 bg-[#22c55e] transform rotate-45 mr-2"></span>
-          <span>Break-Even: {results.breakEvenPoint} months</span>
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-4 h-4 bg-[#22c55e] transform rotate-45"></span>
+          <span>Break-Even Point</span>
         </div>
       </div>
     </div>

@@ -63,6 +63,12 @@ function calculateTargetBasedPlanningResults(inputs: TargetBasedPlanningInputs):
 
   const monthlyOperatingCostReduction = monthlyBaseCost * (teamReduction + processEfficiency);
 
+  // Calculate crossover and break-even points
+  const monthlySavings = monthlyOperatingCostReduction - platformMaintenance;
+  const isViable = monthlySavings > 0;
+  const crossoverPoint = isViable ? Math.ceil(platformCost / monthlySavings) : 0;
+  const breakEvenPoint = isViable ? Math.ceil((platformCost * 2) / monthlySavings) : 0;
+
   return {
     platformCost,
     platformMaintenance,
@@ -75,7 +81,10 @@ function calculateTargetBasedPlanningResults(inputs: TargetBasedPlanningInputs):
     monthlyOperatingCostReduction,
     targetType,
     targetValue,
-    timeframe
+    timeframe,
+    crossoverPoint,
+    breakEvenPoint,
+    isViable
   };
 }
 

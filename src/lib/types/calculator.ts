@@ -203,6 +203,9 @@ export interface TargetBasedPlanningResults {
   timeframe: number;
   monthlyBaseCost: number;
   monthlyOperatingCostReduction: number;
+  crossoverPoint: number;
+  breakEvenPoint: number;
+  isViable: boolean;
 }
 
 // Other calculator types can be added here 

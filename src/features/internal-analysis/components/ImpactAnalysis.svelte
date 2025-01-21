@@ -242,9 +242,9 @@
               ? 'border-secondary bg-secondary'
               : 'border-gray-300'
           }"/>
-          <span class="font-medium text-gray-900">Team Topology</span>
+          <span class="font-medium text-gray-900">Inverse Conway Maneuver</span>
         </div>
-        <p class="text-xs text-gray-600 mb-2">Compare with independent teams</p>
+        <p class="text-xs text-gray-600 mb-2">Utilize Team Topologies heuristics, by Manuel Pais, and Matthew Skelton</p>
         <svg class="w-full h-16" viewBox="0 0 160 60">
           {#each Array(4) as _, i}
             {@const x = 40 + i * 40}

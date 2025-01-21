@@ -74,6 +74,41 @@
       y: 50 + levelHeight * level
     };
   }
+
+  function calculateSequentialPosition(index: number, totalNodes: number) {
+    const padding = 100; // Padding from edges
+    const availableWidth = 1000 - (padding * 2); // Total width minus padding
+    
+    if (totalNodes <= 5) {
+      // Single row layout
+      const spacing = availableWidth / (totalNodes - 1 || 1);
+      return {
+        x: padding + (spacing * index),
+        y: 400 // Middle of the view
+      };
+    } else {
+      // Two row layout
+      const nodesFirstRow = 5;
+      const spacing = availableWidth / (nodesFirstRow - 1);
+      
+      if (index < nodesFirstRow) {
+        // First row (left to right)
+        return {
+          x: padding + (spacing * index),
+          y: 300 // Upper row
+        };
+      } else {
+        // Second row (right to left)
+        const secondRowIndex = index - nodesFirstRow;
+        const nodesSecondRow = Math.min(5, totalNodes - nodesFirstRow);
+        const secondRowSpacing = availableWidth / (nodesSecondRow - 1 || 1);
+        return {
+          x: padding + availableWidth - (secondRowSpacing * secondRowIndex),
+          y: 500 // Lower row
+        };
+      }
+    }
+  }
 </script>
 
 <!-- Team Dependencies Visualization -->
@@ -198,9 +233,13 @@
         
         {@const sourcePos = distributionMode === 'hierarchical' 
           ? calculateHierarchicalPosition(sourceIndex, nodes.length)
+          : distributionMode === 'sequential'
+          ? calculateSequentialPosition(sourceIndex, nodes.length)
           : calculateCircularPosition(sourceIndex, nodes.length)}
         {@const targetPos = distributionMode === 'hierarchical'
           ? calculateHierarchicalPosition(targetIndex, nodes.length)
+          : distributionMode === 'sequential'
+          ? calculateSequentialPosition(targetIndex, nodes.length)
           : calculateCircularPosition(targetIndex, nodes.length)}
         
         {#if visualizationMode === 'weighted'}
@@ -209,11 +248,11 @@
           {@const midY = (sourcePos.y + targetPos.y) / 2}
           {@const dx = targetPos.x - sourcePos.x}
           {@const dy = targetPos.y - sourcePos.y}
-          {@const normalX = distributionMode === 'hierarchical' 
+          {@const normalX = distributionMode === 'hierarchical' || distributionMode === 'sequential'
             ? 0 
             : -dy / Math.sqrt(dx * dx + dy * dy) * 40}
-          {@const normalY = distributionMode === 'hierarchical'
-            ? 0
+          {@const normalY = distributionMode === 'hierarchical' || distributionMode === 'sequential'
+            ? distributionMode === 'sequential' ? -40 : 0
             : dx / Math.sqrt(dx * dx + dy * dy) * 40}
           {@const nodeRadius = 75}
           {@const totalLength = Math.sqrt(dx * dx + dy * dy)}
@@ -279,6 +318,8 @@
       {#each nodes as node, i}
         {@const position = distributionMode === 'hierarchical' 
           ? calculateHierarchicalPosition(i, nodes.length)
+          : distributionMode === 'sequential'
+          ? calculateSequentialPosition(i, nodes.length)
           : calculateCircularPosition(i, nodes.length)}
         
         <!-- Team Node -->

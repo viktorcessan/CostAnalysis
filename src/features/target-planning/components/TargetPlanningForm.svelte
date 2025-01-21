@@ -724,17 +724,6 @@
 
 <!-- Input Container -->
 <div class="bg-white rounded-xl shadow-sm p-4 space-y-4 mb-4">
-  <!-- Model Description -->
-  <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-2 rounded-lg border border-secondary/20">
-    <p class="text-secondary text-xs leading-relaxed">
-      {#if model === 'team'}
-        Set target goals and calculate required platform investment based on your team metrics
-      {:else}
-        Set target goals and calculate required platform investment based on your ticket metrics
-      {/if}
-    </p>
-  </div>
-
   <!-- Base Configuration -->
   <div>
     <h3 class="text-sm font-semibold text-gray-900 mb-2">Baseline Parameters</h3>

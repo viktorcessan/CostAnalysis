@@ -1715,23 +1715,23 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Team</th>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Size</th>
-                  <th class="px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Eff</th>
+                  <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Team</th>
+                  <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Size</th>
+                  <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Efficiency</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 {#each teamParams.teams.slice(0, teamCount) as team, i}
                   <tr class="hover:bg-gray-50">
-                    <td class="px-2 py-2">
+                    <td class="px-4 py-3">
                         <div class="relative group">
                       <input
                         type="text"
                         value={team.name}
-                            class="w-20 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-xs truncate"
+                        class="w-40 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-sm truncate"
                         on:change={(e) => updateTeamName(i, e.currentTarget.value)}
-                            data-tippy-content={team.name}
-                          />
+                        data-tippy-content={team.name}
+                      />
                           {#if team.name.length > 12}
                             <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap">
                               {team.name}
@@ -1739,23 +1739,23 @@
                           {/if}
                         </div>
                     </td>
-                    <td class="px-2 py-2">
+                    <td class="px-4 py-3">
                       <input
                         type="number"
                         min="1"
                         max="20"
-                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-sm"
                         value={team.size}
                         on:input={(e) => updateTeamParam(i, 'size', parseInt(e.currentTarget.value) || 1)}
                       />
                     </td>
-                    <td class="px-2 py-2">
+                    <td class="px-4 py-3">
                       <input
                         type="number"
                         min="0.1"
                         max="2"
                         step="0.1"
-                        class="w-12 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs"
+                        class="w-24 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-sm"
                         value={team.efficiency}
                         on:input={(e) => updateTeamParam(i, 'efficiency', parseFloat(e.currentTarget.value) || 0.1)}
                       />
@@ -1771,7 +1771,7 @@
               <span>Number of team members</span>
             </div>
             <div class="flex gap-2">
-              <span class="font-medium">Eff:</span>
+              <span class="font-medium">Efficiency:</span>
               <span>Team efficiency multiplier (0.1-2.0)</span>
             </div>
           </div>

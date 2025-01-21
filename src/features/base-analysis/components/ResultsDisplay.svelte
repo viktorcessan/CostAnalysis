@@ -837,17 +837,11 @@
   {/if}
 
   <!-- Cost Metrics -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div class="bg-gray-50 rounded-lg p-4">
       <h4 class="text-sm font-medium text-gray-500">Current Monthly Cost</h4>
       <p class="mt-1 text-2xl font-semibold text-gray-900">{formatCurrency(results?.totalCost ?? 0)}</p>
     </div>
-    {#if results?.model === 'ticket'}
-      <div class="bg-gray-50 rounded-lg p-4">
-        <h4 class="text-sm font-medium text-gray-500">Cost per Ticket</h4>
-        <p class="mt-1 text-2xl font-semibold text-gray-900">{formatCurrency(results?.costPerTicket ?? 0)}</p>
-      </div>
-    {/if}
     <div class="bg-gray-50 rounded-lg p-4">
       <h4 class="text-sm font-medium text-gray-500">Annual Cost</h4>
       <p class="mt-1 text-2xl font-semibold text-gray-900">{formatCurrency(results?.annualCost ?? 0)}</p>

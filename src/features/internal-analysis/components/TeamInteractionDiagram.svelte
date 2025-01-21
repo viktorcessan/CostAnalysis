@@ -1715,7 +1715,10 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                  <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Team</th>
+                  <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                    Team Name
+                    <span class="normal-case text-gray-400 ml-1">(click to edit)</span>
+                  </th>
                   <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Size</th>
                   <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Efficiency</th>
                 </tr>
@@ -1728,9 +1731,10 @@
                       <input
                         type="text"
                         value={team.name}
-                        class="w-40 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-secondary focus:ring-0 text-sm truncate"
+                        class="w-40 bg-transparent border-b border-gray-200 hover:border-gray-400 focus:border-secondary focus:ring-0 text-sm truncate cursor-pointer"
                         on:change={(e) => updateTeamName(i, e.currentTarget.value)}
                         data-tippy-content={team.name}
+                        placeholder="Enter team name"
                       />
                           {#if team.name.length > 12}
                             <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap">

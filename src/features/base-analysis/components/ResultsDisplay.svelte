@@ -297,6 +297,9 @@
           tooltip: {
             enabled: false // Disable tooltips
           },
+          datalabels: {
+            display: false // Disable data point labels
+          },
           annotation: {
             annotations: {
               crossover: {

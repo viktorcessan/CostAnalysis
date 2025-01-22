@@ -1,3 +1,6 @@
+General:
+- Fix formula accordeons
+
 Business case:
 
 - Fix business case card balance: went to 2x2 grid
@@ -7,6 +10,7 @@ Target:
 
 - Remove the model explanation at the top
 - From target, remove from the graph the monthly savings, make a bigger pointer to crossover
+- From target, add hourly rate for the ticket system
 
 
 Team dependencies:
@@ -17,15 +21,13 @@ Team dependencies:
 - Fix team dependency costs:
   - Direct meeting costs
   - Indirect meeting costs
-  - Cost of opporutnity: sum of indirect + direct + lost efficiency
+  - Cost of opporutnity
   - Efficiency costs
-- Fix LLM templates: One per type: base, target, team dependency. for base and target, make it depend on team or ticket. Be sure math matches results in chatgpt
+- Fix LLM templates: One per type: base, target, team dependency. for base and target, make it depend on team or ticket. Be sure that math matches results in chatgpt (still needed to be tested further: i've tried some scenarios, but not all)
 
 
 
 To do:
 
 - Fix hierarchy levels: put restrictions in relation to the number of teams
-- Fix formula accordeons
 - In base and target, the input boxes arrows hide some of the units. 
-- From target, add hourly rate for the ticket system

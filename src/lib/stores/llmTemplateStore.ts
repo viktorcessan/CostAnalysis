@@ -387,11 +387,11 @@ function generateTicketPlatformTemplate(inputs: any, results: ExtendedCalculatio
     monthlyTickets: 0,
     hoursPerTicket: 0,
     peoplePerTicket: 0,
-    hourlyRate: 0,
     slaCompliance: 0
   };
 
   const safeInputs = { ...defaultInputs, ...inputs };
+  const hourlyRate = results.baseInputs?.hourlyRate || 0;
   const totalCost = results.totalCost || 0;
   const costPerTicket = results.costPerTicket || 0;
   const monthlySavings = results.monthlySavings || 0;
@@ -407,8 +407,8 @@ Current Configuration:
 - Monthly Tickets: ${safeInputs.monthlyTickets}
 - Hours per Ticket: ${safeInputs.hoursPerTicket}
 - People per Ticket: ${safeInputs.peoplePerTicket}
-- Hourly Rate: $${safeInputs.hourlyRate}/hour
-- SLA Compliance: ${Math.round(safeInputs.slaCompliance * 100)}%
+- Hourly Rate: $${hourlyRate}/hour
+- SLA Compliance: ${safeInputs.slaCompliance}%
 
 Platform Solution Details:
 - Platform Cost: $${platformInputs.platformCost.toFixed(2)}
@@ -420,7 +420,7 @@ Platform Solution Details:
 Key Formulas Used:
 1. Current Monthly Processing Cost:
    Monthly Cost = Monthly Tickets × Hours per Ticket × People per Ticket × Hourly Rate
-   = ${safeInputs.monthlyTickets} × ${safeInputs.hoursPerTicket} × ${safeInputs.peoplePerTicket} × $${safeInputs.hourlyRate}
+   = ${safeInputs.monthlyTickets} × ${safeInputs.hoursPerTicket} × ${safeInputs.peoplePerTicket} × $${hourlyRate}
    = $${totalCost.toFixed(2)}
 
    Cost per Ticket = Monthly Cost ÷ Monthly Tickets
@@ -470,7 +470,7 @@ Based on this analysis, please provide insights on:
 5. How does this compare to similar automation initiatives?
 
 Summary:
-We are currently processing ${safeInputs.monthlyTickets} tickets per month, with ${safeInputs.hoursPerTicket} hours and ${safeInputs.peoplePerTicket} people per ticket at $${safeInputs.hourlyRate}/hour, maintaining ${Math.round(safeInputs.slaCompliance * 100)}% SLA compliance. This results in a monthly cost of $${totalCost.toFixed(2)} ($${costPerTicket.toFixed(2)} per ticket).
+We are currently processing ${safeInputs.monthlyTickets} tickets per month, with ${safeInputs.hoursPerTicket} hours and ${safeInputs.peoplePerTicket} people per ticket at $${hourlyRate}/hour, maintaining ${safeInputs.slaCompliance}% SLA compliance. This results in a monthly cost of $${totalCost.toFixed(2)} ($${costPerTicket.toFixed(2)} per ticket).
 
 By implementing a platform solution with an initial investment of $${platformInputs.platformCost.toFixed(2)} and monthly maintenance of $${platformInputs.platformMaintenance.toFixed(2)}, we expect to achieve ${Math.round(platformInputs.teamReduction * 100)}% team reduction and ${Math.round(platformInputs.processEfficiency * 100)}% process efficiency gains. This will result in monthly savings of $${monthlySavings.toFixed(2)}.
 
@@ -491,11 +491,11 @@ function generateTicketOutsourceTemplate(inputs: any, results: ExtendedCalculati
     monthlyTickets: 0,
     hoursPerTicket: 0,
     peoplePerTicket: 0,
-    hourlyRate: 0,
     slaCompliance: 0
   };
 
   const safeInputs = { ...defaultInputs, ...inputs };
+  const hourlyRate = results.baseInputs?.hourlyRate || 0;
   const totalCost = results.totalCost || 0;
   const costPerTicket = results.costPerTicket || 0;
   const monthlySavings = results.monthlySavings || 0;
@@ -511,8 +511,8 @@ Current Configuration:
 - Monthly Tickets: ${safeInputs.monthlyTickets}
 - Hours per Ticket: ${safeInputs.hoursPerTicket}
 - People per Ticket: ${safeInputs.peoplePerTicket}
-- Hourly Rate: $${safeInputs.hourlyRate}/hour
-- SLA Compliance: ${Math.round(safeInputs.slaCompliance * 100)}%
+- Hourly Rate: $${hourlyRate}/hour
+- SLA Compliance: ${safeInputs.slaCompliance}%
 
 Outsourcing Solution Details:
 - Transition Cost: $${outsourceInputs.transitionCost.toFixed(2)}
@@ -550,7 +550,7 @@ Based on this analysis, please provide insights on:
 5. What governance model would you recommend?
 
 Summary:
-We are currently processing ${safeInputs.monthlyTickets} tickets per month, with ${safeInputs.hoursPerTicket} hours and ${safeInputs.peoplePerTicket} people per ticket at $${safeInputs.hourlyRate}/hour, maintaining ${Math.round(safeInputs.slaCompliance * 100)}% SLA compliance. This results in a monthly cost of $${totalCost.toFixed(2)} ($${costPerTicket.toFixed(2)} per ticket).
+We are currently processing ${safeInputs.monthlyTickets} tickets per month, with ${safeInputs.hoursPerTicket} hours and ${safeInputs.peoplePerTicket} people per ticket at $${hourlyRate}/hour, maintaining ${safeInputs.slaCompliance}% SLA compliance. This results in a monthly cost of $${totalCost.toFixed(2)} ($${costPerTicket.toFixed(2)} per ticket).
 
 By transitioning to an outsourced model with a one-time cost of $${outsourceInputs.transitionCost.toFixed(2)} and a vendor rate of $${outsourceInputs.vendorRate.toFixed(2)}/hour, we expect to reduce costs while managing a ${Math.round(outsourceInputs.qualityImpact * 100)}% quality impact and ${Math.round(outsourceInputs.managementOverhead * 100)}% management overhead. This will result in monthly savings of $${monthlySavings.toFixed(2)}.
 
@@ -577,11 +577,11 @@ function generateTicketHybridTemplate(inputs: any, results: ExtendedCalculationR
     monthlyTickets: 0,
     hoursPerTicket: 0,
     peoplePerTicket: 0,
-    hourlyRate: 0,
     slaCompliance: 0
   };
 
   const safeInputs = { ...defaultInputs, ...inputs };
+  const hourlyRate = results.baseInputs?.hourlyRate || 0;
   const totalCost = results.totalCost || 0;
   const costPerTicket = results.costPerTicket || 0;
   const monthlySavings = results.monthlySavings || 0;
@@ -597,8 +597,8 @@ Current Configuration:
 - Monthly Tickets: ${safeInputs.monthlyTickets}
 - Hours per Ticket: ${safeInputs.hoursPerTicket}
 - People per Ticket: ${safeInputs.peoplePerTicket}
-- Hourly Rate: $${safeInputs.hourlyRate}/hour
-- SLA Compliance: ${Math.round(safeInputs.slaCompliance * 100)}%
+- Hourly Rate: $${hourlyRate}/hour
+- SLA Compliance: ${safeInputs.slaCompliance}%
 
 Hybrid Solution Details:
 - Platform Cost: $${hybridInputs.platformCost.toFixed(2)}
@@ -641,7 +641,7 @@ Based on this analysis, please provide insights on:
 5. How should we phase the implementation of both solutions?
 
 Summary:
-We are currently processing ${safeInputs.monthlyTickets} tickets per month, with ${safeInputs.hoursPerTicket} hours and ${safeInputs.peoplePerTicket} people per ticket at $${safeInputs.hourlyRate}/hour, maintaining ${Math.round(safeInputs.slaCompliance * 100)}% SLA compliance. This results in a monthly cost of $${totalCost.toFixed(2)} ($${costPerTicket.toFixed(2)} per ticket).
+We are currently processing ${safeInputs.monthlyTickets} tickets per month, with ${safeInputs.hoursPerTicket} hours and ${safeInputs.peoplePerTicket} people per ticket at $${hourlyRate}/hour, maintaining ${safeInputs.slaCompliance}% SLA compliance. This results in a monthly cost of $${totalCost.toFixed(2)} ($${costPerTicket.toFixed(2)} per ticket).
 
 By implementing a hybrid solution that combines a platform (${Math.round(hybridInputs.platformPortion * 100)}% of workload) and outsourcing (${Math.round(hybridInputs.vendorPortion * 100)}% of workload), with a total investment of $${(hybridInputs.platformCost + hybridInputs.transitionCost).toFixed(2)}, we expect to achieve ${Math.round(hybridInputs.teamReduction * 100)}% team reduction and ${Math.round(hybridInputs.processEfficiency * 100)}% process efficiency gains. This will result in monthly savings of $${monthlySavings.toFixed(2)}.
 

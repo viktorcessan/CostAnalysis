@@ -386,25 +386,7 @@
         },
         plugins: {
           tooltip: {
-            mode: 'index',
-            intersect: false,
-            callbacks: {
-              label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                if (context.parsed.y !== null) {
-                  label += new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(context.parsed.y);
-                }
-                return label;
-              }
-            }
+            enabled: false
           },
           legend: {
             display: false
@@ -433,11 +415,7 @@
               display: false
             },
             ticks: {
-              maxTicksLimit: 12,
-              callback: function(value, index) {
-                if (index % 3 === 0) return `Month ${value}`;
-                return '';
-              }
+              display: false
             }
           },
           y: {

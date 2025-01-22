@@ -294,6 +294,9 @@
           intersect: false
         },
         plugins: {
+          tooltip: {
+            enabled: false // Disable tooltips
+          },
           annotation: {
             annotations: {
               crossover: {

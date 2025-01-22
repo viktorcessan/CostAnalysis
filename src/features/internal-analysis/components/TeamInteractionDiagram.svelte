@@ -798,35 +798,36 @@
     
     const communicationOverhead = dependencyOverhead + manualOverhead;
 
-    // Opportunity cost is the sum of direct and indirect costs
+    // Opportunity cost is the sum of direct meeting costs and communication overhead
     const opportunityCost = directMeetingCost + communicationOverhead;
 
-    // Calculate flow efficiency impact cost
-    const totalDependencyStrength = edges.reduce((sum, edge) => sum + edge.data.strength, 0);
-    const avgTeamSize = nodes.reduce((sum, node) => sum + node.data.size, 0) / nodes.length;
-    const totalMonthlyHours = avgTeamSize * 160; // 160 hours per person per month
+    // Calculate total operational costs (before efficiency impact)
+    const totalOperationalCost = directMeetingCost + communicationOverhead + opportunityCost;
+
+    // Calculate flow efficiency impact using sigmoid, but now relative to operational costs
+    const totalDependencyStrength = edges.reduce((sum, edge) => 
+      sum + edge.data.strength, 0);
+    const avgDependencyLevel = totalDependencyStrength / (edges.length || 1);
     
-    // Calculate impact using sigmoid function
-    // Normalized impact between 0 and maxImpact
-    const maxImpact = 0.4; // Maximum 40% efficiency loss
-    const midpoint = 15; // Sigmoid midpoint - typical dependency sum
-    const steepness = 10; // Controls how fast the curve rises
+    // Adjust sigmoid parameters based on dependency levels
+    const maxImpact = 0.35; // Maximum 35% efficiency loss
+    const midpoint = 3; // Sigmoid midpoint - average dependency level of 3
+    const steepness = 1.5; // Controls how fast the curve rises
     
-    const impactFactor = maxImpact * (1 / (1 + Math.exp(-(totalDependencyStrength - midpoint) / steepness)));
+    const impactFactor = maxImpact * (1 / (1 + Math.exp(-(avgDependencyLevel - midpoint) / steepness)));
     
-    // Flow efficiency cost represents lost productivity due to dependencies
-    const flowEfficiencyCost = Math.round(
-      totalMonthlyHours * 
-      costParams.hourlyRate.developer * 
-      impactFactor
-    );
+    // Flow efficiency cost is now a percentage of total operational costs
+    const flowEfficiencyCost = Math.round(totalOperationalCost * impactFactor);
+
+    // Calculate total cost as sum of all components
+    const totalCost = directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost;
 
     return {
       directMeetingCost,
       communicationOverhead,
       opportunityCost,
       flowEfficiencyCost,
-      totalCost: opportunityCost + flowEfficiencyCost
+      totalCost
     };
   }
 

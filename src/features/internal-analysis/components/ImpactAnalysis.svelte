@@ -126,7 +126,8 @@
       // Opportunity cost from context switching
       const contextSwitchingHours = adjustedEdges.reduce((sum, edge) => 
         sum + (edge.data.strength * 2), 0);
-      const opportunityCost = directMeetingCost + communicationOverhead;
+      const opportunityCost = contextSwitchingHours * costParams.hourlyRate.developer * 
+        costParams.overhead.baselineCommunicationHours;
 
       // Flow efficiency impact cost
       const totalDependencyStrength = adjustedEdges.reduce((sum, edge) => 
@@ -149,7 +150,7 @@
         impactFactor
       );
 
-      const totalCost = opportunityCost + flowEfficiencyCost;
+      const totalCost = directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost;
 
       return {
         costs: {
@@ -188,7 +189,8 @@
       const totalDependencyStrength = targetDependencyMatrix.reduce((sum, row, i) => 
         sum + row.reduce((rowSum, val, j) => i !== j ? rowSum + val : rowSum, 0), 0);
       const contextSwitchingHours = totalDependencyStrength * 2;
-      const opportunityCost = directMeetingCost + communicationOverhead;
+      const opportunityCost = contextSwitchingHours * costParams.hourlyRate.developer * 
+        costParams.overhead.baselineCommunicationHours;
 
       // Flow efficiency impact cost
       const avgTeamSize = nodes.reduce((sum, node) => sum + node.data.size, 0) / nodes.length;
@@ -209,7 +211,7 @@
         impactFactor
       );
 
-      const totalCost = opportunityCost + flowEfficiencyCost;
+      const totalCost = directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost;
 
       // Calculate average dependency level
       const avgDependencyLevel = totalDependencyStrength / (totalConnections || 1);

@@ -66,34 +66,44 @@ Key Formulas and Calculations:
 2. Platform Solution Impact:
    a) Implementation Investment:
       - One-time Platform Cost: $${platformInputs.platformCost.toFixed(2)}
+      - Implementation Timeline: ${platformInputs.timeToBuild} months
       - Monthly Platform Maintenance: $${platformInputs.platformMaintenance.toFixed(2)}
    
-   b) Monthly Savings Calculation:
+   b) Cost Structure:
       Current Monthly Cost = $${totalCost.toFixed(2)}
       
-      Solution Monthly Cost = Current Cost × (1 - Team Reduction) × (1 - Process Efficiency) + Monthly Maintenance
-      = $${totalCost.toFixed(2)} × (1 - ${(platformInputs.teamReduction || 0).toFixed(2)}) × (1 - ${platformInputs.processEfficiency.toFixed(2)}) + $${platformInputs.platformMaintenance.toFixed(2)}
+      Implementation Cost = Platform Cost + (Current Monthly Cost × Build Time)
+      = $${platformInputs.platformCost.toFixed(2)} + ($${totalCost.toFixed(2)} × ${platformInputs.timeToBuild})
+      = $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)}
+
+      Reduced Team Cost = Current Monthly Cost × (1 - Team Reduction) × (1 - Process Efficiency)
+      = $${totalCost.toFixed(2)} × (1 - ${(platformInputs.teamReduction || 0).toFixed(2)}) × (1 - ${platformInputs.processEfficiency.toFixed(2)})
+      = $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency)).toFixed(2)}
+
+      Monthly Operating Cost = Reduced Team Cost + Monthly Maintenance
+      = $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency)).toFixed(2)} + $${platformInputs.platformMaintenance.toFixed(2)}
       = $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency) + platformInputs.platformMaintenance).toFixed(2)}
 
-      Total Monthly Savings = Current Monthly Cost - Solution Monthly Cost
+      Monthly Savings = Current Monthly Cost - Monthly Operating Cost
       = $${totalCost.toFixed(2)} - $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency) + platformInputs.platformMaintenance).toFixed(2)}
       = $${monthlySavings.toFixed(2)}
 
 3. ROI Analysis:
-   Break-Even Period = Platform Cost ÷ Monthly Savings
-   = $${platformInputs.platformCost.toFixed(2)} ÷ $${monthlySavings.toFixed(2)}
+   Break-Even Period = Implementation Cost ÷ Monthly Savings
+   = $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)} ÷ $${monthlySavings.toFixed(2)}
    = ${breakEvenMonths.toFixed(1)} months
 
-   Annual ROI = (Annual Savings ÷ Platform Cost) × 100
-   = ($${(monthlySavings * 12).toFixed(2)} ÷ $${platformInputs.platformCost.toFixed(2)}) × 100
-   = ${((monthlySavings * 12 / platformInputs.platformCost) * 100).toFixed(1)}%
+   Annual ROI = (Monthly Savings × 12 - Implementation Cost) ÷ Implementation Cost × 100
+   = ($${(monthlySavings * 12).toFixed(2)} - $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)}) ÷ $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)} × 100
+   = ${((monthlySavings * 12 - (platformInputs.platformCost + totalCost * platformInputs.timeToBuild)) / (platformInputs.platformCost + totalCost * platformInputs.timeToBuild) * 100).toFixed(1)}%
 
 Key Metrics Summary:
 - Current Monthly Cost: $${totalCost.toFixed(2)}
-- Solution Monthly Cost: $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency) + platformInputs.platformMaintenance).toFixed(2)}
+- Implementation Cost: $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)}
+- Monthly Operating Cost: $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency) + platformInputs.platformMaintenance).toFixed(2)}
 - Monthly Savings: $${monthlySavings.toFixed(2)}
 - Break-even Period: ${breakEvenMonths.toFixed(1)} months
-- First Year ROI: ${((monthlySavings * 12 / platformInputs.platformCost) * 100).toFixed(1)}%
+- First Year ROI: ${((monthlySavings * 12 - (platformInputs.platformCost + totalCost * platformInputs.timeToBuild)) / (platformInputs.platformCost + totalCost * platformInputs.timeToBuild) * 100).toFixed(1)}%
 - 3-Year Total Savings: $${(monthlySavings * 36).toFixed(2)}
 
 Based on this analysis, please provide insights on:
@@ -108,7 +118,7 @@ We are currently operating with a ${safeInputs.teamSize}-member team at $${hourl
 
 By implementing a platform solution with an initial investment of $${platformInputs.platformCost.toFixed(2)} and monthly maintenance of $${platformInputs.platformMaintenance.toFixed(2)}, we expect to achieve ${Math.round(platformInputs.processEfficiency * 100)}% process efficiency gains. This will result in monthly savings of $${monthlySavings.toFixed(2)}.
 
-The break-even point will be reached in ${breakEvenMonths.toFixed(1)} months, with a first-year ROI of ${((monthlySavings * 12 / platformInputs.platformCost) * 100).toFixed(1)}%. Over three years, total savings are projected to be $${(monthlySavings * 36).toFixed(2)}.`;
+The break-even point will be reached in ${breakEvenMonths.toFixed(1)} months, with a first-year ROI of ${((monthlySavings * 12 - (platformInputs.platformCost + totalCost * platformInputs.timeToBuild)) / (platformInputs.platformCost + totalCost * platformInputs.timeToBuild) * 100).toFixed(1)}%. Over three years, total savings are projected to be $${(monthlySavings * 36).toFixed(2)}.`;
 }
 
 function generateTeamOutsourceTemplate(inputs: any, results: ExtendedCalculationResults): string {
@@ -410,24 +420,47 @@ Platform Solution Details:
 Key Formulas Used:
 1. Current Monthly Processing Cost:
    Monthly Cost = Monthly Tickets × Hours per Ticket × People per Ticket × Hourly Rate
-   Cost per Ticket = Monthly Cost / Monthly Tickets
+   = ${safeInputs.monthlyTickets} × ${safeInputs.hoursPerTicket} × ${safeInputs.peoplePerTicket} × $${safeInputs.hourlyRate}
+   = $${totalCost.toFixed(2)}
+
+   Cost per Ticket = Monthly Cost ÷ Monthly Tickets
+   = $${totalCost.toFixed(2)} ÷ ${safeInputs.monthlyTickets}
+   = $${costPerTicket.toFixed(2)}
 
 2. Platform Solution Cost:
-   Implementation Cost = Platform Cost
-   Monthly Operating Cost = Platform Maintenance + (Remaining Manual Tickets × Reduced Processing Cost)
-   Team Cost Reduction = Monthly Cost × Team Reduction %
-   Process Efficiency Savings = Monthly Cost × Process Efficiency %
-   Total Monthly Savings = Team Cost Reduction + Process Efficiency Savings - Monthly Operating Cost
+   Implementation Cost = Platform Cost + (Current Monthly Cost × Build Time)
+   = $${platformInputs.platformCost.toFixed(2)} + ($${totalCost.toFixed(2)} × ${platformInputs.timeToBuild})
+   = $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)}
+
+   Reduced Team Cost = Current Monthly Cost × (1 - Team Reduction) × (1 - Process Efficiency)
+   = $${totalCost.toFixed(2)} × (1 - ${(platformInputs.teamReduction || 0).toFixed(2)}) × (1 - ${platformInputs.processEfficiency.toFixed(2)})
+   = $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency)).toFixed(2)}
+
+   Monthly Operating Cost = Reduced Team Cost + Monthly Maintenance
+   = $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency)).toFixed(2)} + $${platformInputs.platformMaintenance.toFixed(2)}
+   = $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency) + platformInputs.platformMaintenance).toFixed(2)}
+
+   Monthly Savings = Current Monthly Cost - Monthly Operating Cost
+   = $${totalCost.toFixed(2)} - $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency) + platformInputs.platformMaintenance).toFixed(2)}
+   = $${monthlySavings.toFixed(2)}
 
 3. Break-Even Analysis:
-   Break-Even Months = Platform Cost / Monthly Savings
+   Break-Even Period = Implementation Cost ÷ Monthly Savings
+   = $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)} ÷ $${monthlySavings.toFixed(2)}
+   = ${breakEvenMonths.toFixed(1)} months
+
+   Annual ROI = (Monthly Savings × 12 - Implementation Cost) ÷ Implementation Cost × 100
+   = ($${(monthlySavings * 12).toFixed(2)} - $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)}) ÷ $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)} × 100
+   = ${((monthlySavings * 12 - (platformInputs.platformCost + totalCost * platformInputs.timeToBuild)) / (platformInputs.platformCost + totalCost * platformInputs.timeToBuild) * 100).toFixed(1)}%
 
 Current Results:
-- Current Monthly Cost: $${results.totalCost.toFixed(2)}
-- Cost per Ticket: $${results.costPerTicket.toFixed(2)}
-- Expected Monthly Savings: $${results.monthlySavings.toFixed(2)}
-- Break-even Period: ${results.breakEvenMonths?.toFixed(1) || 'N/A'} months
-- Annual ROI: ${((results.monthlySavings * 12 / platformInputs.platformCost) * 100).toFixed(1)}%
+- Current Monthly Cost: $${totalCost.toFixed(2)}
+- Cost per Ticket: $${costPerTicket.toFixed(2)}
+- Implementation Cost: $${(platformInputs.platformCost + totalCost * platformInputs.timeToBuild).toFixed(2)}
+- Monthly Operating Cost: $${(totalCost * (1 - (platformInputs.teamReduction || 0)) * (1 - platformInputs.processEfficiency) + platformInputs.platformMaintenance).toFixed(2)}
+- Monthly Savings: $${monthlySavings.toFixed(2)}
+- Break-even Period: ${breakEvenMonths.toFixed(1)} months
+- Annual ROI: ${((monthlySavings * 12 - (platformInputs.platformCost + totalCost * platformInputs.timeToBuild)) / (platformInputs.platformCost + totalCost * platformInputs.timeToBuild) * 100).toFixed(1)}%
 
 Based on this analysis, please provide insights on:
 1. Is this automation level achievable for our ticket types?
@@ -441,7 +474,7 @@ We are currently processing ${safeInputs.monthlyTickets} tickets per month, with
 
 By implementing a platform solution with an initial investment of $${platformInputs.platformCost.toFixed(2)} and monthly maintenance of $${platformInputs.platformMaintenance.toFixed(2)}, we expect to achieve ${Math.round(platformInputs.teamReduction * 100)}% team reduction and ${Math.round(platformInputs.processEfficiency * 100)}% process efficiency gains. This will result in monthly savings of $${monthlySavings.toFixed(2)}.
 
-The break-even point will be reached in ${breakEvenMonths.toFixed(1)} months, with a first-year ROI of ${((monthlySavings * 12 / platformInputs.platformCost) * 100).toFixed(1)}%. Over three years, total savings are projected to be $${(monthlySavings * 36).toFixed(2)}.`;
+The break-even point will be reached in ${breakEvenMonths.toFixed(1)} months, with a first-year ROI of ${((monthlySavings * 12 - (platformInputs.platformCost + totalCost * platformInputs.timeToBuild)) / (platformInputs.platformCost + totalCost * platformInputs.timeToBuild) * 100).toFixed(1)}%. Over three years, total savings are projected to be $${(monthlySavings * 36).toFixed(2)}.`;
 }
 
 function generateTicketOutsourceTemplate(inputs: any, results: ExtendedCalculationResults): string {

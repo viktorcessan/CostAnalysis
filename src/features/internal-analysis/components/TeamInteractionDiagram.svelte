@@ -402,7 +402,7 @@
     data: {
       labels: [
         'Direct Meeting Costs',
-        'Communication Overhead',
+        'Indirect Meeting Costs',
         'Opportunity Cost',
         'Flow Efficiency Impact'
       ],
@@ -771,19 +771,9 @@
     const totalConnections = edges.length;
     const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
     
-    // Calculate direct meeting costs based on dependencies and manual communication metrics
-    const dependencyMeetingCost = 
-      costParams.meetings.duration * 
-      getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
-      costParams.meetings.attendeesPerTeam * 
-      costParams.hourlyRate.developer * 
-      totalConnections;
-
-    // Add manual meeting hours from communication matrix
-    const manualMeetingCost = teamCommunicationMetrics.reduce((sum, metrics) => 
+    // Calculate direct meeting costs only from manual communication metrics
+    const directMeetingCost = teamCommunicationMetrics.reduce((sum, metrics) => 
       sum + (metrics.meetingHours * costParams.hourlyRate.developer), 0);
-    
-    const directMeetingCost = dependencyMeetingCost + manualMeetingCost;
 
     // Calculate communication overhead combining dependency-based and manual metrics
     const dependencyOverhead =
@@ -798,7 +788,7 @@
     
     const communicationOverhead = dependencyOverhead + manualOverhead;
 
-    // Opportunity cost is the sum of direct meeting costs and communication overhead
+    // Opportunity cost is the sum of direct and indirect costs
     const opportunityCost = directMeetingCost + communicationOverhead;
 
     // Calculate total operational costs (before efficiency impact)

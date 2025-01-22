@@ -95,7 +95,7 @@
                 </div>
 
                 <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
-                  <div class="text-sm font-medium text-gray-600">Communication Overhead</div>
+                  <div class="text-sm font-medium text-gray-600">Indirect Meeting Costs</div>
                   <div class="text-xl font-bold text-amber-500 mt-1">
                     ${costs.communicationOverhead.toFixed(0)}
                   </div>
@@ -158,7 +158,7 @@
                       </svg>
                     </div>
                     <div>
-                      <h6 class="text-sm font-medium text-gray-900">Communication Overhead</h6>
+                      <h6 class="text-sm font-medium text-gray-900">Indirect Meeting Costs</h6>
                       <p class="text-sm text-gray-600 mt-1">
                         {#if (costs.communicationOverhead / costs.totalCost) > 0.35}
                           High communication overhead suggests complex coordination patterns. Consider streamlining team interfaces.

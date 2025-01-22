@@ -132,55 +132,166 @@ Total Monthly Cost = Monthly Platform Cost + Monthly Vendor Cost + Quality and K
               'Team reduction can be achieved through natural attrition',
               'Process improvements can be maintained long-term'
             ]
+          },
+          {
+            title: 'Cost Savings Analysis',
+            formula: `Monthly Savings = Current Monthly Cost - Future Monthly Cost
+Break-even Point = Implementation Cost / Monthly Savings
+Crossover Point = First month where Cumulative Solution Cost < Cumulative Current Cost
+Two Year Total = (Monthly Cost × 24) + Initial Cost`,
+            explanation: 'Analyzes cost savings and key financial metrics for the solution.',
+            variables: [
+              { name: 'Current Monthly Cost', description: 'Current operational costs per month' },
+              { name: 'Future Monthly Cost', description: 'Projected costs after solution implementation' },
+              { name: 'Implementation Cost', description: 'One-time cost to implement the solution' },
+              { name: 'Monthly Savings', description: 'Difference between current and future monthly costs' }
+            ],
+            assumptions: [
+              'Monthly costs remain stable after implementation',
+              'Implementation costs are paid upfront',
+              'Savings begin after implementation period'
+            ]
+          },
+          {
+            title: 'Target Planning Metrics',
+            formula: `Target Monthly Cost = Current Cost × (1 - Cost Reduction Target)
+Required Efficiency Gain = (Current Cost - Target Cost) / Current Cost
+Implementation Budget = Monthly Savings × Target Break-even
+Platform Cost Target = Monthly Savings × Platform Cost Factor`,
+            explanation: 'Calculates target metrics based on desired outcomes and constraints.',
+            variables: [
+              { name: 'Cost Reduction Target', description: 'Desired percentage cost reduction' },
+              { name: 'Target Break-even', description: 'Desired months to break even' },
+              { name: 'Platform Cost Factor', description: 'Portion of savings allocated to platform' },
+              { name: 'Current Cost', description: 'Current monthly operational cost' }
+            ],
+            assumptions: [
+              'Targets are achievable within constraints',
+              'Linear relationship between costs and efficiency',
+              'Stable business environment during transition'
+            ]
+          },
+          {
+            title: 'Sensitivity Analysis',
+            formula: `Pessimistic Case = Base Savings × 0.8
+Optimistic Case = Base Savings × 1.2
+Adjusted Break-even = Base Break-even × (Base Savings / Adjusted Savings)
+Risk-adjusted ROI = (Expected Savings × Probability) / Implementation Cost`,
+            explanation: 'Evaluates the impact of variations in key assumptions.',
+            variables: [
+              { name: 'Base Savings', description: 'Expected monthly savings' },
+              { name: 'Base Break-even', description: 'Expected break-even period' },
+              { name: 'Probability', description: 'Likelihood of achieving projected savings' },
+              { name: 'Implementation Cost', description: 'Total cost of implementation' }
+            ],
+            assumptions: [
+              '±20% variation for sensitivity bounds',
+              'Normal distribution of outcomes',
+              'Independent risk factors'
+            ]
           }
         ];
       } else {
         return [
           {
-            title: 'Team Interaction Cost',
-            formula: `Direct Interaction Cost = Σ(Interaction Frequency × Average Duration × Number of Participants × Average Hourly Rate)
-Coordination Overhead = Direct Interaction Cost × Coordination Factor
-Total Interaction Cost = Direct Interaction Cost + Coordination Overhead`,
-            explanation: 'Calculates the cost of team interactions including meetings, communications, and coordination overhead.',
+            title: 'Direct Meeting Costs',
+            formula: `Direct Meeting Cost = Σ(Meeting Hours × Hourly Rate)
+where Meeting Hours comes from the team communication matrix`,
+            explanation: 'Calculates the cost of direct team meetings based on manually specified meeting hours in the communication matrix.',
             variables: [
-              { name: 'Interaction Frequency', description: 'Number of interactions per month (meetings, calls, etc.)' },
-              { name: 'Average Duration', description: 'Average length of each interaction in hours' },
-              { name: 'Number of Participants', description: 'Average number of people involved in each interaction' },
-              { name: 'Average Hourly Rate', description: 'Weighted average cost per hour of participants' },
-              { name: 'Coordination Factor', description: 'Multiplier for additional coordination work (typically 0.2-0.5)' }
+              { name: 'Meeting Hours', description: 'Meeting hours per month from communication matrix' },
+              { name: 'Hourly Rate', description: 'Average cost per hour per team member' }
             ],
             assumptions: [
-              'Interactions are necessary and productive',
-              'Coordination overhead scales with direct interaction time',
-              'All participants are actively engaged during interactions'
+              'Meeting hours are accurately tracked in communication matrix',
+              'All participants are actively engaged',
+              'Hourly rates are consistent across team members'
             ]
           },
           {
-            title: 'Team Dependency Impact',
-            formula: `Dependency Strength Score = Σ(Frequency × Complexity × Impact)
-Communication Overhead = Dependency Strength Score × Communication Hours × Average Hourly Rate
-Process Delay Cost = Dependency Strength Score × Average Delay Hours × Average Team Cost per Hour
-Total Dependency Cost = Communication Overhead + Process Delay Cost`,
-            explanation: 'Measures the cost impact of team dependencies through communication overhead and process delays.',
+            title: 'Communication Overhead',
+            formula: `Dependency Overhead = Number of Dependencies × Communication Overhead Multiplier × Hourly Rate × Baseline Hours
+Manual Overhead = Σ((Overhead Hours + Additional Hours) × Hourly Rate)
+Total Communication Overhead = Dependency Overhead + Manual Overhead`,
+            explanation: 'Calculates additional costs from meeting preparation, follow-up, and coordination activities. Combines both dependency-based overhead (from team connections) and manual overhead (from communication matrix).',
             variables: [
-              { name: 'Frequency', description: 'How often teams need to interact (1-5 scale)' },
-              { name: 'Complexity', description: 'Complexity of the dependency (1-5 scale)' },
-              { name: 'Impact', description: 'Business impact of the dependency (1-5 scale)' },
-              { name: 'Communication Hours', description: 'Hours spent on inter-team communication' },
-              { name: 'Average Delay Hours', description: 'Average delay in hours due to dependencies' },
-              { name: 'Average Team Cost per Hour', description: 'Average cost per hour for affected teams' }
+              { name: 'Number of Dependencies', description: 'Total count of team connections' },
+              { name: 'Communication Overhead Multiplier', description: 'Multiplier for coordination time (default 1.2)' },
+              { name: 'Baseline Hours', description: 'Base monthly communication hours per connection (default 8)' },
+              { name: 'Overhead Hours', description: 'Manual overhead hours from communication matrix' },
+              { name: 'Additional Hours', description: 'Extra communication hours from matrix' },
+              { name: 'Hourly Rate', description: 'Average cost per hour per team member' }
             ],
             assumptions: [
-              'Dependencies can be accurately mapped and measured',
-              'Impact scores are consistently evaluated across teams',
-              'Delays can be attributed to specific dependencies',
-              'Communication overhead is proportional to dependency strength'
+              'Dependency overhead scales linearly with number of connections',
+              'Communication overhead multiplier applies to all dependencies',
+              'Manual overhead is accurately tracked in the communication matrix'
+            ]
+          },
+          {
+            title: 'Opportunity Cost',
+            formula: 'Opportunity Cost = Direct Meeting Cost + Communication Overhead',
+            explanation: 'Represents the total cost of time spent on coordination and communication instead of direct work.',
+            variables: [
+              { name: 'Direct Meeting Cost', description: 'Cost of scheduled meetings' },
+              { name: 'Communication Overhead', description: 'Cost of coordination activities' }
             ],
-            observations: [
-              'Higher dependency strength typically leads to increased coordination costs',
-              'Complex dependencies often result in longer delays',
-              'Regular dependency assessment helps identify optimization opportunities',
-              'Strong dependencies may indicate need for team restructuring'
+            assumptions: [
+              'All coordination time has opportunity cost',
+              'Time could otherwise be spent on direct work',
+              'Cost is proportional to time spent'
+            ]
+          },
+          {
+            title: 'Flow Efficiency Impact',
+            formula: `Total Dependency Strength = Σ(Edge Strength)
+Average Dependency Level = Total Dependency Strength / Number of Edges
+Impact Factor = MaxImpact × (1 / (1 + e^(-(TotalDependencyStrength - Midpoint) / Steepness)))
+Flow Efficiency Cost = Total Monthly Hours × Hourly Rate × Impact Factor`,
+            explanation: 'Calculates the cost of reduced productivity due to dependencies using a sigmoid function.',
+            variables: [
+              { name: 'MaxImpact', description: 'Maximum efficiency loss (40%)' },
+              { name: 'TotalDependencyStrength', description: 'Sum of all dependency values' },
+              { name: 'Midpoint', description: 'Sigmoid midpoint (15)' },
+              { name: 'Steepness', description: 'Curve steepness factor (10)' },
+              { name: 'Total Monthly Hours', description: 'Average team size × 160 hours' }
+            ],
+            assumptions: [
+              'Impact follows a sigmoid curve',
+              'Maximum efficiency loss is capped at 40%',
+              'Impact increases with total dependency strength'
+            ]
+          },
+          {
+            title: 'Team Metrics',
+            formula: `Flow Efficiency = (Process Time / (Process Time + Wait Time)) × 100%
+Process Time = Σ(Throughput × (8 / Efficiency))
+Wait Time = Σ(Dependency Strength × Base Lead Time × 0.5)
+
+Dependency Impact Score = (Actual Dependencies / Maximum Dependencies) × 100%
+Maximum Dependencies = Teams × (Teams - 1) × 5
+
+Utilization Rate = ((Actual Work + Coordination Overhead) / Total Capacity) × 100%
+Total Capacity = Σ(Team Size × 40 hours)
+Actual Work = Σ(Throughput × 8 hours × 5 days)
+Coordination Overhead = Σ(Dependency Strength × 2 hours)
+
+Service Efficiency = (Total Service Time / (Total Service Time + Overhead Time)) × 100%
+Total Service Time = Σ(Throughput × 8 hours × 5 days)
+Overhead Time = Σ(Dependency Strength × 4 hours × Number of Teams)`,
+            explanation: 'Key metrics for measuring team efficiency, utilization, and service delivery.',
+            variables: [
+              { name: 'Process Time', description: 'Time spent on direct work' },
+              { name: 'Wait Time', description: 'Delay from dependencies' },
+              { name: 'Dependency Strength', description: 'Individual dependency values (0-5)' },
+              { name: 'Team Size', description: 'Number of people per team' },
+              { name: 'Throughput', description: 'Work items completed per week' }
+            ],
+            assumptions: [
+              'Standard 40-hour work week',
+              '8-hour workday, 5 days per week',
+              'Dependencies affect wait time linearly',
+              'Overhead scales with dependency strength'
             ]
           }
         ];
@@ -189,179 +300,93 @@ Total Dependency Cost = Communication Overhead + Process Delay Cost`,
       if (mode === 'base') {
         return [
           {
-            title: 'Monthly Processing Cost',
-            formula: 'Monthly Cost = Monthly Tickets × Hours per Ticket × People per Ticket × Hourly Rate',
-            explanation: 'Calculates the total monthly cost based on ticket volume and processing requirements.',
+            title: 'Ticket Processing Cost',
+            formula: `Monthly Processing Cost = Monthly Tickets × Hours per Ticket × People per Ticket × Hourly Rate
+Cost per Ticket = Hours per Ticket × People per Ticket × Hourly Rate
+Total Monthly Hours = Monthly Tickets × Hours per Ticket × People per Ticket`,
+            explanation: 'Calculates the base cost of processing tickets based on volume and resource requirements.',
             variables: [
               { name: 'Monthly Tickets', description: 'Number of tickets processed per month' },
-              { name: 'Hours per Ticket', description: 'Average time spent per ticket' },
-              { name: 'People per Ticket', description: 'Average number of people needed per ticket' },
-              { name: 'Hourly Rate', description: 'Average cost per hour per person' }
+              { name: 'Hours per Ticket', description: 'Average processing time per ticket' },
+              { name: 'People per Ticket', description: 'Average number of people involved per ticket' },
+              { name: 'Hourly Rate', description: 'Average cost per person per hour' }
             ],
             assumptions: [
-              'Ticket complexity is relatively consistent',
-              'Resource availability matches ticket demand',
-              'Processing time follows a normal distribution'
+              'Consistent ticket complexity',
+              'Linear scaling of processing time',
+              'Available resource capacity'
             ]
           },
           {
-            title: 'Cost per Ticket',
-            formula: 'Cost per Ticket = Hours per Ticket × People per Ticket × Hourly Rate',
-            explanation: 'Calculates the average cost to process a single ticket.',
+            title: 'SLA Impact Analysis',
+            formula: `SLA Compliance Cost = (1 - SLA Compliance %) × Monthly Tickets × Penalty Rate
+Effective Processing Time = Base Processing Time × (1 + (1 - SLA Compliance %))
+Quality Impact = (100% - SLA Compliance %) × Quality Cost Factor`,
+            explanation: 'Evaluates the cost impact of SLA compliance levels.',
             variables: [
-              { name: 'Hours per Ticket', description: 'Average time spent per ticket' },
-              { name: 'People per Ticket', description: 'Average number of people needed per ticket' },
-              { name: 'Hourly Rate', description: 'Average cost per hour per person' }
+              { name: 'SLA Compliance %', description: 'Percentage of tickets meeting SLA' },
+              { name: 'Penalty Rate', description: 'Cost of SLA breach per ticket' },
+              { name: 'Quality Cost Factor', description: 'Cost multiplier for quality issues' }
             ],
             assumptions: [
-              'Costs are averaged across ticket types',
-              'Resource allocation is optimal',
-              'No significant outliers in processing time'
+              'SLA breaches have measurable cost impact',
+              'Linear relationship between compliance and cost',
+              'Quality issues correlate with SLA compliance'
             ]
           },
           {
-            title: 'Platform Solution Cost',
-            formula: `Implementation Cost = Setup Cost + Integration Cost + Initial Training Cost
-Monthly Platform Cost = Base License Fee + (Per-Ticket Fee × Monthly Ticket Volume)
-Maintenance Cost = Platform Support + Infrastructure Cost + Ongoing Training
-Total Platform Cost = Implementation Cost + (Monthly Platform Cost + Maintenance Cost) × Duration`,
-            explanation: 'Estimates the total cost of implementing and maintaining a ticket automation platform.',
+            title: 'Resource Utilization',
+            formula: `Required FTE = (Monthly Tickets × Hours per Ticket × People per Ticket) / Available Hours per FTE
+Utilization Rate = (Total Processing Hours / Available Team Hours) × 100%
+Overhead Time = Total Hours × (1 - Service Efficiency)`,
+            explanation: 'Analyzes resource requirements and utilization.',
             variables: [
-              { name: 'Setup Cost', description: 'Initial platform setup and configuration costs' },
-              { name: 'Integration Cost', description: 'Cost to integrate with existing systems' },
-              { name: 'Initial Training Cost', description: 'Cost to train staff on the new platform' },
-              { name: 'Base License Fee', description: 'Monthly base fee for platform usage' },
-              { name: 'Per-Ticket Fee', description: 'Additional cost per ticket processed' },
-              { name: 'Monthly Ticket Volume', description: 'Expected number of tickets per month' },
-              { name: 'Platform Support', description: 'Monthly cost for platform support' },
-              { name: 'Infrastructure Cost', description: 'Monthly hosting and infrastructure costs' },
-              { name: 'Ongoing Training', description: 'Monthly cost for continuous training' },
-              { name: 'Duration', description: 'Number of months for cost projection' }
+              { name: 'Available Hours per FTE', description: 'Monthly working hours per full-time employee' },
+              { name: 'Service Efficiency', description: 'Percentage of time spent on direct work' },
+              { name: 'Total Hours', description: 'Total hours worked by the team' }
             ],
             assumptions: [
-              'Platform can handle expected ticket volume',
-              'Integration with existing systems is feasible',
-              'Staff can be effectively trained on the platform',
-              'Infrastructure can support the platform',
-              'License model is volume-based'
-            ],
-            observations: [
-              'Setup costs vary significantly based on complexity',
-              'Training needs often exceed initial estimates',
-              'Integration costs depend on existing system compatibility',
-              'Volume-based pricing may need negotiation for high volumes'
-            ]
-          },
-          {
-            title: 'Outsourcing Solution Cost',
-            formula: `Base Ticket Cost = Monthly Tickets × Vendor Per-Ticket Rate
-Knowledge Transfer Cost = (Training Hours × Vendor Rate) + (Documentation Cost)
-Quality Management Cost = Base Ticket Cost × QA Rate
-Vendor Management Cost = Base Ticket Cost × Management Rate
-SLA Penalty Risk = (Penalty Rate × Affected Ticket %) × Base Ticket Cost
-Total Outsourcing Cost = Base Ticket Cost + Knowledge Transfer Cost + Quality Management Cost + Vendor Management Cost + SLA Penalty Risk`,
-            explanation: 'Calculates the total cost of outsourcing ticket processing, including quality management and risks.',
-            variables: [
-              { name: 'Monthly Tickets', description: 'Number of tickets to be outsourced per month' },
-              { name: 'Vendor Per-Ticket Rate', description: 'Vendor\'s charge per ticket processed' },
-              { name: 'Training Hours', description: 'Hours required for vendor training' },
-              { name: 'Vendor Rate', description: 'Vendor\'s hourly rate during training' },
-              { name: 'Documentation Cost', description: 'Cost to prepare training materials' },
-              { name: 'QA Rate', description: 'Quality assurance overhead percentage (typically 5-15%)' },
-              { name: 'Management Rate', description: 'Vendor management overhead percentage (typically 10-20%)' },
-              { name: 'Penalty Rate', description: 'SLA breach penalty as percentage of ticket cost' },
-              { name: 'Affected Ticket %', description: 'Expected percentage of tickets at risk of SLA breach' }
-            ],
-            assumptions: [
-              'Vendor can maintain required service levels',
-              'Knowledge transfer can be completed effectively',
-              'Quality can be maintained with proper oversight',
-              'SLA penalties are properly defined in contract',
-              'Ticket volumes are predictable'
-            ],
-            observations: [
-              'Per-ticket rates often decrease with volume',
-              'Quality management costs decrease over time',
-              'SLA penalties need careful contract negotiation',
-              'Knowledge transfer is crucial for complex tickets'
-            ]
-          },
-          {
-            title: 'Hybrid Solution Cost',
-            formula: `Automated Ticket Cost = (Automation Rate × Monthly Tickets) × Platform Per-Ticket Cost
-Manual Ticket Cost = ((1 - Automation Rate) × Monthly Tickets) × Internal Processing Cost
-Outsourced Ticket Cost = (Outsource Rate × Monthly Tickets) × Vendor Per-Ticket Rate
-Platform Costs = Platform License + Monthly Maintenance
-Management Overhead = (Outsourced Ticket Cost × Vendor Management Rate) + (Automated Ticket Cost × Platform Management Rate)
-Integration Cost = (Platform Costs + Outsourced Ticket Cost) × Integration Factor
-Total Hybrid Cost = Automated Ticket Cost + Manual Ticket Cost + Outsourced Ticket Cost + Platform Costs + Management Overhead + Integration Cost`,
-            explanation: 'Calculates the total cost of a hybrid solution combining automation, internal processing, and outsourcing for ticket management.',
-            variables: [
-              { name: 'Automation Rate', description: 'Percentage of tickets suitable for automation (0-100%)' },
-              { name: 'Monthly Tickets', description: 'Total number of tickets per month' },
-              { name: 'Platform Per-Ticket Cost', description: 'Cost per ticket for automated processing' },
-              { name: 'Internal Processing Cost', description: 'Cost per ticket for internal team processing' },
-              { name: 'Outsource Rate', description: 'Percentage of tickets to be outsourced (0-100%)' },
-              { name: 'Vendor Per-Ticket Rate', description: 'Vendor\'s charge per ticket' },
-              { name: 'Platform License', description: 'Monthly platform license fee' },
-              { name: 'Monthly Maintenance', description: 'Platform maintenance and support costs' },
-              { name: 'Vendor Management Rate', description: 'Overhead for managing outsourced tickets (%)' },
-              { name: 'Platform Management Rate', description: 'Overhead for managing automated solution (%)' },
-              { name: 'Integration Factor', description: 'Additional cost factor for integration (0.1-0.3)' }
-            ],
-            assumptions: [
-              'Tickets can be effectively categorized for routing',
-              'Automation and outsourcing can coexist efficiently',
-              'Integration between systems is reliable',
-              'Management overhead scales with volume',
-              'Service levels can be maintained across all channels'
-            ],
-            observations: [
-              'Optimal balance varies by ticket complexity',
-              'Integration costs increase with more components',
-              'Regular route optimization is needed',
-              'Different ticket types may need different approaches',
-              'Monitoring across channels requires robust tools'
+              'Standard working hours per FTE',
+              'Consistent resource availability',
+              'Measurable service efficiency'
             ]
           }
         ];
-      } else {
+      } else if (mode === 'solutions') {
         return [
           {
-            title: 'Break-Even Analysis',
-            formula: 'Break-Even Months = Total Solution Cost / (Current Monthly Cost - Future Monthly Cost)',
-            explanation: 'Calculates how long it will take to recover the automation investment.',
+            title: 'Automation Impact',
+            formula: `Automated Processing Cost = Monthly Tickets × Automation Rate × Cost per Automated Ticket
+Manual Processing Cost = Monthly Tickets × (1 - Automation Rate) × Cost per Manual Ticket
+Total Cost = Automated Processing Cost + Manual Processing Cost + Platform Cost`,
+            explanation: 'Calculates the cost impact of automation solutions.',
             variables: [
-              { name: 'Total Solution Cost', description: 'Total investment in automation solution' },
-              { name: 'Current Monthly Cost', description: 'Current monthly operational cost' },
-              { name: 'Future Monthly Cost', description: 'Projected monthly cost after automation' }
+              { name: 'Automation Rate', description: 'Percentage of tickets that can be automated' },
+              { name: 'Cost per Automated Ticket', description: 'Processing cost for automated tickets' },
+              { name: 'Cost per Manual Ticket', description: 'Processing cost for manual tickets' },
+              { name: 'Platform Cost', description: 'Monthly cost of automation platform' }
             ],
             assumptions: [
-              'Cost savings remain stable post-implementation',
-              'Ticket volume remains relatively consistent',
-              'Automation effectiveness meets projections'
+              'Clear distinction between automatable and manual tickets',
+              'Stable automation success rate',
+              'Predictable platform costs'
             ]
           },
           {
-            title: 'Future Monthly Cost',
-            formula: `Manual Processing Cost = Monthly Tickets × (1 - Automation Rate) × Hours per Ticket × People per Ticket × Hourly Rate
-Automated Processing Cost = Monthly Tickets × Automation Rate × Per-Ticket Automation Cost
-Future Cost = Manual Processing Cost + Automated Processing Cost + Platform Maintenance`,
-            explanation: 'Projects future monthly costs after implementing automation.',
+            title: 'ROI Calculation',
+            formula: `Monthly Savings = Current Processing Cost - (Automated Cost + Manual Cost)
+Annual ROI = ((Monthly Savings × 12) - Implementation Cost) / Implementation Cost × 100%
+Payback Period = Implementation Cost / Monthly Savings`,
+            explanation: 'Evaluates the return on investment for automation solutions.',
             variables: [
-              { name: 'Automation Rate', description: 'Percentage of tickets that can be automated (0-100%)' },
-              { name: 'Per-Ticket Automation Cost', description: 'Cost to process a ticket through automation' },
-              { name: 'Platform Maintenance', description: 'Monthly platform maintenance cost' }
+              { name: 'Current Processing Cost', description: 'Current monthly cost without automation' },
+              { name: 'Implementation Cost', description: 'One-time cost to implement automation' },
+              { name: 'Monthly Savings', description: 'Reduction in monthly processing costs' }
             ],
             assumptions: [
-              'Automation rate can be achieved and maintained',
-              'Manual and automated processes can coexist',
-              'Maintenance costs remain stable'
-            ],
-            observations: [
-              'Higher automation rates typically lead to better ROI',
-              'Some tickets may require hybrid processing',
-              'Regular monitoring helps optimize automation rules'
+              'Savings remain consistent post-implementation',
+              'Implementation costs are one-time',
+              'Linear cost reduction with automation'
             ]
           }
         ];

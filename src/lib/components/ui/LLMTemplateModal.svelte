@@ -1,27 +1,16 @@
 <!-- LLM Template Modal -->
 <script lang="ts">
-  import { targetPlanningTemplateStore } from '$lib/stores/targetPlanningTemplateStore';
+  import { llmTemplateStore } from '$lib/stores/llmTemplateStore';
   import { fade, fly } from 'svelte/transition';
   import { clickOutside } from '$lib/actions/clickOutside';
 
   export let show = false;
 
-  // Get the targets from the parent component
-  export let targets: Array<{
-    type: 'roi' | 'team' | 'efficiency' | 'implementation';
-    value: number;
-  }> = [
-    { type: 'roi', value: 24 }, // Break even in months
-    { type: 'team', value: 30 }, // Team reduction %
-    { type: 'efficiency', value: 40 }, // Process efficiency %
-    { type: 'implementation', value: 6 } // Implementation time
-  ];
-
   let template = '';
   let copied = false;
 
-  $: if (show && $targetPlanningTemplateStore) {
-    template = $targetPlanningTemplateStore.generateTemplate(targets);
+  $: if (show && $llmTemplateStore) {
+    template = $llmTemplateStore.generateTemplate();
   }
 
   function copyToClipboard() {

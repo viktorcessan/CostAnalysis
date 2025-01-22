@@ -551,6 +551,7 @@
   function updateDependency(fromIndex: number, toIndex: number, value: number) {
     dependencyMatrix.dependencies[fromIndex][toIndex] = Math.max(0, Math.min(5, value));
     dependencyMatrix = dependencyMatrix;
+    applyMatrix(); // Regenerate edges based on the updated matrix
   }
 
   function updateTeamName(index: number, newName: string) {
@@ -770,44 +771,62 @@
     const totalConnections = edges.length;
     const totalPeople = nodes.reduce((sum, node) => sum + node.data.size, 0);
     
-    // Calculate direct meeting costs
-    const directMeetingCost = 
+    // Calculate direct meeting costs based on dependencies and manual communication metrics
+    const dependencyMeetingCost = 
       costParams.meetings.duration * 
       getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
       costParams.meetings.attendeesPerTeam * 
       costParams.hourlyRate.developer * 
       totalConnections;
 
-    // Calculate communication overhead
-    const communicationOverhead =
+    // Add manual meeting hours from communication matrix
+    const manualMeetingCost = teamCommunicationMetrics.reduce((sum, metrics) => 
+      sum + (metrics.meetingHours * costParams.hourlyRate.developer), 0);
+    
+    const directMeetingCost = dependencyMeetingCost + manualMeetingCost;
+
+    // Calculate communication overhead combining dependency-based and manual metrics
+    const dependencyOverhead =
       totalConnections * 
       costParams.meetings.communicationOverhead *
       costParams.hourlyRate.developer * 
       costParams.overhead.baselineCommunicationHours;
 
-    // Calculate opportunity cost from context switching
-    const contextSwitchingHours = edges.reduce((sum, edge) => 
-      sum + (edge.data.strength * 2), 0); // 2 hours per dependency strength level
-    const opportunityCost = 
-      contextSwitchingHours * 
-      costParams.hourlyRate.developer * 
-      costParams.meetings.attendeesPerTeam;
+    // Add manual overhead hours from communication matrix
+    const manualOverhead = teamCommunicationMetrics.reduce((sum, metrics) => 
+      sum + ((metrics.overheadHours + metrics.additionalHours) * costParams.hourlyRate.developer), 0);
+    
+    const communicationOverhead = dependencyOverhead + manualOverhead;
+
+    // Opportunity cost is the sum of direct and indirect costs
+    const opportunityCost = directMeetingCost + communicationOverhead;
 
     // Calculate flow efficiency impact cost
-    const avgDependencyStrength = edges.reduce((sum, edge) => 
-      sum + edge.data.strength, 0) / (edges.length || 1);
-    const waitTimeHours = totalConnections * avgDependencyStrength * 4; // 4 hours of wait time per dependency strength
-    const flowEfficiencyCost = 
-      waitTimeHours * 
+    const totalDependencyStrength = edges.reduce((sum, edge) => sum + edge.data.strength, 0);
+    const avgTeamSize = nodes.reduce((sum, node) => sum + node.data.size, 0) / nodes.length;
+    const totalMonthlyHours = avgTeamSize * 160; // 160 hours per person per month
+    
+    // Calculate impact using sigmoid function
+    // Normalized impact between 0 and maxImpact
+    const maxImpact = 0.4; // Maximum 40% efficiency loss
+    const midpoint = 15; // Sigmoid midpoint - typical dependency sum
+    const steepness = 10; // Controls how fast the curve rises
+    
+    const impactFactor = maxImpact * (1 / (1 + Math.exp(-(totalDependencyStrength - midpoint) / steepness)));
+    
+    // Flow efficiency cost represents lost productivity due to dependencies
+    const flowEfficiencyCost = Math.round(
+      totalMonthlyHours * 
       costParams.hourlyRate.developer * 
-      costParams.overhead.waitTimeMultiplier;
+      impactFactor
+    );
 
     return {
       directMeetingCost,
       communicationOverhead,
       opportunityCost,
       flowEfficiencyCost,
-      totalCost: directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost
+      totalCost: opportunityCost + flowEfficiencyCost
     };
   }
 
@@ -2066,6 +2085,8 @@
                           teamCommunicationMetrics[i].totalHours = value + 
                             teamCommunicationMetrics[i].overheadHours + 
                             teamCommunicationMetrics[i].additionalHours;
+                          teamCommunicationMetrics = teamCommunicationMetrics;
+                          metrics = updateMetrics();
                         }
                       }}
                     />
@@ -2083,6 +2104,8 @@
                             teamCommunicationMetrics[i].meetingHours + 
                             value + 
                             teamCommunicationMetrics[i].additionalHours;
+                          teamCommunicationMetrics = teamCommunicationMetrics;
+                          metrics = updateMetrics();
                         }
                       }}
                     />
@@ -2100,6 +2123,8 @@
                             teamCommunicationMetrics[i].meetingHours + 
                             teamCommunicationMetrics[i].overheadHours + 
                             value;
+                          teamCommunicationMetrics = teamCommunicationMetrics;
+                          metrics = updateMetrics();
                         }
                       }}
                     />

@@ -1,6 +1,7 @@
 Business case:
 
 - Fix business case card balance: went to 2x2 grid
+- Fix labeling issues with charts
 
 Target:
 
@@ -13,16 +14,16 @@ Team dependencies:
 - Improve matrix design for sequential topology
 - Remove hightlight from current costs
 - Improve team details table: bigger efficiency cells and visual cue for team name edit.
-
-
-
-To do:
-
 - Fix team dependency costs:
   - Direct meeting costs
   - Indirect meeting costs
   - Cost of opporutnity: sum of indirect + direct + lost efficiency
   - Efficiency costs
+
+
+
+To do:
+
 - Fix hierarchy levels: put restrictions in relation to the number of teams
 - Fix formula accordeons
 - Fix LLM templates: One per type: base, target, team dependency. for base and target, make it depend on team or ticket. Be sure math matches results in chatgpt

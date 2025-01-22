@@ -126,21 +126,30 @@
       // Opportunity cost from context switching
       const contextSwitchingHours = adjustedEdges.reduce((sum, edge) => 
         sum + (edge.data.strength * 2), 0);
-      const opportunityCost = 
-        contextSwitchingHours * 
-        costParams.hourlyRate.developer * 
-        costParams.meetings.attendeesPerTeam;
+      const opportunityCost = directMeetingCost + communicationOverhead;
 
       // Flow efficiency impact cost
-      const avgDependencyStrength = adjustedEdges.reduce((sum, edge) => 
-        sum + edge.data.strength, 0) / (adjustedEdges.length || 1);
-      const waitTimeHours = totalConnections * avgDependencyStrength * 4;
-      const flowEfficiencyCost = 
-        waitTimeHours * 
+      const totalDependencyStrength = adjustedEdges.reduce((sum, edge) => 
+        sum + edge.data.strength, 0);
+      const avgTeamSize = nodes.reduce((sum, node) => sum + node.data.size, 0) / nodes.length;
+      const totalMonthlyHours = avgTeamSize * 160; // 160 hours per person per month
+      
+      // Calculate impact using sigmoid function
+      // Normalized impact between 0 and maxImpact
+      const maxImpact = 0.4; // Maximum 40% efficiency loss
+      const midpoint = 15; // Sigmoid midpoint - typical dependency sum
+      const steepness = 10; // Controls how fast the curve rises
+      
+      const impactFactor = maxImpact * (1 / (1 + Math.exp(-(totalDependencyStrength - midpoint) / steepness)));
+      
+      // Flow efficiency cost represents lost productivity due to dependencies
+      const flowEfficiencyCost = Math.round(
+        totalMonthlyHours * 
         costParams.hourlyRate.developer * 
-        costParams.overhead.waitTimeMultiplier;
+        impactFactor
+      );
 
-      const totalCost = directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost;
+      const totalCost = opportunityCost + flowEfficiencyCost;
 
       return {
         costs: {
@@ -179,20 +188,28 @@
       const totalDependencyStrength = targetDependencyMatrix.reduce((sum, row, i) => 
         sum + row.reduce((rowSum, val, j) => i !== j ? rowSum + val : rowSum, 0), 0);
       const contextSwitchingHours = totalDependencyStrength * 2;
-      const opportunityCost = 
-        contextSwitchingHours * 
-        costParams.hourlyRate.developer * 
-        costParams.meetings.attendeesPerTeam;
+      const opportunityCost = directMeetingCost + communicationOverhead;
 
       // Flow efficiency impact cost
-      const avgDependencyStrength = totalDependencyStrength / (totalConnections || 1);
-      const waitTimeHours = totalConnections * avgDependencyStrength * 4;
-      const flowEfficiencyCost = 
-        waitTimeHours * 
+      const avgTeamSize = nodes.reduce((sum, node) => sum + node.data.size, 0) / nodes.length;
+      const totalMonthlyHours = avgTeamSize * 160; // 160 hours per person per month
+      
+      // Calculate impact using sigmoid function
+      // Normalized impact between 0 and maxImpact
+      const maxImpact = 0.4; // Maximum 40% efficiency loss
+      const midpoint = 15; // Sigmoid midpoint - typical dependency sum
+      const steepness = 10; // Controls how fast the curve rises
+      
+      const impactFactor = maxImpact * (1 / (1 + Math.exp(-(totalDependencyStrength - midpoint) / steepness)));
+      
+      // Flow efficiency cost represents lost productivity due to dependencies
+      const flowEfficiencyCost = Math.round(
+        totalMonthlyHours * 
         costParams.hourlyRate.developer * 
-        costParams.overhead.waitTimeMultiplier;
+        impactFactor
+      );
 
-      const totalCost = directMeetingCost + communicationOverhead + opportunityCost + flowEfficiencyCost;
+      const totalCost = opportunityCost + flowEfficiencyCost;
 
       // Calculate average dependency level
       const avgDependencyLevel = totalDependencyStrength / (totalConnections || 1);

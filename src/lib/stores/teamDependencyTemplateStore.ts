@@ -152,7 +152,7 @@ function generateTemplate(
 ## Team Analysis
 
 ### Team Composition & Dependencies
-${safeTeams.map((team, i) => {
+${safeTeams.slice(0, teamCount).map((team, i) => {
   const node = safeNodes.find(n => n.data.label === team.name);
   const commMetrics = safeTeamCommunicationMetrics[i] || {
     meetingHours: 0,
@@ -325,7 +325,17 @@ Cost per Team Member: ${formatCurrency(costPerTeamMember)}
 3. Review Cycle
    - Monthly metrics review
    - Quarterly dependency assessment
-   - Annual structure evaluation`;
+   - Annual structure evaluation
+
+## Questions for Analysis
+
+Based on this data, please provide:
+1. Analysis of the current team structure and dependency patterns
+2. Identification of potential bottlenecks or inefficiencies
+3. Recommendations for optimizing team interactions and reducing coordination overhead
+4. Suggestions for improving flow efficiency and reducing lead times
+5. Cost-benefit analysis of the current structure vs potential improvements`;
+
 
   return template;
 }

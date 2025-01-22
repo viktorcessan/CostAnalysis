@@ -1,31 +1,20 @@
-import type { Team, DependencyMatrix } from '$lib/types/teamDependency';
+import type { CostParams, DependencyMatrix } from '$lib/stores/teamDependencyTemplateStore';
+import type { Team } from '$lib/types/team';
 
 export interface TeamDependencyParams {
-  distributionMode: 'even' | 'hub-spoke';
+  distributionMode: 'even' | 'hub-spoke' | 'sequential' | 'mesh' | 'hierarchical' | 'clustered';
   teamCount: number;
   companyDependencyLevel: number;
   teams: Team[];
   dependencyMatrix: DependencyMatrix;
-  costParams: {
-    hourlyRate: {
-      developer: number;
-      manager: number;
-      teamLead: number;
-    };
-    meetings: {
-      duration: number;
-      recurrence: string;
-      attendeesPerTeam: number;
-      communicationOverhead: number;
-      additionalHours: number;
-    };
-    overhead: {
-      communicationOverhead: number;
-      waitTimeMultiplier: number;
-      baselineCommunicationHours: number;
-      dependencyHoursRate: number;
-    };
-  };
+  costParams: CostParams;
+}
+
+export interface Team {
+  name: string;
+  size: number;
+  efficiency: number;
+  baseCapacity?: number;  // Make it optional since it's calculated
 }
 
 export function generateShareLink(params: TeamDependencyParams): string {
@@ -79,7 +68,7 @@ export function generateShareLink(params: TeamDependencyParams): string {
 export function parseShareLink(searchParams: URLSearchParams): TeamDependencyParams | null {
   try {
     // Parse basic parameters
-    const distributionMode = searchParams.get('distributionMode') as 'even' | 'hub-spoke';
+    const distributionMode = searchParams.get('distributionMode') as 'even' | 'hub-spoke' | 'sequential' | 'mesh' | 'hierarchical' | 'clustered';
     const teamCount = parseInt(searchParams.get('teamCount') || '');
     const companyDependencyLevel = parseInt(searchParams.get('companyDependencyLevel') || '');
     

@@ -12,11 +12,16 @@
   export let comparisonMode: 'topology' | 'lazy' | 'advanced';
   export let targetDependencyMatrix: number[][];
   export let dependencyAdjustment: number;
-  export let calculateCosts: () => {
-    monthlyMeetingCost: number;
-    communicationCost: number;
+
+  interface CostAnalysis {
+    directMeetingCost: number;
+    communicationOverhead: number;
+    opportunityCost: number;
+    flowEfficiencyCost: number;
     totalCost: number;
-  };
+  }
+
+  export let calculateCosts: () => CostAnalysis;
 
   export let costParams: {
     meetings: {
@@ -57,11 +62,7 @@
   type ComparisonMode = 'topology' | 'lazy' | 'advanced';
 
   export let calculateComparisonMetrics: (mode: ComparisonMode) => {
-    costs: {
-      monthlyMeetingCost: number;
-      communicationCost: number;
-      totalCost: number;
-    };
+    costs: CostAnalysis;
     flowEfficiency: number;
     leadTime: number;
     utilizationRate: number;

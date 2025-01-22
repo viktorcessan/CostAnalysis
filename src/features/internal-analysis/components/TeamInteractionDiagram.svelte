@@ -310,6 +310,12 @@
     serviceEfficiency: number;
     costPerFTE: number;
     overheadRatio: number;
+    // Cost metrics
+    directMeetingCost: number;
+    communicationOverhead: number;
+    opportunityCost: number;
+    flowEfficiencyCost: number;
+    totalCost: number;
   }
 
   let metrics: Metrics = { 
@@ -321,7 +327,12 @@
     utilizationRate: 0,
     serviceEfficiency: 0,
     costPerFTE: 0,
-    overheadRatio: 0
+    overheadRatio: 0,
+    directMeetingCost: 0,
+    communicationOverhead: 0,
+    opportunityCost: 0,
+    flowEfficiencyCost: 0,
+    totalCost: 0
   };
 
   // Cost parameters
@@ -375,8 +386,10 @@
 
   // Update the CostAnalysis interface
   interface CostAnalysis {
-    monthlyMeetingCost: number;
-    communicationCost: number;
+    directMeetingCost: number;
+    communicationOverhead: number;
+    opportunityCost: number;
+    flowEfficiencyCost: number;
     totalCost: number;
   }
 
@@ -758,11 +771,20 @@
     // Calculate advanced metrics
     const advancedMetrics = calculateAdvancedMetrics(nodes, edges);
     
+    // Calculate cost metrics
+    const costs = calculateCosts();
+    
+    // Return combined metrics
     return {
       avgThroughput,
       avgLeadTime,
       dependencyComplexity,
-      ...advancedMetrics
+      ...advancedMetrics,
+      directMeetingCost: costs.directMeetingCost,
+      communicationOverhead: costs.communicationOverhead,
+      opportunityCost: costs.opportunityCost,
+      flowEfficiencyCost: costs.flowEfficiencyCost,
+      totalCost: costs.totalCost
     };
   }
 
@@ -794,7 +816,7 @@
     // Calculate total operational costs (before efficiency impact)
     const totalOperationalCost = directMeetingCost + communicationOverhead + opportunityCost;
 
-    // Calculate flow efficiency impact using sigmoid, but now relative to operational costs
+    // Calculate flow efficiency impact using sigmoid
     const totalDependencyStrength = edges.reduce((sum, edge) => 
       sum + edge.data.strength, 0);
     const avgDependencyLevel = totalDependencyStrength / (edges.length || 1);
@@ -2271,7 +2293,8 @@
     edges,
     dependencyMatrix,
     metrics,
-    costParams
+    costParams,
+    teamCommunicationMetrics
   )}
 />
 

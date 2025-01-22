@@ -19,6 +19,7 @@ Team dependencies:
   - Indirect meeting costs
   - Cost of opporutnity: sum of indirect + direct + lost efficiency
   - Efficiency costs
+- Fix LLM templates: One per type: base, target, team dependency. for base and target, make it depend on team or ticket. Be sure math matches results in chatgpt
 
 
 
@@ -26,6 +27,5 @@ To do:
 
 - Fix hierarchy levels: put restrictions in relation to the number of teams
 - Fix formula accordeons
-- Fix LLM templates: One per type: base, target, team dependency. for base and target, make it depend on team or ticket. Be sure math matches results in chatgpt
 - In base and target, the input boxes arrows hide some of the units. 
 - From target, add hourly rate for the ticket system

@@ -20,13 +20,16 @@
       additionalHours: number;
     };
   };
-  export let calculateCosts: () => {
+
+  interface CostAnalysis {
     directMeetingCost: number;
     communicationOverhead: number;
     opportunityCost: number;
     flowEfficiencyCost: number;
     totalCost: number;
-  };
+  }
+
+  export let calculateCosts: () => CostAnalysis;
   export let costChartCanvas: HTMLCanvasElement;
 
   // Helper function to get monthly meeting multiplier

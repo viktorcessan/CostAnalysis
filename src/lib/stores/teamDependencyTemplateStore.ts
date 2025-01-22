@@ -1,12 +1,7 @@
 import { writable } from 'svelte/store';
+import type { Team } from '$lib/types/team';
 
-interface Team {
-  name: string;
-  size: number;
-  efficiency: number;
-}
-
-interface Node {
+export interface Node {
   id: string;
   data: {
     label: string;
@@ -19,7 +14,7 @@ interface Node {
   };
 }
 
-interface Edge {
+export interface Edge {
   id: string;
   source: string;
   target: string;
@@ -29,22 +24,20 @@ interface Edge {
   };
 }
 
-interface DependencyMatrix {
+export interface DependencyMatrix {
   teams: string[];
   dependencies: number[][];
 }
 
-interface CostAnalysis {
-  monthlyMeetingCost: number;
-  communicationCost: number;
-  totalCost: number;
+export interface CostAnalysis {
   directMeetingCost: number;
   communicationOverhead: number;
   opportunityCost: number;
   flowEfficiencyCost: number;
+  totalCost: number;
 }
 
-interface Metrics {
+export interface Metrics {
   avgThroughput: number;
   avgLeadTime: number;
   dependencyComplexity: number;
@@ -54,11 +47,19 @@ interface Metrics {
   serviceEfficiency: number;
   costPerFTE: number;
   overheadRatio: number;
+  // Cost metrics
+  directMeetingCost: number;
+  communicationOverhead: number;
+  opportunityCost: number;
+  flowEfficiencyCost: number;
+  totalCost: number;
 }
 
-interface CostParams {
+export interface CostParams {
   hourlyRate: {
     developer: number;
+    manager: number;
+    teamLead: number;
   };
   meetings: {
     duration: number;
@@ -75,18 +76,38 @@ interface CostParams {
   };
 }
 
-interface TeamParams {
-  dependencyImpact: number;
-  baseLeadTime: number;
+interface TeamCommunicationMetrics {
+  meetingHours: number;
+  overheadHours: number;
+  additionalHours: number;
+  totalHours: number;
 }
 
-const defaultTeamParams: TeamParams = {
-  dependencyImpact: 0.2,
-  baseLeadTime: 5
-};
+function formatCurrency(value: number): string {
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+}
+
+function formatPercent(value: number): string {
+  return `${value.toFixed(1)}%`;
+}
+
+function getMonthlyMeetingMultiplier(recurrence: string): number {
+  switch (recurrence) {
+    case 'twice-weekly': return 8;
+    case 'weekly': return 4;
+    case 'biweekly': return 2;
+    case 'monthly': return 1;
+    default: return 4;
+  }
+}
 
 function generateTemplate(
-  distributionMode: 'even' | 'hub-spoke',
+  distributionMode: string,
   teamCount: number,
   companyDependencyLevel: number,
   teams: Team[],
@@ -94,231 +115,219 @@ function generateTemplate(
   edges: Edge[],
   dependencyMatrix: DependencyMatrix,
   metrics: Metrics,
-  costParams: CostParams
+  costParams: CostParams,
+  teamCommunicationMetrics: TeamCommunicationMetrics[]
 ): string {
-  const costs = calculateCosts(nodes, edges, teams, costParams);
-  const teamParams = defaultTeamParams;
-  
-  // Create a map of team names to nodes for safer lookup
-  const nodeMap = new Map(nodes.map(node => [node.data.label, node]));
-  
-  const template = `# Team Dependency Analysis
+  // Ensure we have valid arrays to work with
+  const safeTeams = teams || [];
+  const safeNodes = nodes || [];
+  const safeEdges = edges || [];
+  const safeDependencyMatrix = {
+    teams: dependencyMatrix?.teams || [],
+    dependencies: dependencyMatrix?.dependencies || []
+  };
+  const safeTeamCommunicationMetrics = teamCommunicationMetrics || [];
 
-## Input Configuration
+  // Calculate total monthly cost and cost per team member
+  const totalCost = metrics.totalCost || 0;
+  const totalTeamMembers = safeTeams.reduce((sum, team) => sum + team.size, 0);
+  const costPerTeamMember = totalTeamMembers > 0 ? totalCost / totalTeamMembers : 0;
 
-### Organization Structure
-- Distribution Mode: ${distributionMode === 'hub-spoke' ? 'Hub and Spoke' : 'Even Distribution'}
-- Number of Teams: ${teamCount}
-- Company-wide Dependency Level: ${companyDependencyLevel}/5
+  const template = `# Team Dependency Analysis Report
+
+## Organization Overview
+
+### Structure
+- Distribution Pattern: ${distributionMode?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not Specified'}
+- Number of Teams: ${teamCount || 0}
+- Overall Dependency Level: ${companyDependencyLevel || 0}/5
 
 ### Cost Parameters
-1. Labor Rates
-   - Developer: $${costParams.hourlyRate.developer}/hr
+- Average Employee Cost: ${formatCurrency(costParams?.hourlyRate?.developer || 0)}/hour
+- Meeting Duration: ${costParams?.meetings?.duration || 0} hours
+- Meeting Frequency: ${costParams?.meetings?.recurrence || 'Not Specified'}
+- Average Attendees per Team: ${costParams?.meetings?.attendeesPerTeam || 0}
+- Meeting Overhead Multiplier: ${costParams?.meetings?.communicationOverhead || 1}x
 
-2. Meeting Configuration
-   - Duration: ${costParams.meetings.duration}hr
-   - Frequency: ${costParams.meetings.recurrence}
-   - Attendees per Team: ${costParams.meetings.attendeesPerTeam}
-   - Communication Overhead: ${(costParams.meetings.communicationOverhead * 100 - 100).toFixed(0)}% additional time
-   - Additional Hours: ${costParams.meetings.additionalHours} hrs/month
+## Team Analysis
 
-3. Overhead Parameters
-   - Communication Overhead: ${(costParams.overhead.communicationOverhead * 100 - 100).toFixed(0)}% additional time
-   - Wait Time Impact: ${(costParams.overhead.waitTimeMultiplier * 100).toFixed(0)}% of base time
-   - Baseline Communication: ${costParams.overhead.baselineCommunicationHours} hrs/month
-   - Dependency Cost Rate: ${costParams.overhead.dependencyHoursRate} hrs/dependency
-
-## Team Composition & Performance
-
-### Team Details
-${teams.map(team => {
-    const node = nodeMap.get(team.name);
-    return `
+### Team Composition & Dependencies
+${safeTeams.map((team, i) => {
+  const node = safeNodes.find(n => n.data.label === team.name);
+  const commMetrics = safeTeamCommunicationMetrics[i] || {
+    meetingHours: 0,
+    overheadHours: 0,
+    additionalHours: 0,
+    totalHours: 0
+  };
+  const incomingDeps = safeDependencyMatrix.dependencies
+    .map(row => row[i])
+    .filter(v => v > 0)
+    .length;
+  const outgoingDeps = (safeDependencyMatrix.dependencies[i] || [])
+    .filter(v => v > 0)
+    .length;
+  
+  return `
 ${team.name}
-   - Size: ${team.size} members
-   - Base Efficiency: ${(team.efficiency * 100).toFixed(1)}%${node ? `
-   - Current Throughput: ${node.data.throughput.toFixed(2)} items/day
-   - Lead Time: ${node.data.leadTime.toFixed(1)} days
-   - Dependency Impact: ${(node.data.dependencyFactor * 100).toFixed(1)}% efficiency` : ''}`
-  }).join('\n')}
+- Team Size: ${team.size} members
+- Efficiency Rating: ${formatPercent(team.efficiency * 100)}
+- Dependencies:
+  * Incoming: ${incomingDeps}
+  * Outgoing: ${outgoingDeps}
+- Communication Hours (Monthly):
+  * Direct Meeting Hours: ${commMetrics.meetingHours}
+  * Overhead Hours: ${commMetrics.overheadHours}
+  * Additional Hours: ${commMetrics.additionalHours}
+  * Total Hours: ${commMetrics.totalHours}
+${node ? `- Performance Metrics:
+  * Throughput: ${node.data.throughput.toFixed(1)} items/day
+  * Lead Time: ${node.data.leadTime.toFixed(1)} days
+  * Dependency Factor: ${formatPercent(node.data.dependencyFactor * 100)}` : ''}`;
+}).join('\n')}
 
 ### Dependency Matrix
 \`\`\`
-${dependencyMatrix.teams.map((team, i) => 
-  `${team.padEnd(15)} → ${dependencyMatrix.teams.map((_, j) => 
-    (i === j ? 'X' : dependencyMatrix.dependencies[i][j]).toString().padStart(2)
-  ).join(' | ')}`
+${['To → | ' + safeDependencyMatrix.teams.join(' | ')].concat(
+  safeDependencyMatrix.teams.map((team, i) => 
+    team + ' | ' + (safeDependencyMatrix.dependencies[i] || []).map(v => 
+      (v || 0).toString().padStart(team.length)
+    ).join(' | ')
+  )
 ).join('\n')}
 \`\`\`
 
-## Models & Formulas
+## Cost Analysis
 
-### 1. Dependency Impact Model
-Formula: dependencyFactor = max(0.5, 1 - (totalDependencyStrength * dependencyImpact))
-where:
-- totalDependencyStrength = sum of incoming and outgoing dependency strengths
-- dependencyImpact = ${teamParams.dependencyImpact.toFixed(2)} (configurable impact factor)
-Reasoning: Models how dependencies reduce team efficiency, with a floor of 50%
+### Direct Costs
+1. Direct Meeting Costs
+   - Based on manually specified meeting hours
+   - Calculated as: Meeting Hours × Hourly Rate
+   - Monthly Cost: ${formatCurrency(metrics.directMeetingCost || 0)}
 
-### 2. Team Performance Model
-a) Throughput = (baseCapacity * dependencyFactor) / 5
-where:
-- baseCapacity = team.size * 8 (hours per day)
-- Divided by 5 to convert to daily rate
-Reasoning: Captures how dependencies affect daily output
+2. Indirect Meeting Costs (Communication Overhead)
+   - Includes preparation, follow-up, and coordination time
+   - Calculated as: Meeting Hours × Overhead Multiplier × Hourly Rate
+   - Additional coordination hours from dependency strength
+   - Monthly Cost: ${formatCurrency(metrics.communicationOverhead || 0)}
 
-b) Lead Time = waitTime + processingTime
-where:
-- waitTime = incomingDependencies.length * baseLeadTime * 0.5
-- processingTime = baseLeadTime * (1 + (outgoingDependencies.length * 0.3))
-- baseLeadTime = ${teamParams.baseLeadTime} days
-Reasoning: Models both queue time from dependencies and increased processing complexity
+3. Opportunity Cost
+   - Cost of value-adding work not done due to dependencies
+   - Monthly Cost: ${formatCurrency(metrics.opportunityCost || 0)}
 
-### 3. Cost Model
-Current Monthly Costs:
-1. Direct Meeting Cost: $${costs.directMeetingCost.toFixed(2)}
-   Formula: duration * meetingMultiplier * attendeesPerTeam * hourlyRate * totalConnections
-   where meetingMultiplier = twice-weekly:8, weekly:4, biweekly:2, monthly:1
+4. Flow Efficiency Impact
+   - Cost of reduced productivity from dependencies
+   - Monthly Cost: ${formatCurrency(metrics.flowEfficiencyCost || 0)}
 
-2. Communication Overhead: $${costs.communicationOverhead.toFixed(2)}
-   Formula: (connections * overhead * rate * baselineHours) + 
-           Σ(manualOverhead + additionalHours) * hourlyRate
+Total Monthly Cost: ${formatCurrency(totalCost)}
+Cost per Team Member: ${formatCurrency(costPerTeamMember)}
 
-3. Opportunity Cost: $${costs.opportunityCost.toFixed(2)}
-   Formula: directMeetingCost + communicationOverhead
-   Reasoning: Represents total coordination cost impact
+### Efficiency Impact
+1. Flow Efficiency: ${formatPercent(metrics?.flowEfficiency || 0)}
+   - Ratio of value-adding time to total time
+   - Impacted by dependencies and coordination overhead
+   - Target Range: 15-40%
 
-4. Flow Efficiency Impact: $${costs.flowEfficiencyCost.toFixed(2)}
-   Formula: totalMonthlyHours * hourlyRate * sigmoid(totalDependencyStrength)
-   where:
-   - totalMonthlyHours = avgTeamSize * 160 (160 hours per person per month)
-   - sigmoid(x) = maxImpact * (1 / (1 + e^-((x-midpoint)/steepness)))
-   - maxImpact = 0.4 (40% max efficiency loss)
-   - midpoint = 15 (typical dependency sum)
-   - steepness = 10 (curve steepness)
-   Reasoning: Models non-linear impact of dependencies on productivity through lost time
+2. Service Efficiency: ${formatPercent(metrics?.serviceEfficiency || 0)}
+   - Measures effective use of team capacity
+   - Accounts for coordination and wait times
+   - Target: >80%
 
-Total Monthly Cost: $${costs.totalCost.toFixed(2)}
+3. Utilization Rate: ${formatPercent(metrics?.utilizationRate || 0)}
+   - Actual work + coordination overhead vs. total capacity
+   - Target Range: 70-85%
 
-## Key Metrics & Results
+## Key Metrics
 
-### Performance Metrics
-1. Flow Efficiency: ${metrics.flowEfficiency.toFixed(1)}%
-   Formula: (processTime / (processTime + waitTime)) * 100
-   - Process Time = Σ(node.throughput * (8 / node.efficiency))
-   - Wait Time = Σ(edge.strength * baseLeadTime * 0.5)
-   Target: 15-40%
+1. Dependency Complexity: ${(metrics?.dependencyComplexity || 0).toFixed(2)}
+   - Average strength of dependencies
+   - Scale: 0 (none) to 5 (very high)
 
-2. Utilization Rate: ${metrics.utilizationRate.toFixed(1)}%
-   Formula: ((actualWork + coordinationOverhead) / totalCapacity) * 100
-   - Actual Work = Σ(node.throughput * 8 * 5)
-   - Coordination = Σ(edge.strength * 2)
-   Target: 70-85%
+2. Dependency Impact Score: ${formatPercent(metrics?.dependencyImpactScore || 0)}
+   - Percentage of maximum possible dependencies
+   - Higher scores indicate more complex coordination needs
 
-3. Service Efficiency: ${metrics.serviceEfficiency.toFixed(1)}%
-   Formula: (totalServiceTime / (totalServiceTime + overheadTime + waitTime)) * 100
-   Target: >80%
+3. Average Lead Time: ${(metrics?.avgLeadTime || 0).toFixed(1)} days
+   - Includes both processing and wait time
+   - Impacted by dependency patterns
 
-4. Cost Efficiency
-   - Cost per FTE: $${metrics.costPerFTE.toFixed(2)}/month
-   - Overhead Ratio: ${(metrics.overheadRatio * 100).toFixed(1)}%
+4. Average Throughput: ${(metrics?.avgThroughput || 0).toFixed(1)} items/day
+   - Adjusted for team size and dependency impact
+   - Baseline capacity modified by efficiency factors
 
-5. Dependency Metrics
-   - Complexity Score: ${metrics.dependencyComplexity.toFixed(2)}
-   - Impact Score: ${metrics.dependencyImpactScore.toFixed(1)}%
-     Formula: (actualDependencyScore / maxPossibleDependencies) * 100
+## Recommendations
 
-## Analysis Questions
+### Structure Optimization
+1. ${distributionMode === 'mesh' ? 
+     'Consider reducing non-essential dependencies to decrease coordination overhead' :
+     distributionMode === 'hub-spoke' ? 
+     'Monitor hub team capacity and consider distributing responsibilities' :
+     'Evaluate if current pattern supports desired team autonomy'}
 
-1. Structural Analysis
-   - What patterns emerge from the dependency matrix?
-   - Are there clear clusters or bottleneck teams?
-   - How well does the ${distributionMode} structure serve the organization?
+2. Focus Areas:
+   - Teams with highest dependency factors
+   - High-overhead communication patterns
+   - Bottleneck dependencies
 
-2. Performance Impact
-   - Which teams show the highest dependency impact?
-   - How do lead times correlate with dependency patterns?
-   - What's the relationship between team size and dependency impact?
+### Cost Reduction Opportunities
+1. Meeting Efficiency
+   - Review meeting frequency and duration
+   - Optimize attendee participation
+   - Consider asynchronous alternatives
 
-3. Cost Analysis
-   - Which cost component shows the greatest opportunity for optimization?
-   - How do meeting costs compare to async communication costs?
-   - What's the ROI potential of reducing dependencies?
+2. Dependency Management
+   - Identify and reduce non-essential dependencies
+   - Streamline coordination processes
+   - Implement clear communication protocols
 
-4. Recommendations
-   - What structural changes could improve flow efficiency?
-   - Which specific dependencies should be prioritized for reduction?
-   - How can meeting and communication patterns be optimized?
+### Performance Improvement
+1. Flow Efficiency
+   - Reduce wait times between teams
+   - Minimize coordination overhead
+   - Optimize team interfaces
 
-5. Implementation Strategy
-   - What's the recommended sequence for implementing changes?
-   - How should success metrics be tracked?
-   - What risks should be monitored during transformation?`;
+2. Team Autonomy
+   - Clarify team boundaries
+   - Reduce cross-team dependencies
+   - Empower local decision-making
+
+## Implementation Strategy
+
+1. Short-term Actions
+   - Optimize existing meeting structures
+   - Document and review current dependencies
+   - Identify quick-win reductions
+
+2. Medium-term Goals
+   - Restructure team interfaces
+   - Implement new coordination mechanisms
+   - Monitor and adjust team sizes
+
+3. Long-term Vision
+   - Build towards optimal team autonomy
+   - Develop scalable coordination patterns
+   - Establish sustainable practices
+
+## Monitoring & Success Metrics
+
+1. Key Performance Indicators
+   - Flow efficiency improvement
+   - Lead time reduction
+   - Cost per delivery
+   - Team satisfaction
+
+2. Risk Factors
+   - Communication gaps
+   - Delivery delays
+   - Quality impacts
+   - Team overload
+
+3. Review Cycle
+   - Monthly metrics review
+   - Quarterly dependency assessment
+   - Annual structure evaluation`;
 
   return template;
-}
-
-function calculateCosts(nodes: Node[], edges: Edge[], teams: Team[], costParams: CostParams): CostAnalysis {
-  const totalTeams = nodes.length;
-  const totalConnections = edges.length;
-  
-  // Calculate monthly meeting multiplier based on recurrence
-  const getMonthlyMeetingMultiplier = (recurrence: string) => {
-    switch (recurrence.toLowerCase()) {
-      case 'daily': return 20; // 20 working days per month
-      case 'weekly': return 4; // 4 weeks per month
-      case 'biweekly': return 2; // 2 times per month
-      case 'monthly': return 1; // Once per month
-      default: return 1;
-    }
-  };
-
-  // Direct meeting costs
-  const directMeetingCost = 
-    costParams.meetings.duration * 
-    getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
-    costParams.meetings.attendeesPerTeam * 
-    costParams.hourlyRate.developer * 
-    totalConnections;
-
-  // Communication overhead
-  const communicationOverhead =
-    totalConnections * 
-    costParams.meetings.communicationOverhead *
-    costParams.hourlyRate.developer * 
-    costParams.overhead.baselineCommunicationHours;
-
-  // Opportunity cost from context switching
-  const opportunityCost = directMeetingCost + communicationOverhead;
-
-  // Flow efficiency impact cost
-  const totalDependencyStrength = edges.reduce((sum, edge) => sum + edge.data.strength, 0);
-  const avgTeamSize = nodes.reduce((sum, node) => sum + node.data.size, 0) / nodes.length;
-  const totalMonthlyHours = avgTeamSize * 160; // 160 hours per person per month
-  
-  // Calculate impact using sigmoid function
-  const maxImpact = 0.4; // Maximum 40% efficiency loss
-  const midpoint = 15; // Sigmoid midpoint - typical dependency sum
-  const steepness = 10; // Controls how fast the curve rises
-  
-  const impactFactor = maxImpact * (1 / (1 + Math.exp(-(totalDependencyStrength - midpoint) / steepness)));
-  
-  // Flow efficiency cost represents lost productivity due to dependencies
-  const flowEfficiencyCost = Math.round(
-    totalMonthlyHours * 
-    costParams.hourlyRate.developer * 
-    impactFactor
-  );
-
-  return {
-    monthlyMeetingCost: directMeetingCost,
-    communicationCost: communicationOverhead,
-    totalCost: opportunityCost + flowEfficiencyCost,
-    directMeetingCost,
-    communicationOverhead,
-    opportunityCost,
-    flowEfficiencyCost
-  };
 }
 
 export const teamDependencyTemplateStore = writable({

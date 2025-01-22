@@ -9,7 +9,7 @@
   import { base } from '$app/paths';
 
   export let show = false;
-  export let distributionMode: 'even' | 'hub-spoke';
+  export let distributionMode: 'even' | 'hub-spoke' | 'sequential' | 'mesh' | 'hierarchical' | 'clustered';
   export let teamCount: number;
   export let companyDependencyLevel: number;
   export let teams: Team[];

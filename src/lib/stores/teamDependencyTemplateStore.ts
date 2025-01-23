@@ -73,6 +73,7 @@ export interface CostParams {
     waitTimeMultiplier: number;
     baselineCommunicationHours: number;
     dependencyHoursRate: number;
+    opportunityCostMultiplier: number;
   };
 }
 
@@ -130,7 +131,7 @@ function generateTemplate(
 
   // Calculate total monthly cost and cost per team member
   const totalCost = metrics.totalCost || 0;
-  const totalTeamMembers = safeTeams.reduce((sum, team) => sum + team.size, 0);
+  const totalTeamMembers = safeTeams.slice(0, teamCount).reduce((sum, team) => sum + team.size, 0);
   const costPerTeamMember = totalTeamMembers > 0 ? totalCost / totalTeamMembers : 0;
 
   const template = `# Team Dependency Analysis Report
@@ -148,6 +149,7 @@ function generateTemplate(
 - Meeting Frequency: ${costParams?.meetings?.recurrence || 'Not Specified'}
 - Average Attendees per Team: ${costParams?.meetings?.attendeesPerTeam || 0}
 - Meeting Overhead Multiplier: ${costParams?.meetings?.communicationOverhead || 1}x
+- Opportunity Cost Multiplier: ${costParams.overhead.opportunityCostMultiplier}x (efficiency of time spent in meetings)
 
 ## Team Analysis
 
@@ -213,6 +215,9 @@ ${['To → | ' + safeDependencyMatrix.teams.join(' | ')].concat(
 
 3. Opportunity Cost
    - Cost of value-adding work not done due to dependencies
+   - Calculated as: (Direct Meeting Cost + Communication Overhead) × Opportunity Cost Multiplier
+   - Opportunity Cost Multiplier: ${costParams.overhead.opportunityCostMultiplier}x
+     * Represents efficiency of time spent in meetings (0 = no loss, 1 = equal loss, 2 = double loss)
    - Monthly Cost: ${formatCurrency(metrics.opportunityCost || 0)}
 
 4. Flow Efficiency Impact

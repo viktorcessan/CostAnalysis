@@ -162,7 +162,12 @@
   }
 
   interface TeamParams {
-    teams: Team[];
+    teams: {
+      name: string;
+      size: number;
+      efficiency: number;
+      baseCapacity?: number;
+    }[];
     baseLeadTime: number;
     dependencyImpact: number;
   }
@@ -353,7 +358,8 @@
       communicationOverhead: 1.2,
       waitTimeMultiplier: 1.5,
       baselineCommunicationHours: 8, // Changed from 2 to 8 (2 * 4 weeks)
-      dependencyHoursRate: 8 // Changed from 2 to 8 (2 * 4 weeks)
+      dependencyHoursRate: 8, // Changed from 2 to 8 (2 * 4 weeks)
+      opportunityCostMultiplier: 1 // Default value of 1 for opportunity cost multiplier
     }
   };
 
@@ -510,6 +516,7 @@
     costParams.hourlyRate;
     costParams.meetings;
     costParams.overhead;
+    costParams.overhead.opportunityCostMultiplier;  // Explicitly watch the multiplier
     teamParams.teams;
     dependencyMatrix;
     
@@ -517,6 +524,7 @@
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
+    metrics = updateMetrics();  // Update metrics when costs change
   }
 
   function updateTeamParam(index: number, param: keyof Team, value: number | string) {
@@ -810,8 +818,8 @@
     
     const communicationOverhead = dependencyOverhead + manualOverhead;
 
-    // Opportunity cost is the sum of direct and indirect costs
-    const opportunityCost = directMeetingCost + communicationOverhead;
+    // Opportunity cost is the sum of direct and indirect costs multiplied by the opportunity cost multiplier
+    const opportunityCost = (directMeetingCost + communicationOverhead) * costParams.overhead.opportunityCostMultiplier;
 
     // Calculate total operational costs (before efficiency impact)
     const totalOperationalCost = directMeetingCost + communicationOverhead + opportunityCost;
@@ -953,6 +961,7 @@
     costParams.hourlyRate;
     costParams.meetings;
     costParams.overhead;
+    costParams.overhead.opportunityCostMultiplier;  // Explicitly watch the multiplier
     teamParams.teams;
     dependencyMatrix;
     
@@ -960,25 +969,27 @@
       const costs = calculateCosts();
       createCostDistributionChart(costs);
     }
+    metrics = updateMetrics();  // Update metrics when costs change
   }
 
   // Add function to calculate metrics for independent teams
   function calculateIndependentTeamMetrics() {
-    const independentCosts = {
-      monthlyMeetingCost: costParams.meetings.duration * 
-        getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
-        costParams.meetings.attendeesPerTeam * 
-        costParams.hourlyRate.developer * 
-        nodes.length,
-      communicationCost: nodes.length * costParams.hourlyRate.developer * 5,
-      totalCost: 0
-    };
-    
-    independentCosts.totalCost = independentCosts.monthlyMeetingCost + 
-      independentCosts.communicationCost;
+    const baseMeetingCost = costParams.meetings.duration * 
+      getMonthlyMeetingMultiplier(costParams.meetings.recurrence) *
+      costParams.meetings.attendeesPerTeam * 
+      costParams.hourlyRate.developer * 
+      nodes.length;
+
+    const communicationCost = nodes.length * costParams.hourlyRate.developer * 5;
     
     return {
-      costs: independentCosts,
+      costs: {
+        directMeetingCost: baseMeetingCost,
+        communicationOverhead: communicationCost,
+        opportunityCost: 0, // No context switching in independent teams
+        flowEfficiencyCost: 0, // No dependency-related delays
+        totalCost: baseMeetingCost + communicationCost
+      },
       flowEfficiency: 95,
       leadTime: teamParams.baseLeadTime,
       utilizationRate: 90,
@@ -1061,7 +1072,8 @@
         communicationOverhead: sharedConfig.costParams.overhead.communicationOverhead,
         waitTimeMultiplier: sharedConfig.costParams.overhead.waitTimeMultiplier,
         baselineCommunicationHours: sharedConfig.costParams.overhead.baselineCommunicationHours,
-        dependencyHoursRate: sharedConfig.costParams.overhead.dependencyHoursRate
+        dependencyHoursRate: sharedConfig.costParams.overhead.dependencyHoursRate,
+        opportunityCostMultiplier: sharedConfig.costParams.overhead.opportunityCostMultiplier
       }
     };
 
@@ -1809,6 +1821,34 @@
             <div class="flex gap-2">
               <span class="font-medium">Efficiency:</span>
               <span>Team efficiency multiplier (0.1-2.0)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add this in the Team Parameters section, after the Dev Rate slider -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">
+            Opportunity Cost Multiplier
+            <button 
+              class="tooltip ml-1"
+              data-tippy-content="Multiplier for calculating opportunity cost from meeting time. A value of 0 means no opportunity cost, 1 means equal value lost, 2 means double value lost, etc.">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </h4>
+          <p class="text-xs text-gray-500 mb-2">Adjust how much value you believe is lost when time is spent in meetings instead of direct work. A value of 1 means equal value lost, 2 means double value lost, etc.</p>
+          <div class="flex items-center gap-2">
+            <input
+              type="range"
+              bind:value={costParams.overhead.opportunityCostMultiplier}
+              min="0"
+              max="3"
+              step="0.1"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
+            />
+            <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+              <span class="text-sm font-medium text-gray-900">{costParams.overhead.opportunityCostMultiplier}x</span>
             </div>
           </div>
         </div>

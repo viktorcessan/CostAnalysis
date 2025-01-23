@@ -66,7 +66,7 @@
                 <span class="text-sm text-gray-600 whitespace-nowrap">Total Monthly Cost:</span>
                 <span class="text-xl font-bold text-secondary whitespace-nowrap">${costs.totalCost.toFixed(0)}</span>
               </div>
-              <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">(${(costs.totalCost / (teamCount * teamParams.teams[0].size)).toFixed(0)} per team member)</span>
+              <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">(${(costs.totalCost / teamParams.teams.slice(0, teamCount).reduce((sum, team) => sum + team.size, 0)).toFixed(0)} per team member)</span>
             </div>
           </div>
   

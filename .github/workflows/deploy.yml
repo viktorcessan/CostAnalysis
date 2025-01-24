@@ -24,6 +24,12 @@ jobs:
       - name: Build
         run: npm run build
         
+      - name: Copy .htaccess
+        run: cp static/.htaccess build/
+
+      - name: List build directory
+        run: ls -la build/
+        
       - name: Deploy to SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:

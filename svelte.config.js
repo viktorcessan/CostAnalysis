@@ -11,7 +11,7 @@ const config = {
 			strict: false
 		}),
 		paths: {
-			base: process.env.NODE_ENV === 'production' ? '/CostAnalysis' : ''
+			base: ''
 		}
 	},
 	preprocess: vitePreprocess()

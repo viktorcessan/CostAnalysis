@@ -5,17 +5,8 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,18 +24,13 @@ jobs:
       - name: Build
         run: npm run build
         
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          path: ./build
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          username: ${{ secrets.SFTP_USERNAME }}
+          server: ${{ secrets.SFTP_HOST }}
+          port: ${{ secrets.SFTP_PORT }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          local_path: './build/*'
+          remote_path: './httpd.www'
+          sftp_only: true

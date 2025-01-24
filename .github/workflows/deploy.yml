@@ -31,6 +31,6 @@ jobs:
           server: ${{ secrets.SFTP_HOST }}
           port: ${{ secrets.SFTP_PORT }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          local_path: './build/*'
-          remote_path: './httpd.www'
+          local_path: './build/'
+          remote_path: '/customers/1/0/6/napkin-ops.com/httpd.www'
           sftp_only: true

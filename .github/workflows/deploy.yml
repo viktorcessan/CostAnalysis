@@ -40,14 +40,13 @@ jobs:
           echo "Content of build/index.html:"
           cat build/index.html
 
-      - name: Deploy to SFTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: SFTP Upload
+        uses: Dylan700/sftp-upload-action@latest
         with:
           server: ${{ secrets.SFTP_HOST }}
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
           port: ${{ secrets.SFTP_PORT }}
-          protocol: ftps
-          local-dir: ./build/
-          server-dir: /customers/1/0/6/napkin-ops.com/httpd.www/
-          dangerous-clean-slate: true
+          uploads: |
+            ./build/ => /customers/1/0/6/napkin-ops.com/httpd.www/
+          delete: 'true'

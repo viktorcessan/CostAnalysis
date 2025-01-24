@@ -27,8 +27,6 @@ jobs:
       - name: Build
         run: npm run build
         
-<<<<<<< HEAD
-=======
       - name: Copy .htaccess
         run: cp static/.htaccess build/
         
@@ -54,7 +52,6 @@ jobs:
           sftp_only: true
           delete_remote_files: true
           
->>>>>>> 1e5d6584d6c88b4af660a88aa914d3013c0e7898
       - name: Deploy to SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:

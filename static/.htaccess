@@ -1,22 +1,31 @@
 Options -MultiViews
 RewriteEngine On
 RewriteBase /
-DirectoryIndex index.html
 
-# If the requested resource exists as a file or directory,
-# serve it directly
+# Allow direct access to assets in _app directory
+RewriteCond %{REQUEST_URI} ^/_app/.*
+RewriteRule ^(.*)$ $1 [L,QSA]
+
+# If the requested resource exists as a file or directory, serve it directly
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
 # Otherwise, serve index.html
-RewriteRule ^ index.html [QSA,L]
-
-# Enable CORS if needed
-Header set Access-Control-Allow-Origin "*"
+RewriteRule ^ index.html [L]
 
 # Proper MIME types
 AddType application/javascript .js
 AddType text/css .css
+
+# Security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+Header set X-XSS-Protection "1; mode=block"
+
+# CORS headers for assets
+<FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch>
 
 # Caching rules
 <IfModule mod_expires.c>

@@ -1,11 +1,33 @@
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
+RewriteEngine On
+
+# Handle requests for static files in _app directory
+RewriteCond %{REQUEST_URI} ^/_app/.*
+RewriteRule ^(_app/.*)$ $1 [L]
+
+# Serve existing files directly
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Serve existing directories directly
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Handle SvelteKit routes - rewrite all other requests to index.html
+RewriteRule ^ index.html [L]
+
+# Set correct MIME types
+AddType application/javascript .js
+AddType text/css .css
+
+# Enable CORS for font files
+<FilesMatch "\.(ttf|otf|eot|woff|woff2)$">
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch>
+
+# Cache static assets
+<FilesMatch "\.(js|css|jpg|jpeg|png|gif|ico|woff|woff2|ttf|otf|eot)$">
+    Header set Cache-Control "max-age=31536000, public"
+</FilesMatch>
 
 # Enable CORS if needed
 Header set Access-Control-Allow-Origin "*"

@@ -48,7 +48,7 @@ jobs:
           port: ${{ secrets.SFTP_PORT }}
           password: ${{ secrets.SFTP_PASSWORD }}
           local_path: './empty/'
-          remote_path: '/customers/1/0/6/napkin-ops.com/httpd.www'
+          remote_path: '/customers/1/0/6/napkin-ops.com/httpd.www/'
           sftp_only: true
           delete_remote_files: true
           
@@ -59,6 +59,6 @@ jobs:
           server: ${{ secrets.SFTP_HOST }}
           port: ${{ secrets.SFTP_PORT }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          local_path: './build/'
-          remote_path: '/customers/1/0/6/napkin-ops.com/httpd.www'
+          local_path: './build/*'
+          remote_path: '/customers/1/0/6/napkin-ops.com/httpd.www/'
           sftp_only: true

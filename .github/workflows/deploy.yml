@@ -40,6 +40,9 @@ jobs:
           echo "Content of build/index.html:"
           cat build/index.html
 
+      - name: Create empty directory
+        run: mkdir -p empty
+
       - name: Clean Remote Directory
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:

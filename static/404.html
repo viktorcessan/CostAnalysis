@@ -1,19 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <title>Redirecting...</title>
     <script>
+      const pathname = window.location.pathname;
       const base = '/CostAnalysis';
-      const path = window.location.pathname;
-      if (path.startsWith(base)) {
-        window.location.href = base + '/#' + path.slice(base.length);
-      } else {
-        window.location.href = base + '/#' + path;
-      }
+      
+      // Remove base path if present and ensure we have a leading slash
+      const path = pathname.startsWith(base) 
+        ? pathname.slice(base.length) || '/'
+        : pathname;
+
+      // Redirect to the app with the correct path
+      window.location.replace(`${base}${path}`);
     </script>
   </head>
   <body>
-    <p>Redirecting...</p>
+    <p>Redirecting to application...</p>
   </body>
 </html> 

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { Node, Edge, DependencyMatrix } from '$lib/types/teamDependency';
+  import type { Node, Edge, DependencyMatrix, CostAnalysis } from '$lib/types/teamDependency';
+  import { currencyStore } from '$lib/stores/currencyStore';
 
   export let nodes: Node[];
   export let edges: Edge[];
@@ -12,14 +13,6 @@
   export let comparisonMode: 'topology' | 'lazy' | 'advanced';
   export let targetDependencyMatrix: number[][];
   export let dependencyAdjustment: number;
-
-  interface CostAnalysis {
-    directMeetingCost: number;
-    communicationOverhead: number;
-    opportunityCost: number;
-    flowEfficiencyCost: number;
-    totalCost: number;
-  }
 
   export let calculateCosts: () => CostAnalysis;
 
@@ -44,10 +37,17 @@
     teams: {
       name: string;
       size: number;
-      baseCapacity: number;
       efficiency: number;
+      baseCapacity: number;
     }[];
   };
+
+  // Helper function to format currency
+  function formatCurrency(value: number): string {
+    return `${$currencyStore.symbol}${(value * $currencyStore.multiplier).toLocaleString('en-US', {
+      maximumFractionDigits: 0
+    })}`;
+  }
 
   function getMonthlyMeetingMultiplier(recurrence: string): number {
     switch (recurrence) {
@@ -493,16 +493,16 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Current Model -->
         <div class="bg-white rounded-lg p-4 border border-gray-200">
-            <div class="flex items-center justify-between mb-2">
-              <div class="text-sm font-medium text-gray-600">Current Dependency Costs</div>
-            </div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-medium text-gray-600">Current Dependency Costs</div>
+          </div>
           <div class="space-y-3">
             <div>
-                <div class="flex justify-between text-sm items-center">
+              <div class="flex justify-between text-sm items-center">
                 <span class="text-gray-600">Monthly Cost</span>
-                  <div class="flex items-center gap-2">
-                    <span class="font-medium">${currentCosts.totalCost.toFixed(0)}</span>
-                  </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-medium">{formatCurrency(currentCosts.totalCost)}</span>
+                </div>
               </div>
               <div class="text-xs text-gray-500 mt-1">
                 Including dependencies and coordination
@@ -531,21 +531,21 @@
   
         <!-- Comparison Model -->
         <div class="bg-white rounded-lg p-4 border border-gray-200">
-            <div class="flex items-center justify-between mb-2">
-              <div class="text-sm font-medium text-gray-600">Future Dependency Costs</div>
-              {#if costDifference > 0}
-                <span class="text-sm font-medium text-green-600">(-${costDifference.toFixed(0)})</span>
-              {:else if costDifference < 0}
-                <span class="text-sm font-medium text-red-600">(+${(-costDifference).toFixed(0)})</span>
-              {/if}
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-medium text-gray-600">Future Dependency Costs</div>
+            {#if costDifference > 0}
+              <span class="text-sm font-medium text-green-600">(-{formatCurrency(costDifference)})</span>
+            {:else if costDifference < 0}
+              <span class="text-sm font-medium text-red-600">(+{formatCurrency(-costDifference)})</span>
+            {/if}
           </div>
           <div class="space-y-3">
             <div>
-                <div class="flex justify-between text-sm items-center">
+              <div class="flex justify-between text-sm items-center">
                 <span class="text-gray-600">Monthly Cost</span>
-                  <div class="flex items-center gap-2">
-                    <span class="font-medium">${modeMetrics.costs.totalCost.toFixed(0)}</span>
-                  </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-medium">{formatCurrency(modeMetrics.costs.totalCost)}</span>
+                </div>
               </div>
               <div class="text-xs text-gray-500 mt-1">
                 {#if comparisonMode === 'topology'}
@@ -901,7 +901,7 @@
         <h5 class="text-sm font-medium text-gray-900 mb-2">Impact Summary</h5>
         <div class="space-y-2">
           <p class="text-sm text-gray-600">
-            Team dependencies are adding <span class="font-medium text-secondary">${costDifference.toFixed(2)}</span> in monthly costs 
+            Team dependencies are adding <span class="font-medium text-secondary">{formatCurrency(costDifference)}</span> in monthly costs 
             ({((costDifference / modeMetrics.costs.totalCost) * 100).toFixed(2)}% increase).
           </p>
           <p class="text-sm text-gray-600">

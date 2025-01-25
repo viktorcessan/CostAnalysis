@@ -7,6 +7,7 @@
 
 <script lang="ts">
   import { calculatorStore } from '$lib/stores/calculatorStore';
+  import { currencyStore, type Currency, currencyConfigs } from '$lib/stores/currencyStore';
   import type { CalculatorModel, SolutionType, PlatformInputs, OutsourceInputs, HybridInputs } from '$lib/types/calculator';
   import { onMount } from 'svelte';
   import type { Instance as TippyInstance } from 'tippy.js';
@@ -80,12 +81,12 @@
   let qualityImpactPercent = Math.round(outsourceInputs.qualityImpact * 100);
   let knowledgeLossPercent = Math.round(outsourceInputs.knowledgeLoss * 100);
 
-  // Input constraints
-  const constraints = {
+  // Base constraints (USD values)
+  const baseConstraints = {
     teamSize: { min: 1, max: 15, step: 1 },
     hourlyRate: { min: 10, max: 150, step: 5 },
-    serviceEfficiency: { min: 0, max: 100, step: 1 },  // Changed to work with percentages directly
-    operationalOverhead: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
+    serviceEfficiency: { min: 0, max: 100, step: 1 },
+    operationalOverhead: { min: 0, max: 100, step: 1 },
     monthlyTickets: { min: 1, max: 250, step: 1 },
     hoursPerTicket: { min: 0.1, max: 100, step: 0.1 },
     peoplePerTicket: { min: 1, max: 10, step: 1 },
@@ -93,15 +94,84 @@
     platformCost: { min: 50000, max: 500000, step: 10000 },
     platformMaintenance: { min: 1000, max: 10000, step: 100 },
     timeToBuild: { min: 1, max: 12, step: 1 },
-    teamReduction: { min: 0, max: 100, step: 1 },  // Changed to work with percentages directly
-    processEfficiency: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
-    managementOverhead: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
-    qualityImpact: { min: -50, max: 50, step: 1 }, // Changed to work with percentages directly
-    knowledgeLoss: { min: 0, max: 100, step: 1 }, // Changed to work with percentages directly
+    teamReduction: { min: 0, max: 100, step: 1 },
+    processEfficiency: { min: 0, max: 100, step: 1 },
+    managementOverhead: { min: 0, max: 100, step: 1 },
+    qualityImpact: { min: -50, max: 50, step: 1 },
+    knowledgeLoss: { min: 0, max: 100, step: 1 },
     transitionTime: { min: 1, max: 12, step: 1 },
     transitionCost: { min: 0, max: 100000, step: 1000 },
     portion: { min: 0, max: 100, step: 5 }
   };
+
+  // Current constraints that will be updated based on currency
+  let constraints = { ...baseConstraints };
+  let previousMultiplier = 1;
+
+  // Subscribe to currency changes and update constraints
+  $: {
+    const multiplier = $currencyStore.multiplier;
+    if (multiplier !== previousMultiplier) {
+      const ratio = multiplier / previousMultiplier;
+      
+      // Update monetary values
+      hourlyRate = Math.round(hourlyRate * ratio);
+      if (platformInputs) {
+        platformInputs.platformCost = Math.round(platformInputs.platformCost * ratio);
+        platformInputs.platformMaintenance = Math.round(platformInputs.platformMaintenance * ratio);
+      }
+      if (outsourceInputs) {
+        outsourceInputs.vendorRate = Math.round(outsourceInputs.vendorRate * ratio);
+        outsourceInputs.transitionCost = Math.round(outsourceInputs.transitionCost * ratio);
+      }
+      if (hybridInputs) {
+        hybridInputs.platformCost = Math.round(hybridInputs.platformCost * ratio);
+        hybridInputs.platformMaintenance = Math.round(hybridInputs.platformMaintenance * ratio);
+        hybridInputs.vendorRate = Math.round(hybridInputs.vendorRate * ratio);
+        hybridInputs.transitionCost = Math.round(hybridInputs.transitionCost * ratio);
+      }
+
+      // Update constraints for monetary fields
+      constraints = {
+        ...baseConstraints,
+        hourlyRate: {
+          min: Math.round(baseConstraints.hourlyRate.min * multiplier),
+          max: Math.round(baseConstraints.hourlyRate.max * multiplier),
+          step: Math.round(baseConstraints.hourlyRate.step * multiplier)
+        },
+        vendorRate: {
+          min: Math.round(baseConstraints.vendorRate.min * multiplier),
+          max: Math.round(baseConstraints.vendorRate.max * multiplier),
+          step: Math.round(baseConstraints.vendorRate.step * multiplier)
+        },
+        platformCost: {
+          min: Math.round(baseConstraints.platformCost.min * multiplier),
+          max: Math.round(baseConstraints.platformCost.max * multiplier),
+          step: Math.round(baseConstraints.platformCost.step * multiplier)
+        },
+        platformMaintenance: {
+          min: Math.round(baseConstraints.platformMaintenance.min * multiplier),
+          max: Math.round(baseConstraints.platformMaintenance.max * multiplier),
+          step: Math.round(baseConstraints.platformMaintenance.step * multiplier)
+        },
+        transitionCost: {
+          min: Math.round(baseConstraints.transitionCost.min * multiplier),
+          max: Math.round(baseConstraints.transitionCost.max * multiplier),
+          step: Math.round(baseConstraints.transitionCost.step * multiplier)
+        }
+      };
+
+      // Update store with new values
+      if (model === 'team') {
+        handleTeamInputs();
+      } else {
+        handleTicketInputs();
+      }
+      updateSolutionInputs();
+
+      previousMultiplier = multiplier;
+    }
+  }
 
   // Subscribe to store changes and sync local state
   calculatorStore.subscribe(state => {
@@ -388,6 +458,23 @@
 </script>
 
 <div class="bg-white rounded-xl shadow-lg p-6 space-y-8">
+  <!-- Currency Selector -->
+  <div class="flex justify-end">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-medium text-gray-700">Currency:</span>
+      <div class="flex rounded-lg border border-gray-200 p-1 bg-white shadow-sm">
+        {#each ['USD', 'EUR', 'SEK'] as code}
+          <button
+            class="px-3 py-1 text-sm rounded-md transition-colors {$currencyStore.code === code ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+            on:click={() => currencyStore.setCurrency(code as Currency)}
+          >
+            {currencyConfigs[code as Currency].symbol} {code}
+          </button>
+        {/each}
+      </div>
+    </div>
+  </div>
+
   <!-- Header Section -->
   <!--
   <div class="bg-gradient-to-r from-secondary/10 to-secondary/5 p-2 rounded-lg border border-secondary/20">
@@ -570,7 +657,7 @@
                     step={constraints.hourlyRate.step}
                     class="number-input"
                   />
-                  <span class="unit-suffix">$</span>
+                  <span class="unit-suffix">{$currencyStore.symbol}</span>
                 </div>
                 <input
                   type="range"
@@ -836,7 +923,7 @@
                     step={constraints.hourlyRate.step}
                     class="number-input pr-8"
                   />
-                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$/hr</span>
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">{$currencyStore.symbol}/hr</span>
                 </div>
                 <input
                   type="range"
@@ -948,7 +1035,7 @@
                         step={1000}
                         class="number-input"
                       />
-                      <span class="unit-suffix">$</span>
+                      <span class="unit-suffix">{$currencyStore.symbol}</span>
                     </div>
                     <input
                       type="range"
@@ -993,7 +1080,7 @@
                         step={100}
                         class="number-input"
                       />
-                      <span class="unit-suffix">$</span>
+                      <span class="unit-suffix">{$currencyStore.symbol}</span>
                     </div>
                     <input
                       type="range"
@@ -1179,7 +1266,7 @@
                         step={constraints.vendorRate.step}
                         class="number-input"
                       />
-                      <span class="unit-suffix">$</span>
+                      <span class="unit-suffix">{$currencyStore.symbol}</span>
                     </div>
                     <input
                       type="range"
@@ -1404,7 +1491,7 @@
                     step={constraints.transitionCost.step}
                         class="number-input"
                       />
-                      <span class="unit-suffix">$</span>
+                      <span class="unit-suffix">{$currencyStore.symbol}</span>
                     </div>
                     <input
                       type="range"
@@ -1579,7 +1666,7 @@
                     step={1000}
                     class="number-input"
                   />
-                  <span class="unit-suffix">$</span>
+                  <span class="unit-suffix">{$currencyStore.symbol}</span>
                 </div>
                 <input
                   type="range"
@@ -1624,7 +1711,7 @@
                     step={100}
                     class="number-input"
                   />
-                  <span class="unit-suffix">$</span>
+                  <span class="unit-suffix">{$currencyStore.symbol}</span>
                 </div>
                 <input
                   type="range"
@@ -1812,7 +1899,7 @@
                     step={constraints.vendorRate.step}
                     class="number-input"
                   />
-                  <span class="unit-suffix">$</span>
+                  <span class="unit-suffix">{$currencyStore.symbol}</span>
                 </div>
                 <input
                   type="range"
@@ -2037,7 +2124,7 @@
                         step={1000}
                     class="number-input"
                   />
-                  <span class="unit-suffix">$</span>
+                  <span class="unit-suffix">{$currencyStore.symbol}</span>
                 </div>
                 <input
                   type="range"

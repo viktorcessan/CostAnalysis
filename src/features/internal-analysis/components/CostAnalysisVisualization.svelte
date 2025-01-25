@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { Chart, type ChartConfiguration } from 'chart.js/auto';
   import type { Node } from '$lib/types/teamDependency';
+  import { currencyStore } from '$lib/stores/currencyStore';
 
   export let nodes: Node[];
   export let teamCount: number;
@@ -31,6 +34,13 @@
 
   export let calculateCosts: () => CostAnalysis;
   export let costChartCanvas: HTMLCanvasElement;
+
+  // Helper function to format currency
+  function formatCurrency(value: number): string {
+    return `${$currencyStore.symbol}${(value * $currencyStore.multiplier).toLocaleString('en-US', {
+      maximumFractionDigits: 0
+    })}`;
+  }
 
   // Helper function to get monthly meeting multiplier
   function getMonthlyMeetingMultiplier(recurrence: string): number {
@@ -64,9 +74,9 @@
             <div class="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 px-4 py-2 bg-secondary/5 rounded-lg border border-secondary/20">
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-600 whitespace-nowrap">Total Monthly Cost:</span>
-                <span class="text-xl font-bold text-secondary whitespace-nowrap">${costs.totalCost.toFixed(0)}</span>
+                <span class="text-xl font-bold text-secondary whitespace-nowrap">{formatCurrency(costs.totalCost)}</span>
               </div>
-              <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">(${(costs.totalCost / teamParams.teams.slice(0, teamCount).reduce((sum, team) => sum + team.size, 0)).toFixed(0)} per team member)</span>
+              <span class="text-xs text-gray-500 whitespace-normal sm:whitespace-nowrap">({formatCurrency(costs.totalCost / teamParams.teams.slice(0, teamCount).reduce((sum, team) => sum + team.size, 0))} per team member)</span>
             </div>
           </div>
   
@@ -90,7 +100,7 @@
                 <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
                   <div class="text-sm font-medium text-gray-600">Direct Meeting Costs</div>
                   <div class="text-xl font-bold text-sky-500 mt-1">
-                    ${costs.directMeetingCost.toFixed(0)}
+                    {formatCurrency(costs.directMeetingCost)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
                     Synchronous team coordination through regular meetings, including preparation and follow-up activities.
@@ -100,7 +110,7 @@
                 <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-lg border border-amber-200">
                   <div class="text-sm font-medium text-gray-600">Indirect Meeting Costs</div>
                   <div class="text-xl font-bold text-amber-500 mt-1">
-                    ${costs.communicationOverhead.toFixed(0)}
+                    {formatCurrency(costs.communicationOverhead)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
                     Cordination, documentation, and communication activities between dependent teams associated with meetings.
@@ -110,7 +120,7 @@
                 <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-lg border border-emerald-200">
                   <div class="text-sm font-medium text-gray-600">Opportunity Cost</div>
                   <div class="text-xl font-bold text-emerald-500 mt-1">
-                    ${costs.opportunityCost.toFixed(0)}
+                    {formatCurrency(costs.opportunityCost)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
                     Cost of value-adding work not done due to time spent on dependency-related activities and meetings.
@@ -120,7 +130,7 @@
                 <div class="bg-gradient-to-br from-rose-50 to-white p-4 rounded-lg border border-rose-200">
                   <div class="text-sm font-medium text-gray-600">Flow Efficiency Impact</div>
                   <div class="text-xl font-bold text-rose-500 mt-1">
-                    ${costs.flowEfficiencyCost.toFixed(0)}
+                    {formatCurrency(costs.flowEfficiencyCost)}
                   </div>
                   <div class="text-xs text-gray-500 mt-1">
                     Cost of reduced productivity from inter-team dependencies and associated wait times.

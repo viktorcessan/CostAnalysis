@@ -1,5 +1,6 @@
 <script lang="ts">
   import { calculatorStore } from '$lib/stores/calculatorStore';
+  import { currencyStore } from '$lib/stores/currencyStore';
   import type { CalculationResults, SolutionInputs, PlatformInputs, OutsourceInputs, HybridInputs } from '$lib/types/calculator';
   import { onMount, onDestroy } from 'svelte';
   import { Chart } from 'chart.js';
@@ -58,12 +59,9 @@
 
   // Format currency values
   function formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
+    return `${$currencyStore.symbol}${(value * $currencyStore.multiplier).toLocaleString('en-US', {
       maximumFractionDigits: 0
-    }).format(value);
+    })}`;
   }
 
   // Format percentage values
@@ -811,7 +809,26 @@
 <ExpertModal bind:show={showExpertModal} />
 
 <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
-  <h3 class="text-xl font-semibold text-gray-900">Calculation Results</h3>
+  <div class="flex justify-between items-center">
+    <h3 class="text-xl font-semibold text-gray-900">Calculation Results</h3>
+    <div class="relative">
+      <button
+        class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary"
+        on:click={() => {
+          const currentCurrency = $currencyStore.code;
+          const currencies = ['USD', 'EUR', 'SEK'];
+          const currentIndex = currencies.indexOf(currentCurrency);
+          const nextIndex = (currentIndex + 1) % currencies.length;
+          currencyStore.setCurrency(currencies[nextIndex]);
+        }}
+      >
+        <span>{$currencyStore.symbol}</span>
+        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+    </div>
+  </div>
 
   <!-- Savings Banner -->
   {#if results?.monthlySavings !== undefined}

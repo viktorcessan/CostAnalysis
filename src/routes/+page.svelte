@@ -44,6 +44,32 @@
       icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
       </svg>`
+    },
+    {
+      title: 'Build vs Buy Analysis',
+      description: 'Make data-driven decisions about whether to build or buy solutions by analyzing costs, benefits, and strategic factors.',
+      details: [
+        'Score options across dimensions',
+        'Visualize trade-offs',
+        'Get clear recommendations',
+        'Receive actionable insights'
+      ],
+      icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+      </svg>`
+    },
+    {
+      title: 'Feature Value Calculator',
+      description: 'Quantify the business impact of a feature by evaluating how it generates revenue, protects revenue, reduces costs, or avoids costs.',
+      details: [
+        'Revenue impact analysis',
+        'Cost reduction tracking',
+        'ROI visualization',
+        'Break-even calculations'
+      ],
+      icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
+      </svg>`
     }
   ];
 </script>
@@ -138,10 +164,18 @@
             href="{base}/calculator"
             class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
             data-analysis={feature.title === 'Build a Business Case' ? 'breakeven' : 
-                         feature.title === 'Find Platform Budget' ? 'target' : 'team-analysis'}
+                         feature.title === 'Find Platform Budget' ? 'target' : 
+                         feature.title === 'Build vs Buy Analysis' ? 'build-buy' :
+                         feature.title === 'Feature Value Calculator' ? 'feature-calculator' : 'team-analysis'}
             on:click|preventDefault={(e) => {
               const analysis = e.currentTarget.getAttribute('data-analysis');
-              goto(`${base}/calculator?goal=${analysis}`);
+              if (analysis === 'build-buy') {
+                goto(`${base}/calculator/build_buy`);
+              } else if (analysis === 'feature-calculator') {
+                goto(`${base}/calculator/feature_calculator`);
+              } else {
+                goto(`${base}/calculator?goal=${analysis}`);
+              }
             }}
           >
             <div class="flex items-center gap-4 mb-6">

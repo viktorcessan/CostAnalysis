@@ -9,6 +9,8 @@
   import TeamDependencyShareModal from '$lib/components/ui/TeamDependencyShareModal.svelte';
   import TeamDependencyLoadingModal from '$lib/components/ui/TeamDependencyLoadingModal.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
+  import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
+  import { currencyStore } from '$lib/stores/currencyStore';
   import { teamDependencyTemplateStore } from '$lib/stores/teamDependencyTemplateStore';
   import { base } from '$app/paths';
   import { validateShareParams, parseShareLink } from '$lib/utils/teamDependencyShare';
@@ -22,6 +24,7 @@
   import CostAnalysisVisualization from './CostAnalysisVisualization.svelte';
   import ImpactAnalysis from './ImpactAnalysis.svelte';
   import ExpertConsultationCard from '$lib/components/ui/ExpertConsultationCard.svelte';
+  import TeamPerformanceRadars from './TeamPerformanceRadars.svelte';
 
   let tour: Tour | null = null;
 
@@ -162,13 +165,13 @@
   }
 
   interface TeamParams {
+    baseLeadTime: number;
     teams: {
       name: string;
       size: number;
       efficiency: number;
-      baseCapacity?: number;
+      baseCapacity: number;
     }[];
-    baseLeadTime: number;
     dependencyImpact: number;
   }
 
@@ -176,7 +179,8 @@
     teams: Array(10).fill(null).map((_, i) => ({
       name: `Team ${i + 1}`,
       size: 5,
-      efficiency: 1.0
+      efficiency: 1.0,
+      baseCapacity: 40 // 8 hours * 5 days
     })),
     baseLeadTime: 3,
     dependencyImpact: 0.15
@@ -372,6 +376,20 @@
     }
   });
 
+  // Add currency-adjusted rate getter
+  $: adjustedHourlyRate = {
+    developer: costParams.hourlyRate.developer * $currencyStore.multiplier,
+    manager: costParams.hourlyRate.manager * $currencyStore.multiplier,
+    teamLead: costParams.hourlyRate.teamLead * $currencyStore.multiplier
+  };
+
+  // Update the range for hourly rate based on currency
+  $: hourlyRateRange = {
+    min: $currencyStore.code === 'SEK' ? 200 : 20,
+    max: $currencyStore.code === 'SEK' ? 2000 : 200,
+    step: $currencyStore.code === 'SEK' ? 50 : 5
+  };
+
   // Update calculator store when hourly rate changes
   function handleHourlyRateChange() {
     const currentState = calculatorStore.getCurrentState();
@@ -379,7 +397,7 @@
     if (baseInputs) {
       calculatorStore.updateTeamInputs({
         teamSize: baseInputs.teamSize,
-        hourlyRate: costParams.hourlyRate.developer,
+        hourlyRate: costParams.hourlyRate.developer / $currencyStore.multiplier, // Store base USD value
         serviceEfficiency: baseInputs.serviceEfficiency,
         operationalOverhead: baseInputs.operationalOverhead
       });
@@ -980,7 +998,7 @@
       costParams.hourlyRate.developer * 
       nodes.length;
 
-    const communicationCost = nodes.length * costParams.hourlyRate.developer * 5;
+    const communicationCost = nodes.length * costParams.hourlyRate.developer * 2;
     
     return {
       costs: {
@@ -1246,22 +1264,22 @@
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200 space-y-8">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-semibold text-gray-900">Team Structure Configuration</h3>
-      <!-- Add Tutorial Button -->
-      
-      <button
-        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-all flex items-center gap-2 shadow hover:shadow-lg"
-        on:click={() => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          setTimeout(() => tour?.start(), 300);
-        }}
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Tutorial
-      </button>
-      
-      
+      <div class="flex items-center gap-4">
+        <CurrencySelector />
+        <!-- Add Tutorial Button -->
+        <button
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-all flex items-center gap-2 shadow hover:shadow-lg"
+          on:click={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => tour?.start(), 300);
+          }}
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Tutorial
+        </button>
+      </div>
     </div>
     
     <!-- Distribution Pattern Selection -->
@@ -1725,7 +1743,7 @@
           <!-- Dev Rate -->
           <div>
             <h4 class="text-sm font-medium text-gray-700 mb-2">
-              Average Employee Cost ($/hr)
+              Average Employee Cost ({$currencyStore.symbol}/hr)
               <button 
                 class="tooltip ml-1"
                 data-tippy-content="Average hourly cost per team member, including salary, benefits, and overhead. Used to calculate financial impact.">
@@ -1740,13 +1758,13 @@
                 type="range"
                 bind:value={costParams.hourlyRate.developer}
                 on:input={handleHourlyRateChange}
-                min="20"
-                max="200"
-                step="5"
+                min={hourlyRateRange.min}
+                max={hourlyRateRange.max}
+                step={hourlyRateRange.step}
                 class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-secondary"
               />
-              <div class="w-16 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
-                <span class="text-sm font-medium text-gray-900">${costParams.hourlyRate.developer}</span>
+              <div class="w-24 px-2 py-1 bg-gray-50 rounded-md border border-gray-200 text-center">
+                <span class="text-sm font-medium text-gray-900">{$currencyStore.symbol}{adjustedHourlyRate.developer.toFixed(0)}</span>
               </div>
             </div>
           </div>
@@ -2222,6 +2240,16 @@
   {hierarchyLevels}
   {childrenPerNode}
   on:applyMatrix={applyMatrix}
+/>
+
+<!-- Add Team Performance Radars -->
+<TeamPerformanceRadars
+  {nodes}
+  {edges}
+  {dependencyMatrix}
+  {metrics}
+  {teamCommunicationMetrics}
+  {costParams}
 />
 
 <!-- Replace the cut section with this component -->

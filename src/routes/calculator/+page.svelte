@@ -83,6 +83,42 @@
       icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
             </svg>`
+    },
+    {
+      id: 'build-buy',
+      name: 'Build vs Buy Analysis',
+      description: 'Make data-driven decisions about whether to build or buy solutions by analyzing costs, benefits, and strategic factors.',
+      longDescription: 'Evaluate build vs buy options objectively by scoring them across key dimensions like business criticality, time to implement, cost, control, competency, and market fit.',
+      benefits: [
+        'Score options across dimensions',
+        'Visualize trade-offs',
+        'Get clear recommendations',
+        'Receive actionable insights'
+      ],
+      mode: 'solutions',
+      requiresModel: false,
+      path: 'build_buy',
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+            </svg>`
+    },
+    {
+      id: 'feature-calculator',
+      name: 'Feature Value Calculator',
+      description: 'Quantify the business impact of a feature by evaluating how it generates revenue, protects revenue, reduces costs, or avoids costs.',
+      longDescription: 'Calculate and visualize the total value created by features through revenue gains, cost reductions, and risk mitigation. Get clear ROI and break-even analysis to support your decisions.',
+      benefits: [
+        'Calculate total value created',
+        'Analyze multiple value streams',
+        'Visualize ROI and break-even',
+        'Build strong business cases'
+      ],
+      mode: 'solutions',
+      requiresModel: false,
+      path: 'feature_calculator',
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
+            </svg>`
     }
   ];
 
@@ -96,6 +132,10 @@
           activeModel = 'team';
           calculatorStore.updateModel(activeModel);
           goto(`${base}/calculator/team_analysis/team_model`);
+        } else if (goal.id === 'build-buy') {
+          goto(`${base}/calculator/build_buy`);
+        } else if (goal.id === 'feature-calculator') {
+          goto(`${base}/calculator/feature_calculator`);
         } else {
           showModelSelection = true;
         }
@@ -114,6 +154,10 @@
           activeModel = 'team';
           calculatorStore.updateModel(activeModel);
           goto(`${base}/calculator/team_analysis/team_model`);
+        } else if (goal.id === 'build-buy') {
+          goto(`${base}/calculator/build_buy`);
+        } else if (goal.id === 'feature-calculator') {
+          goto(`${base}/calculator/feature_calculator`);
         } else {
           showModelSelection = true;
         }
@@ -140,6 +184,10 @@
       activeModel = 'team';
       calculatorStore.updateModel(activeModel);
       goto(`${base}/calculator/team_analysis/team_model`);
+    } else if (goal.id === 'build-buy') {
+      goto(`${base}/calculator/build_buy`);
+    } else if (goal.id === 'feature-calculator') {
+      goto(`${base}/calculator/feature_calculator`);
     } else {
       showModelSelection = true;
       // Update URL with goal parameter

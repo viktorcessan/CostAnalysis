@@ -1,5 +1,6 @@
 <script lang="ts">
   import { calculatorStore } from '$lib/stores/calculatorStore';
+  import { currencyStore, type Currency, currencyConfigs } from '$lib/stores/currencyStore';
   import type { CalculatorModel, SolutionType, PlatformInputs, TeamInputs, TicketInputs, TargetBasedPlanningResults } from '$lib/types/calculator';
   import { onMount, onDestroy } from 'svelte';
   import tippy from 'tippy.js';
@@ -93,47 +94,71 @@
   // Results
   let results: TargetBasedPlanningResults | null = null;
 
-  // Input constraints
-  const constraints = {
+  // Base constraints (USD values)
+  const baseConstraints = {
     teamSize: { min: 1, max: 15, step: 1 },
     hourlyRate: { min: 10, max: 150, step: 5 },
-    serviceEfficiency: { min: 0, max: 1, step: 0.01 },
-    operationalOverhead: { min: 0, max: 1, step: 0.01 },
+    serviceEfficiency: { min: 0, max: 100, step: 1 },
+    operationalOverhead: { min: 0, max: 100, step: 1 },
     monthlyTickets: { min: 1, max: 250, step: 1 },
     hoursPerTicket: { min: 0.1, max: 100, step: 0.1 },
     peoplePerTicket: { min: 1, max: 10, step: 1 },
-    timeframe: { min: 12, max: 60, step: 3 }, // 12-60 months
-    targetTeamReduction: { min: 0, max: 75, step: 5 }, // 0-75%
-    targetEfficiency: { min: 0, max: 75, step: 5 }, // 0-75%
-    platformCost: { min: 0, max: 50000, step: 1000 } // $0 to $50k per month
+    timeframe: { min: 12, max: 60, step: 3 },
+    targetTeamReduction: { min: 0, max: 75, step: 5 },
+    targetEfficiency: { min: 0, max: 75, step: 5 },
+    platformCost: { min: 0, max: 50000, step: 1000 }
   };
 
-  // Initialize tooltips
-  onMount(() => {
-    const tooltipInstances = tippy('[data-tippy-content]', {
-      theme: 'light-border',
-      placement: 'right',
-      delay: [100, 200],
-      touch: 'hold',
-      maxWidth: 300,
-      hideOnClick: false,
-      trigger: 'mouseenter focus click',
-      interactive: true,
-      appendTo: () => document.body,
-      plugins: [],
-      animation: false,
-      allowHTML: false
-    });
-  });
+  // Current constraints that will be updated based on currency
+  let constraints = { ...baseConstraints };
+  let previousMultiplier = 1;
+
+  // Subscribe to currency changes and update constraints
+  $: {
+    const multiplier = $currencyStore.multiplier;
+    if (multiplier !== previousMultiplier) {
+      const ratio = multiplier / previousMultiplier;
+      
+      // Update monetary values
+      hourlyRate = Math.round(hourlyRate * ratio);
+      targets = targets.map(target => {
+        if (target.type === 'platform_cost') {
+          return { ...target, value: Math.round(target.value * ratio) };
+        }
+        return target;
+      });
+
+      // Update constraints for monetary fields
+      constraints = {
+        ...baseConstraints,
+        hourlyRate: {
+          min: Math.round(baseConstraints.hourlyRate.min * multiplier),
+          max: Math.round(baseConstraints.hourlyRate.max * multiplier),
+          step: Math.round(baseConstraints.hourlyRate.step * multiplier)
+        },
+        platformCost: {
+          min: Math.round(baseConstraints.platformCost.min * multiplier),
+          max: Math.round(baseConstraints.platformCost.max * multiplier),
+          step: Math.round(baseConstraints.platformCost.step * multiplier)
+        }
+      };
+
+      // Update store with new values
+      if (model === 'team') {
+        handleTeamInputs();
+      } else {
+        handleTicketInputs();
+      }
+
+      previousMultiplier = multiplier;
+    }
+  }
 
   // Helper function to format currency
   function formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
+    return `${$currencyStore.symbol}${(value * $currencyStore.multiplier).toLocaleString('en-US', {
       maximumFractionDigits: 0
-    }).format(value);
+    })}`;
   }
 
   // Helper function to format percentage
@@ -728,6 +753,23 @@
 
 <!-- Input Container -->
 <div class="bg-white rounded-xl shadow-sm p-4 space-y-4 mb-4">
+  <!-- Currency Selector -->
+  <div class="flex justify-end">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-medium text-gray-700">Currency:</span>
+      <div class="flex rounded-lg border border-gray-200 p-1 bg-white shadow-sm">
+        {#each ['USD', 'EUR', 'SEK'] as code}
+          <button
+            class="px-3 py-1 text-sm rounded-md transition-colors {$currencyStore.code === code ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
+            on:click={() => currencyStore.setCurrency(code as Currency)}
+          >
+            {currencyConfigs[code as Currency].symbol} {code}
+          </button>
+        {/each}
+      </div>
+    </div>
+  </div>
+
   <!-- Base Configuration -->
   <div>
     <h3 class="text-sm font-semibold text-gray-900 mb-2">Baseline Parameters</h3>
@@ -786,7 +828,7 @@
                   class="tooltip ml-1"
                   aria-label="Help information" 
                   data-tippy-content="Include all costs associated with each employee, such as compensation, benefits, and operational expenses.">
-                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
@@ -797,19 +839,17 @@
             </div>
             <div>
               <div class="input-group">
-                <div class="value-container">
-                  <div class="relative">
-                    <input
-                      type="number"
-                      id="hourlyRate"
-                      bind:value={hourlyRate}
-                      min={constraints.hourlyRate.min}
-                      max={constraints.hourlyRate.max}
-                      step={constraints.hourlyRate.step}
-                      class="number-input pr-8"
-                    />
-                    <span class="unit-suffix">$</span>
-                  </div>
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="hourlyRate"
+                    bind:value={hourlyRate}
+                    min={constraints.hourlyRate.min}
+                    max={constraints.hourlyRate.max}
+                    step={constraints.hourlyRate.step}
+                    class="number-input pr-8"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">{$currencyStore.symbol}/hr</span>
                 </div>
                 <input
                   type="range"
@@ -994,7 +1034,7 @@
                       step={constraints.hourlyRate.step}
                       class="number-input pr-8"
                     />
-                    <span class="unit-suffix">$</span>
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">{$currencyStore.symbol}/hr</span>
                   </div>
                 </div>
                 <div class="slider-container">
@@ -1412,7 +1452,7 @@
                 class="tooltip ml-1"
                 aria-label="Help information" 
                 data-tippy-content="Include expenses for updates, hosting, and support needed to keep the platform operational.">
-                <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
@@ -1421,8 +1461,8 @@
               Specify the expected monthly cost for maintaining your platform.
             </p>
           </div>
-          <div class="input-group">
-            <div class="value-container">
+          <div>
+            <div class="input-group">
               <div class="relative">
                 <input
                   type="number"
@@ -1433,10 +1473,8 @@
                   step={constraints.platformCost.step}
                   class="number-input pr-8"
                 />
-                <span class="unit-suffix">$</span>
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">{$currencyStore.symbol}</span>
               </div>
-            </div>
-            <div class="slider-container">
               <input
                 type="range"
                 bind:value={targets[4].value}
@@ -1520,7 +1558,7 @@
             </p>
           </div>
           {#if results.isViable}
-            <p class="text-3xl font-bold text-green-700">${results.platformCost.toLocaleString()}</p>
+            <p class="text-3xl font-bold text-green-700">{formatCurrency(results.platformCost)}</p>
           {:else}
             <p class="text-3xl font-bold text-red-600">Not Viable</p>
           {/if}
@@ -1535,11 +1573,11 @@
             <p class="text-gray-500 text-sm">Monthly Savings</p>
             {#if results.isViable}
               <p class="text-xl font-semibold text-green-600 mt-1">
-                ${results.monthlyOperatingCostReduction.toLocaleString()}
+                {formatCurrency(results.monthlyOperatingCostReduction)}
               </p>
             {:else}
               <p class="text-xl font-semibold text-red-600 mt-1">
-                Negative (${Math.abs(results.monthlyOperatingCostReduction).toLocaleString()})
+                Negative ({formatCurrency(Math.abs(results.monthlyOperatingCostReduction))})
               </p>
             {/if}
           </div>

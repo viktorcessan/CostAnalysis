@@ -11,7 +11,7 @@ const config = {
 			strict: false
 		}),
 		paths: {
-			base: ''
+			base: '/CostAnalysis'
 		}
 	},
 	preprocess: vitePreprocess()

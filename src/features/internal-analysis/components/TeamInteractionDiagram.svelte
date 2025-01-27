@@ -1262,13 +1262,15 @@
 <div class="space-y-6">
   <!-- Mode Selection Controls -->
   <div class="bg-white p-6 rounded-lg shadow border border-gray-200 space-y-8">
-    <div class="flex justify-between items-center mb-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
       <h3 class="text-lg font-semibold text-gray-900">Team Structure Configuration</h3>
-      <div class="flex items-center gap-4">
-        <CurrencySelector />
+      <div class="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+        <div class="w-full sm:w-auto">
+          <CurrencySelector />
+        </div>
         <!-- Add Tutorial Button -->
         <button
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-all flex items-center gap-2 shadow hover:shadow-lg"
+          class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-all flex items-center justify-center gap-2 shadow hover:shadow-lg"
           on:click={() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setTimeout(() => tour?.start(), 300);

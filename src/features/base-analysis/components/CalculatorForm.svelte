@@ -463,7 +463,7 @@
     <div class="flex items-center gap-2">
       <span class="text-sm font-medium text-gray-700">Currency:</span>
       <div class="flex rounded-lg border border-gray-200 p-1 bg-white shadow-sm">
-        {#each ['USD', 'EUR', 'SEK'] as code}
+        {#each ['USD', 'EUR', 'SEK', 'GBP'] as code}
           <button
             class="px-3 py-1 text-sm rounded-md transition-colors {$currencyStore.code === code ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
             on:click={() => currencyStore.setCurrency(code as Currency)}

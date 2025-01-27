@@ -119,7 +119,7 @@
     if (multiplier !== previousMultiplier) {
       const ratio = multiplier / previousMultiplier;
       
-      // Update monetary values
+      // These values are already being converted here
       hourlyRate = Math.round(hourlyRate * ratio);
       targets = targets.map(target => {
         if (target.type === 'platform_cost') {
@@ -156,7 +156,7 @@
 
   // Helper function to format currency
   function formatCurrency(value: number): string {
-    return `${$currencyStore.symbol}${(value * $currencyStore.multiplier).toLocaleString('en-US', {
+    return `${$currencyStore.symbol}${value.toLocaleString('en-US', {
       maximumFractionDigits: 0
     })}`;
   }
@@ -758,7 +758,7 @@
     <div class="flex items-center gap-2">
       <span class="text-sm font-medium text-gray-700">Currency:</span>
       <div class="flex rounded-lg border border-gray-200 p-1 bg-white shadow-sm">
-        {#each ['USD', 'EUR', 'SEK'] as code}
+        {#each ['USD', 'EUR', 'SEK', 'GBP'] as code}
           <button
             class="px-3 py-1 text-sm rounded-md transition-colors {$currencyStore.code === code ? 'bg-secondary text-white' : 'text-gray-600 hover:bg-gray-50'}"
             on:click={() => currencyStore.setCurrency(code as Currency)}

@@ -7,32 +7,6 @@
 
   const features = [
     {
-      title: 'Build a Business Case',
-      description: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point.',
-      details: [
-        'Monthly cost breakdown',
-        'Break-even analysis',
-        'ROI projections',
-        'Resource utilization metrics'
-      ],
-      icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>`
-    },
-    {
-      title: 'Find Platform Budget',
-      description: 'Determine how much to invest in your platform to lower costs while meeting your efficiency goals.',
-      details: [
-        'Process efficiency tracking',
-        'Team productivity metrics',
-        'Knowledge retention scoring',
-        'Volume capacity analysis'
-      ],
-      icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>`
-    },
-    {
       title: 'Reveal Team Dependency Costs',
       description: 'Understand how team dependencies are driving up costs and find actionable ways to reduce them.',
       details: [
@@ -70,6 +44,32 @@
       icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
       </svg>`
+    },
+    {
+      title: 'Build a Business Case',
+      description: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point.',
+      details: [
+        'Monthly cost breakdown',
+        'Break-even analysis',
+        'ROI projections',
+        'Resource utilization metrics'
+      ],
+      icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>`
+    },
+    {
+      title: 'Find Platform Budget',
+      description: 'Determine how much to invest in your platform to lower costs while meeting your efficiency goals.',
+      details: [
+        'Process efficiency tracking',
+        'Team productivity metrics',
+        'Knowledge retention scoring',
+        'Volume capacity analysis'
+      ],
+      icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>`
     }
   ];
 </script>
@@ -86,17 +86,17 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto text-center">
         <h1 class="text-4xl font-bold text-secondary mb-6 tracking-tight">
-          Operations Cost Planning
+          Free, Fast, Tailored Operational Cost Analysis
         </h1>
         <p class="text-xl text-gray-600 mb-8 leading-relaxed">
-          Optimize your delivery with tailored analyses to understand your development, application management, and service delivery costs, identify opportunities, and make informed decisions.
+        Get quick, customized insights into your operational costs. Identify cost-saving opportunities, streamline your delivery, and make data-driven decisions—all in just a few clicks.
         </p>
         <div class="flex justify-center gap-4">
           <a
             href="{base}/calculator"
             class="px-8 py-4 bg-secondary text-white rounded-lg text-lg font-medium hover:bg-secondary/90 transition-all transform hover:scale-105 hover:shadow-lg"
           >
-            Start Calculating
+            Start Analyzing
           </a>
         </div>
       </div>

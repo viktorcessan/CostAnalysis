@@ -2242,15 +2242,6 @@
   on:applyMatrix={applyMatrix}
 />
 
-<!-- Add Team Performance Radars -->
-<TeamPerformanceRadars
-  {nodes}
-  {edges}
-  {dependencyMatrix}
-  {metrics}
-  {teamCommunicationMetrics}
-  {costParams}
-/>
 
 <!-- Replace the cut section with this component -->
 <CostAnalysisVisualization
@@ -2260,6 +2251,16 @@
   {costParams}
   {calculateCosts}
   bind:costChartCanvas={costChartCanvas as HTMLCanvasElement}
+/>
+
+<!-- Add Team Performance Radars -->
+<TeamPerformanceRadars
+  {nodes}
+  {edges}
+  {dependencyMatrix}
+  {metrics}
+  {teamCommunicationMetrics}
+  {costParams}
 />
 
 <!-- Impact Analysis Component -->

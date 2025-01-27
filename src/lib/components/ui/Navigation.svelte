@@ -28,10 +28,10 @@
           </div>
           <div class="flex flex-col">
             <span class="text-lg font-bold tracking-tight text-secondary">
-              Operations Cost Planning
+              Napkin Operations Cost Planning
             </span>
             <span class="text-xs text-gray-500">
-              Optimize Your Delivery
+              Quick insights for Smarter Decisions
             </span>
           </div>
         </a>
@@ -41,24 +41,6 @@
       <div class="hidden lg:flex flex-1 justify-center">
         <div class="flex items-center space-x-1 px-4 mx-auto">
           <div class="bg-gray-50/80 rounded-lg p-1.5 flex items-center space-x-1">
-            <a
-              href="{base}/calculator?goal=breakeven"
-              class="px-3 py-2 rounded-md text-sm font-medium {isBaseAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
-              on:click|preventDefault={() => {
-                goto(`${base}/calculator?goal=breakeven`);
-              }}
-            >
-              Business Case
-            </a>
-            <a
-              href="{base}/calculator?goal=target"
-              class="px-3 py-2 rounded-md text-sm font-medium {isTargetAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
-              on:click|preventDefault={() => {
-                goto(`${base}/calculator?goal=target`);
-              }}
-            >
-              Platform Budget
-            </a>
             <a
               href="{base}/calculator/team_analysis/team_model"
               class="px-3 py-2 rounded-md text-sm font-medium {isTeamAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
@@ -85,6 +67,24 @@
               }}
             >
               Feature Value
+            </a>
+            <a
+              href="{base}/calculator?goal=breakeven"
+              class="px-3 py-2 rounded-md text-sm font-medium {isBaseAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
+              on:click|preventDefault={() => {
+                goto(`${base}/calculator?goal=breakeven`);
+              }}
+            >
+              Business Case
+            </a>
+            <a
+              href="{base}/calculator?goal=target"
+              class="px-3 py-2 rounded-md text-sm font-medium {isTargetAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
+              on:click|preventDefault={() => {
+                goto(`${base}/calculator?goal=target`);
+              }}
+            >
+              Platform Budget
             </a>
           </div>
         </div>
@@ -141,24 +141,6 @@
           Analysis Tools
         </div>
         <a
-          href="{base}/calculator?goal=breakeven"
-          class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isBaseAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
-          on:click|preventDefault={() => {
-            goto(`${base}/calculator?goal=breakeven`);
-          }}
-        >
-          Business Case
-        </a>
-        <a
-          href="{base}/calculator?goal=target"
-          class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isTargetAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
-          on:click|preventDefault={() => {
-            goto(`${base}/calculator?goal=target`);
-          }}
-        >
-          Platform Budget
-        </a>
-        <a
           href="{base}/calculator/team_analysis/team_model"
           class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isTeamAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
           on:click|preventDefault={() => {
@@ -184,6 +166,24 @@
           }}
         >
           Feature Value
+        </a>
+        <a
+          href="{base}/calculator?goal=breakeven"
+          class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isBaseAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
+          on:click|preventDefault={() => {
+            goto(`${base}/calculator?goal=breakeven`);
+          }}
+        >
+          Business Case
+        </a>
+        <a
+          href="{base}/calculator?goal=target"
+          class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isTargetAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
+          on:click|preventDefault={() => {
+            goto(`${base}/calculator?goal=target`);
+          }}
+        >
+          Platform Budget
         </a>
         <div class="px-3 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
           More

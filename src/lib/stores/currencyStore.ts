@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-export type Currency = 'USD' | 'EUR' | 'SEK';
+export type Currency = 'USD' | 'EUR' | 'SEK' | 'GBP';
 
 interface CurrencyConfig {
   symbol: string;
@@ -23,6 +23,11 @@ export const currencyConfigs: Record<Currency, CurrencyConfig> = {
     symbol: 'kr',
     multiplier: 10, // Approximate SEK/USD rate
     code: 'SEK'
+  },
+  GBP: {
+    symbol: '£',
+    multiplier: 1, // Approximate GBP/USD rate
+    code: 'GBP'
   }
 };
 

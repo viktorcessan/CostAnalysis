@@ -29,43 +29,6 @@
 
   const goals: Goal[] = [
     {
-      id: 'breakeven',
-      name: 'Build a Business Case',
-      description: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point.',
-      longDescription: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point to build a strong case for change. Put your existing data to work to uncover actionable insights and make better investment decisions. Perfect for analyzing, projecting, and comparing opportunities in platform automation and service outsourcing..',
-      benefits: [
-        'Analyze and justify costs',
-        'Calculate ROI',
-        'Identify break-even points',
-        'See future cost implications'
-
-      ],
-      mode: 'base',
-      requiresModel: true,
-      path: 'base_analysis',
-      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>`
-    },
-    {
-      id: 'target',
-      name: 'Determine your Platform Budget',
-      description: 'Determine an optimal platform investment size that enables lower costs while meeting efficiency goals.',
-      longDescription: 'Set your desired targets for ROI, team reduction, or process efficiency, and we will help you determine the optimal investment parameters to achieve these goals.',
-      benefits: [
-        'Set cost and efficiency targets',
-        'Identify break-even points',
-        'See monthly cost reductions',
-        'Identify total investment size'
-      ],
-      mode: 'solutions',
-      requiresModel: true,
-      path: 'target_analysis',
-      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>`
-    },
-    {
       id: 'team-analysis',
       name: 'Reveal Team Dependency Costs',
       description: 'Understand how team dependencies are driving up costs and find actionable ways to reduce them.',
@@ -118,6 +81,42 @@
       path: 'feature_calculator',
       icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
+            </svg>`
+    },
+    {
+      id: 'breakeven',
+      name: 'Build a Business Case',
+      description: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point.',
+      longDescription: 'Explore how automation or outsourcing impacts your costs. Calculate ROI, compare options, and identify your break-even point to build a strong case for change. Put your existing data to work to uncover actionable insights and make better investment decisions. Perfect for analyzing, projecting, and comparing opportunities in platform automation and service outsourcing..',
+      benefits: [
+        'Analyze and justify costs',
+        'Calculate ROI',
+        'Identify break-even points',
+        'See future cost implications'
+      ],
+      mode: 'base',
+      requiresModel: true,
+      path: 'base_analysis',
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>`
+    },
+    {
+      id: 'target',
+      name: 'Determine your Platform Budget',
+      description: 'Determine an optimal platform investment size that enables lower costs while meeting efficiency goals.',
+      longDescription: 'Set your desired targets for ROI, team reduction, or process efficiency, and we will help you determine the optimal investment parameters to achieve these goals.',
+      benefits: [
+        'Set cost and efficiency targets',
+        'Identify break-even points',
+        'See monthly cost reductions',
+        'Identify total investment size'
+      ],
+      mode: 'solutions',
+      requiresModel: true,
+      path: 'target_analysis',
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>`
     }
   ];

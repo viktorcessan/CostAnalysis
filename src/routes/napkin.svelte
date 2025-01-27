@@ -14,6 +14,30 @@
     timeToBuild?: number;
     timeToFree?: number;
     efficiency?: number;
+    inHouseCost?: number;
+    vendorCost?: number;
+    maintenanceDiff?: number;
+    timeToMarket?: number;
+    customization?: number;
+    vendorLock?: number;
+    revenue?: number;
+    retention?: number;
+    satisfaction?: number;
+    marketShare?: number;
+    competitiveEdge?: string;
+    infrastructure?: number;
+    development?: number;
+    operations?: number;
+    support?: number;
+    generateRevenue?: number;
+    protectRevenue?: number;
+    reduceCosts?: number;
+    avoidCosts?: number;
+    developmentCost?: number;
+    maintenanceCost?: number;
+    breakEven?: number;
+    roi?: number;
+    riskReduction?: number;
   }
 
   interface Napkin {
@@ -33,6 +57,31 @@
       }
     },
     {
+      title: "Build vs Buy Analysis",
+      content: {
+        inHouseCost: 850000,
+        vendorCost: 450000,
+        maintenanceDiff: 25000,
+        timeToMarket: 6,
+        customization: 85,
+        vendorLock: 35
+      }
+    },
+    {
+      title: "Feature Value Analysis",
+      content: {
+        generateRevenue: 450000,
+        protectRevenue: 250000,
+        reduceCosts: 180000,
+        avoidCosts: 120000,
+        developmentCost: 85000,
+        maintenanceCost: 4500,
+        breakEven: 4.2,
+        roi: 285,
+        riskReduction: 65
+      }
+    },
+    {
       title: "Automation Business Case",
       content: {
         teamSize: 9,
@@ -47,7 +96,10 @@
     {
       title: "Platform Budget",
       content: {
-        // Will be populated with platform budget metrics
+        infrastructure: 45000,
+        development: 120000,
+        operations: 35000,
+        support: 25000
       }
     }
   ];
@@ -197,6 +249,103 @@
                   </div>
 
                 {:else if currentNapkin === 1}
+                  <!-- Build vs Buy Analysis -->
+                  <div class="space-y-4 font-handwriting">
+                    <div class="space-y-3">
+                      <div class="flex justify-between text-xl">
+                        <span>In-house Cost:</span>
+                        <span>${currentNapkinData.content.inHouseCost ?? '-'}</span>
+                      </div>
+                      <div class="flex justify-between text-xl">
+                        <span>Vendor Cost:</span>
+                        <span>${currentNapkinData.content.vendorCost ?? '-'}</span>
+                      </div>
+                      <div class="flex justify-between text-xl">
+                        <span>Maintenance Difference:</span>
+                        <span>${currentNapkinData.content.maintenanceDiff ?? '-'}/mo</span>
+                      </div>
+                      <div class="flex justify-between text-xl">
+                        <span>Time to Market:</span>
+                        <span>{currentNapkinData.content.timeToMarket ?? '-'} months</span>
+                      </div>
+                    </div>
+
+                    <!-- Hand-drawn decision graph -->
+                    <div class="border-2 border-dashed border-gray-400 p-4 rounded">
+                      <div class="text-center mb-2 text-xl">Decision Analysis</div>
+                      <svg class="w-full h-48" viewBox="0 0 200 150">
+                        <!-- Axes -->
+                        <path d="M 20 130 L 180 130" class="stroke-gray-600" style="fill: none; stroke-width: 2"/>
+                        <path d="M 20 130 L 20 20" class="stroke-gray-600" style="fill: none; stroke-width: 2"/>
+                        <!-- Axis labels -->
+                        <text x="185" y="130" class="text-sm">Time</text>
+                        <text x="15" y="15" class="text-sm">Cost</text>
+                        <!-- Cost line (in-house vs vendor) -->
+                        <path d="M 20 110 C 40 105, 60 85, 100 82 L 180 78" class="stroke-secondary" style="fill: none; stroke-width: 2; stroke-dasharray: 4"/>
+                        <!-- Decision point -->
+                        <circle cx="100" cy="82" r="4" class="fill-blue-500"/>
+                        <text x="70" y="70" class="text-sm font-bold fill-blue-500">Decision Point</text>
+                        <!-- Legend -->
+                        <text x="30" y="40" class="text-xs fill-secondary">In-house</text>
+                        <text x="30" y="55" class="text-xs fill-secondary">Vendor</text>
+                      </svg>
+                    </div>
+
+                    <div class="text-lg text-gray-600">
+                      Customization: {currentNapkinData.content.customization ?? '-'}%<br>
+                      Vendor Lock: {currentNapkinData.content.vendorLock ?? '-'}%
+                    </div>
+                  </div>
+
+                {:else if currentNapkin === 2}
+                  <!-- Feature Value Analysis -->
+                  <div class="space-y-4 font-handwriting">
+                    <div class="space-y-3">
+                      <div class="flex justify-between text-xl">
+                        <span>Generate Revenue:</span>
+                        <span>${currentNapkinData.content.generateRevenue ?? '-'}</span>
+                      </div>
+                      <div class="flex justify-between text-xl">
+                        <span>Protect Revenue:</span>
+                        <span>${currentNapkinData.content.protectRevenue ?? '-'}</span>
+                      </div>
+                      <div class="flex justify-between text-xl">
+                        <span>Reduce Costs:</span>
+                        <span>${currentNapkinData.content.reduceCosts ?? '-'}</span>
+                      </div>
+                      <div class="flex justify-between text-xl">
+                        <span>Avoid Costs:</span>
+                        <span>${currentNapkinData.content.avoidCosts ?? '-'}</span>
+                      </div>
+                    </div>
+
+                    <!-- Hand-drawn value distribution chart -->
+                    <div class="border-2 border-dashed border-gray-400 p-4 rounded">
+                      <div class="text-center mb-2 text-xl">Value Distribution</div>
+                      <svg class="w-full h-48" viewBox="0 0 200 150">
+                        <!-- Doughnut chart sections -->
+                        <path d="M 100 75 L 100 25 A 50 50 0 0 1 145 100 Z" class="fill-green-400/60 stroke-gray-600" style="stroke-width: 1"/>
+                        <path d="M 100 75 L 145 100 A 50 50 0 0 1 75 120 Z" class="fill-blue-400/60 stroke-gray-600" style="stroke-width: 1"/>
+                        <path d="M 100 75 L 75 120 A 50 50 0 0 1 60 60 Z" class="fill-red-400/60 stroke-gray-600" style="stroke-width: 1"/>
+                        <path d="M 100 75 L 60 60 A 50 50 0 0 1 100 25 Z" class="fill-yellow-400/60 stroke-gray-600" style="stroke-width: 1"/>
+                        <!-- Labels -->
+                        <text x="155" y="45" class="text-xs fill-green-600">Generate</text>
+                        <text x="155" y="75" class="text-xs fill-blue-600">Protect</text>
+                        <text x="155" y="105" class="text-xs fill-red-600">Reduce</text>
+                        <text x="155" y="135" class="text-xs fill-yellow-600">Avoid</text>
+                      </svg>
+                    </div>
+
+                    <div class="text-lg text-gray-600">
+                      Development: ${currentNapkinData.content.developmentCost ?? '-'}<br>
+                      Monthly Maintenance: ${currentNapkinData.content.maintenanceCost ?? '-'}<br>
+                      Break-even: {currentNapkinData.content.breakEven ?? '-'} months<br>
+                      ROI: {currentNapkinData.content.roi ?? '-'}%<br>
+                      Risk Reduction: {currentNapkinData.content.riskReduction ?? '-'}%
+                    </div>
+                  </div>
+
+                {:else if currentNapkin === 3}
                   <!-- Automation Business Case -->
                   <div class="space-y-4 font-handwriting">
                     <div class="space-y-3">
@@ -256,19 +405,19 @@
                     <div class="space-y-3">
                       <div class="flex justify-between text-xl">
                         <span>Infrastructure:</span>
-                        <span>$45k/mo</span>
+                        <span>${currentNapkinData.content.infrastructure ?? '-'}</span>
                       </div>
                       <div class="flex justify-between text-xl">
                         <span>Development:</span>
-                        <span>$120k/mo</span>
+                        <span>${currentNapkinData.content.development ?? '-'}</span>
                       </div>
                       <div class="flex justify-between text-xl">
                         <span>Operations:</span>
-                        <span>$35k/mo</span>
+                        <span>${currentNapkinData.content.operations ?? '-'}</span>
                       </div>
                       <div class="flex justify-between text-xl">
                         <span>Support:</span>
-                        <span>$25k/mo</span>
+                        <span>${currentNapkinData.content.support ?? '-'}</span>
                       </div>
                     </div>
 
@@ -285,7 +434,12 @@
                     </div>
 
                     <div class="text-lg text-gray-600">
-                      Total Monthly Budget: $225k
+                      Total Monthly Budget: ${(
+                        (currentNapkinData.content.infrastructure || 0) + 
+                        (currentNapkinData.content.development || 0) + 
+                        (currentNapkinData.content.operations || 0) + 
+                        (currentNapkinData.content.support || 0)
+                      )}k
                     </div>
                   </div>
                 {/if}

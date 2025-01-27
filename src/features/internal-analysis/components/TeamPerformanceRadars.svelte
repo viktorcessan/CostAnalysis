@@ -25,6 +25,7 @@
   };
 
   let radarCharts: { [key: string]: Chart } = {};
+  let showLegend = false;
 
   interface TeamPerformanceMetrics {
     efficiencyScore: number;
@@ -68,7 +69,8 @@
   }
 
   function calculateFlowRate(node: Node): number {
-    return (node.data.throughput * 24) / node.data.leadTime;
+    // Convert monthly throughput to daily by dividing by workdays in a month (approx 22)
+    return (node.data.throughput / 22);
   }
 
   function calculateResourceUtilization(index: number): number {
@@ -269,55 +271,13 @@
     </p>
   </div>
 
-  <!-- Performance Metrics Legend -->
-  <div class="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-    <h4 class="text-sm font-medium text-gray-900 mb-3">Performance Dimensions</h4>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Efficiency Score</div>
-        <div class="text-xs text-gray-600">Base efficiency × flow rate / lead time</div>
-      </div>
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Value Density</div>
-        <div class="text-xs text-gray-600">Throughput × efficiency / team size and dependencies</div>
-      </div>
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Dependency Impact</div>
-        <div class="text-xs text-gray-600">Total dependencies × average strength</div>
-      </div>
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Flow Rate</div>
-        <div class="text-xs text-gray-600">Daily throughput / lead time</div>
-      </div>
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Resource Utilization</div>
-        <div class="text-xs text-gray-600">Used hours / available hours</div>
-      </div>
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Autonomy</div>
-        <div class="text-xs text-gray-600">Independence from other teams</div>
-      </div>
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Cost Efficiency</div>
-        <div class="text-xs text-gray-600">Value delivered per cost unit</div>
-      </div>
-      <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="text-sm font-medium text-gray-700">Team Velocity</div>
-        <div class="text-xs text-gray-600">Completion rate adjusted for dependencies</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Radar Charts Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 p-2">
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 p-2 mb-6">
     {#each nodes as node, i}
       <div class="bg-white rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
         <div class="p-6">
-          <div class="flex items-center justify-between mb-6">
+          <div class="mb-6">
             <h4 class="text-base font-semibold text-gray-800">{node.data.label}</h4>
-            <div class="px-3 py-1 bg-orange-50 rounded-full">
-              <span class="text-xs font-medium text-orange-600">Team {i + 1}</span>
-            </div>
           </div>
           <div class="relative h-[300px]">
             <canvas id="radar-{i}" class="transition-opacity duration-300"></canvas>
@@ -325,5 +285,65 @@
         </div>
       </div>
     {/each}
+  </div>
+
+  <!-- Performance Metrics Legend (Expandable) -->
+  <div class="border-t border-gray-200 pt-4">
+    <button
+      class="w-full flex items-center justify-between p-4 bg-white rounded-lg hover:bg-gray-50 transition-colors group"
+      on:click={() => showLegend = !showLegend}
+    >
+      <div class="flex items-center gap-2">
+        <svg
+          class="w-5 h-5 text-gray-500 transform transition-transform duration-200 {showLegend ? 'rotate-180' : ''}"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+        <span class="text-sm font-medium text-gray-900">Performance Dimensions Details</span>
+      </div>
+      <span class="text-sm text-gray-500">{showLegend ? 'Hide' : 'Show'} details</span>
+    </button>
+
+    {#if showLegend}
+      <div class="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm transition-all duration-300">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Efficiency Score</div>
+            <div class="text-xs text-gray-600">Base efficiency × flow rate / lead time</div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Value Density</div>
+            <div class="text-xs text-gray-600">Throughput × efficiency / team size and dependencies</div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Dependency Impact</div>
+            <div class="text-xs text-gray-600">Total dependencies × average strength</div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Flow Rate</div>
+            <div class="text-xs text-gray-600">Daily throughput / lead time</div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Resource Utilization</div>
+            <div class="text-xs text-gray-600">Used hours / available hours</div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Autonomy</div>
+            <div class="text-xs text-gray-600">Independence from other teams</div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Cost Efficiency</div>
+            <div class="text-xs text-gray-600">Value delivered per cost unit</div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="text-sm font-medium text-gray-700">Team Velocity</div>
+            <div class="text-xs text-gray-600">Completion rate adjusted for dependencies</div>
+          </div>
+        </div>
+      </div>
+    {/if}
   </div>
 </div> 

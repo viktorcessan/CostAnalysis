@@ -10,7 +10,7 @@
   import TeamDependencyLoadingModal from '$lib/components/ui/TeamDependencyLoadingModal.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
   import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
-  import { currencyStore } from '$lib/stores/currencyStore';
+  import { currencyStore, currencyConfigs, type Currency } from '$lib/stores/currencyStore';
   import { teamDependencyTemplateStore } from '$lib/stores/teamDependencyTemplateStore';
   import { base } from '$app/paths';
   import { validateShareParams, parseShareLink } from '$lib/utils/teamDependencyShare';
@@ -347,23 +347,23 @@
   // Cost parameters
   let costParams = {
     hourlyRate: {
-      developer: 75,
+      developer: 75, // Default to 75 USD
       manager: 100,
       teamLead: 90
     },
     meetings: {
-      duration: 2, // hours per meeting
-      recurrence: 'weekly', // 'twice-weekly' | 'weekly' | 'biweekly' | 'monthly'
+      duration: 2,
+      recurrence: 'weekly',
       attendeesPerTeam: 5,
-      communicationOverhead: 1.2, // multiplier for meeting time
-      additionalHours: 0 // Changed from 4 to 0 (default additional communication hours)
+      communicationOverhead: 1.2,
+      additionalHours: 0
     },
     overhead: {
       communicationOverhead: 1.2,
       waitTimeMultiplier: 1.5,
-      baselineCommunicationHours: 8, // Changed from 2 to 8 (2 * 4 weeks)
-      dependencyHoursRate: 8, // Changed from 2 to 8 (2 * 4 weeks)
-      opportunityCostMultiplier: 1 // Default value of 1 for opportunity cost multiplier
+      baselineCommunicationHours: 8,
+      dependencyHoursRate: 8,
+      opportunityCostMultiplier: 1
     }
   };
 
@@ -376,11 +376,32 @@
     }
   });
 
+  let previousCurrency: Currency = 'USD';
+  
+  // Subscribe to currency changes to adjust values
+  $: {
+    if (previousCurrency !== $currencyStore.code) {
+      const oldMultiplier = currencyConfigs[previousCurrency].multiplier;
+      const newMultiplier = $currencyStore.multiplier;
+      
+      // Convert to base USD value and then to new currency
+      const baseUSDValue = costParams.hourlyRate.developer / oldMultiplier;
+      
+      costParams.hourlyRate = {
+        developer: baseUSDValue * newMultiplier,
+        manager: (baseUSDValue * 1.33) * newMultiplier,
+        teamLead: (baseUSDValue * 1.2) * newMultiplier
+      };
+      
+      previousCurrency = $currencyStore.code;
+    }
+  }
+
   // Add currency-adjusted rate getter
   $: adjustedHourlyRate = {
-    developer: costParams.hourlyRate.developer * $currencyStore.multiplier,
-    manager: costParams.hourlyRate.manager * $currencyStore.multiplier,
-    teamLead: costParams.hourlyRate.teamLead * $currencyStore.multiplier
+    developer: costParams.hourlyRate.developer,
+    manager: costParams.hourlyRate.manager,
+    teamLead: costParams.hourlyRate.teamLead
   };
 
   // Update the range for hourly rate based on currency
@@ -397,7 +418,7 @@
     if (baseInputs) {
       calculatorStore.updateTeamInputs({
         teamSize: baseInputs.teamSize,
-        hourlyRate: costParams.hourlyRate.developer / $currencyStore.multiplier, // Store base USD value
+        hourlyRate: costParams.hourlyRate.developer / $currencyStore.multiplier,
         serviceEfficiency: baseInputs.serviceEfficiency,
         operationalOverhead: baseInputs.operationalOverhead
       });

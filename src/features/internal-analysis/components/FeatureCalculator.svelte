@@ -15,6 +15,12 @@
     };
   }
 
+  // Wizard state
+  let currentStep = 1;
+  const TOTAL_STEPS = 4;
+  let projectName = '';
+  let projectDescription = '';
+
   // Form data
   let objectives: ValueObjective[] = [];
   let developmentCost = {
@@ -23,6 +29,65 @@
   };
   let maintenanceCost = {
     monthly: 0
+  };
+
+  // Confidence score (0-100)
+  $: confidenceScore = calculateConfidenceScore();
+
+  function calculateConfidenceScore(): number {
+    let score = 0;
+    
+    // Project info completeness (20%)
+    if (projectName) score += 10;
+    if (projectDescription) score += 10;
+    
+    // Objectives completeness (40%)
+    if (objectives.length > 0) {
+      score += Math.min(objectives.length * 10, 40);
+    }
+    
+    // Costs completeness (40%)
+    if (developmentCost.hourlyRate > 0) score += 20;
+    if (developmentCost.hours > 0) score += 10;
+    if (maintenanceCost.monthly > 0) score += 10;
+    
+    return score;
+  }
+
+  // Template objectives
+  const objectiveTemplates = {
+    generate: {
+      name: "New Revenue Stream",
+      details: {
+        revenuePerUnit: 100,
+        unitsSold: 100,
+        frequency: 12
+      }
+    },
+    protect: {
+      name: "Customer Retention",
+      details: {
+        revenueAtRisk: 10000,
+        retentionImprovement: 15
+      }
+    },
+    reduce: {
+      name: "Process Optimization",
+      details: {
+        timeSaved: 30,
+        users: 10,
+        frequency: 52,
+        hourlyRate: 50
+      }
+    },
+    avoid: {
+      name: "Risk Mitigation",
+      details: {
+        potentialCost: 50000,
+        probability: 30,
+        riskReduction: 80
+      }
+    }
   };
 
   // Add state for results visibility
@@ -44,6 +109,51 @@
       }
     }
   }
+
+  // Add tooltip component
+  let showTooltip = false;
+  let tooltipContent = '';
+  let tooltipX = 0;
+  let tooltipY = 0;
+
+  function showHelpTooltip(event: MouseEvent, content: string) {
+    tooltipContent = content;
+    tooltipX = event.clientX;
+    tooltipY = event.clientY;
+    showTooltip = true;
+  }
+
+  function hideTooltip() {
+    showTooltip = false;
+  }
+
+  // Help text content
+  const helpText = {
+    generate: {
+      title: "Generate Revenue",
+      description: "Calculate new revenue streams from feature adoption",
+      formula: "Annual Value = Revenue per Unit × Units Sold × Annual Frequency",
+      example: "Example: A new feature priced at $100, sold to 100 customers monthly = $120,000 annually"
+    },
+    protect: {
+      title: "Protect Revenue",
+      description: "Calculate the value of retaining existing revenue",
+      formula: "Annual Value = Revenue at Risk × Retention Improvement %",
+      example: "Example: $100,000 at risk with 15% improvement = $15,000 saved annually"
+    },
+    reduce: {
+      title: "Reduce Costs",
+      description: "Calculate savings from improved efficiency",
+      formula: "Annual Value = (Time Saved × Users × Frequency × Hourly Rate) / 60",
+      example: "Example: 30 min saved weekly for 10 users at $50/hr = $13,000 annually"
+    },
+    avoid: {
+      title: "Avoid Costs",
+      description: "Calculate value from risk mitigation",
+      formula: "Annual Value = Potential Cost × Probability % × Risk Reduction %",
+      example: "Example: $50,000 risk at 30% probability, reduced by 80% = $12,000 value"
+    }
+  };
 
   function addObjective() {
     objectives = [...objectives, {
@@ -371,161 +481,495 @@
     }
   }
 
+  // Form validation
+  interface ValidationError {
+    field: string;
+    message: string;
+  }
+
+  let errors: ValidationError[] = [];
+  let touched: { [key: string]: boolean } = {};
+
+  function validateField(field: string, value: any): string | null {
+    switch (field) {
+      case 'projectName':
+        return !value ? 'Project name is required' : null;
+      case 'revenuePerUnit':
+      case 'hourlyRate':
+        return value < 0 ? 'Value must be positive' : null;
+      case 'probability':
+      case 'riskReduction':
+      case 'retentionImprovement':
+        return value < 0 || value > 100 ? 'Percentage must be between 0 and 100' : null;
+      default:
+        return null;
+    }
+  }
+
+  function validateForm(): boolean {
+    errors = [];
+    
+    // Validate project info
+    if (currentStep === 1) {
+      const nameError = validateField('projectName', projectName);
+      if (nameError) errors.push({ field: 'projectName', message: nameError });
+    }
+    
+    // Validate objectives
+    if (currentStep === 2) {
+      objectives.forEach((obj, index) => {
+        if (!obj.name) {
+          errors.push({ field: `objective-${index}-name`, message: 'Name is required' });
+        }
+        
+        // Validate based on objective type
+        switch (obj.type) {
+          case 'generate':
+            if (obj.details.revenuePerUnit < 0) {
+              errors.push({ field: `objective-${index}-revenue`, message: 'Revenue must be positive' });
+            }
+            break;
+          case 'protect':
+            if (obj.details.retentionImprovement < 0 || obj.details.retentionImprovement > 100) {
+              errors.push({ field: `objective-${index}-retention`, message: 'Percentage must be between 0 and 100' });
+            }
+            break;
+          // ... similar validation for other types
+        }
+      });
+    }
+    
+    // Validate development costs
+    if (currentStep === 3) {
+      if (developmentCost.hourlyRate < 0) {
+        errors.push({ field: 'hourlyRate', message: 'Hourly rate must be positive' });
+      }
+      if (developmentCost.hours < 0) {
+        errors.push({ field: 'hours', message: 'Hours must be positive' });
+      }
+    }
+    
+    return errors.length === 0;
+  }
+
+  function handleNext() {
+    if (validateForm()) {
+      if (currentStep < TOTAL_STEPS) {
+        currentStep++;
+        if (currentStep === TOTAL_STEPS) {
+          // Automatically show results when reaching the last step
+          showResults = true;
+          hasCalculated = true;
+          setTimeout(() => {
+            updateCharts();
+          }, 100);
+        }
+      }
+    }
+  }
+
+  // Input formatting helpers
+  function formatPercentage(value: number): string {
+    return `${value}%`;
+  }
+
+  function formatDuration(minutes: number): string {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours}h ${mins}m`;
+    }
+    return `${minutes}m`;
+  }
+
+  function addObjectiveFromTemplate(type: 'generate' | 'protect' | 'reduce' | 'avoid') {
+    const template = objectiveTemplates[type];
+    objectives = [...objectives, {
+      name: template.name,
+      type: type,
+      value: 0,
+      details: { ...template.details }
+    }];
+  }
+
+  // Add insights generation
+  function generateInsights(): string[] {
+    const insights: string[] = [];
+    
+    // ROI insights
+    const roiValue = Number(roi);
+    if (roiValue > 100) {
+      insights.push(`Exceptional ROI of ${roiValue.toFixed(1)}% indicates this is a highly profitable investment.`);
+    } else if (roiValue > 50) {
+      insights.push(`Strong ROI of ${roiValue.toFixed(1)}% suggests this is a worthwhile investment.`);
+    } else if (roiValue > 0) {
+      insights.push(`Positive ROI of ${roiValue.toFixed(1)}% indicates this investment will generate returns, but consider ways to improve value or reduce costs.`);
+    } else {
+      insights.push(`The current ROI of ${roiValue.toFixed(1)}% suggests this investment needs optimization. Consider ways to increase value or reduce costs.`);
+    }
+
+    // Break-even insights
+    const breakEvenValue = Number(breakEvenMonths);
+    if (breakEvenValue < 6) {
+      insights.push(`Quick break-even period of ${breakEvenValue.toFixed(1)} months indicates rapid value realization.`);
+    } else if (breakEvenValue < 12) {
+      insights.push(`Break-even within ${breakEvenValue.toFixed(1)} months suggests moderate time to value.`);
+    } else {
+      insights.push(`Long break-even period of ${breakEvenValue.toFixed(1)} months. Consider ways to accelerate value delivery.`);
+    }
+
+    // Value distribution insights
+    const valueTypes = objectives.reduce((acc, obj) => {
+      acc[obj.type] = (acc[obj.type] || 0) + obj.value;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topValueType = Object.entries(valueTypes).sort((a, b) => b[1] - a[1])[0];
+    if (topValueType) {
+      const [type, value] = topValueType;
+      const percentage = ((value / totalValue) * 100).toFixed(1);
+      insights.push(`${percentage}% of value comes from ${type} objectives. ${
+        Number(percentage) > 70 ? 'Consider diversifying value streams.' : 'This shows a balanced value distribution.'
+      }`);
+    }
+
+    // Cost structure insights
+    const maintenanceRatio = (annualMaintenance / totalCost) * 100;
+    if (maintenanceRatio > 50) {
+      insights.push(`High maintenance costs (${maintenanceRatio.toFixed(1)}% of total cost). Consider ways to reduce ongoing costs.`);
+    }
+
+    return insights;
+  }
+
   onMount(() => {
     updateCharts();
   });
 </script>
 
-<div class="space-y-8 p-4 sm:p-6 max-w-7xl mx-auto">
-  <!-- Input Section -->
-  <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <h2 class="text-2xl font-bold">Input Data</h2>
+<!-- Tooltip Component -->
+{#if showTooltip}
+  <div
+    class="fixed z-50 max-w-xs bg-gray-900 text-white p-4 rounded-lg shadow-lg text-sm"
+    style="left: {tooltipX + 10}px; top: {tooltipY + 10}px;"
+  >
+    <div class="space-y-2">
+      <h4 class="font-semibold">{tooltipContent}</h4>
+      {#if helpText[tooltipContent.toLowerCase() as keyof typeof helpText]}
+        <p class="text-gray-300">{helpText[tooltipContent.toLowerCase() as keyof typeof helpText].formula}</p>
+        <p class="text-gray-400 text-xs">{helpText[tooltipContent.toLowerCase() as keyof typeof helpText].example}</p>
+      {/if}
+    </div>
+  </div>
+{/if}
+
+<div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-8">
+  <!-- Progress Bar -->
+  <div class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl font-bold">Feature Value Calculator</h2>
       <CurrencySelector />
     </div>
-    <!-- Value Objectives section -->
-    <div class="space-y-6">
-      <div class="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200 hover:border-secondary/20 transition-all duration-300">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">Value Objectives</h3>
-            <p class="text-sm text-gray-600 mt-1">Define how your feature creates value</p>
+    
+    <div class="relative pt-1">
+      <div class="flex mb-2 items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-secondary bg-secondary/10">
+            Step {currentStep} of {TOTAL_STEPS}
+          </span>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-semibold inline-block text-secondary">
+            {Math.round((currentStep / TOTAL_STEPS) * 100)}%
+          </span>
+        </div>
+      </div>
+      <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-secondary/10">
+        <div
+          style="width: {(currentStep / TOTAL_STEPS) * 100}%"
+          class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-secondary transition-all duration-500"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Step 1: Project Info -->
+    {#if currentStep === 1}
+      <div class="space-y-6 animate-fade-in">
+        <h3 class="text-xl font-semibold">Project Information</h3>
+        <div class="space-y-4">
+          <div class="form-group">
+            <label class="text-sm font-medium text-gray-700" for="projectName">
+              Project Name
+              <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="projectName"
+              type="text"
+              class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+              class:border-red-300={errors.some(e => e.field === 'projectName')}
+              placeholder="e.g., Customer Dashboard Redesign"
+              bind:value={projectName}
+              on:blur={() => touched.projectName = true}
+            />
+            {#if touched.projectName && errors.some(e => e.field === 'projectName')}
+              <p class="text-sm text-red-500 mt-1">
+                {errors.find(e => e.field === 'projectName')?.message}
+              </p>
+            {/if}
           </div>
-          <button
-            class="w-full sm:w-auto px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors"
-            on:click={addObjective}
-          >
-            Add Objective
-          </button>
+          
+          <div class="form-group">
+            <label class="text-sm font-medium text-gray-700" for="projectDescription">
+              Description
+              <span class="text-gray-400">(optional)</span>
+            </label>
+            <textarea
+              id="projectDescription"
+              class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+              rows="3"
+              placeholder="Brief description of the feature and its goals"
+              bind:value={projectDescription}
+            ></textarea>
+            <p class="text-xs text-gray-500 mt-1">
+              Tip: Include the main problem this feature solves and its target users
+            </p>
+          </div>
+        </div>
+      </div>
+
+    <!-- Step 2: Value Objectives -->
+    {:else if currentStep === 2}
+      <div class="space-y-6 animate-fade-in">
+        <div class="space-y-2">
+          <h3 class="text-xl font-semibold">Value Objectives</h3>
+          <p class="text-sm text-gray-600">Click on the cards below to add different types of value objectives. Each card represents a unique way your feature can deliver value to the organization.</p>
         </div>
 
+        <!-- Objective Type Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {#each Object.entries(helpText) as [type, help]}
+            <button
+              class="p-4 rounded-lg border-2 transition-all text-left relative group hover:scale-[1.02] cursor-pointer"
+              class:border-green-200={type === 'generate'}
+              class:hover:border-green-400={type === 'generate'}
+              class:bg-green-50={type === 'generate'}
+              class:hover:bg-green-100={type === 'generate'}
+              class:border-blue-200={type === 'protect'}
+              class:hover:border-blue-400={type === 'protect'}
+              class:bg-blue-50={type === 'protect'}
+              class:hover:bg-blue-100={type === 'protect'}
+              class:border-amber-200={type === 'reduce'}
+              class:hover:border-amber-400={type === 'reduce'}
+              class:bg-amber-50={type === 'reduce'}
+              class:hover:bg-amber-100={type === 'reduce'}
+              class:border-red-200={type === 'avoid'}
+              class:hover:border-red-400={type === 'avoid'}
+              class:bg-red-50={type === 'avoid'}
+              class:hover:bg-red-100={type === 'avoid'}
+              on:click={() => addObjectiveFromTemplate(type as 'generate' | 'protect' | 'reduce' | 'avoid')}
+              on:mouseenter={(e) => showHelpTooltip(e, help.title)}
+              on:mouseleave={hideTooltip}
+            >
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">
+                  {#if type === 'generate'}💰
+                  {:else if type === 'protect'}🛡️
+                  {:else if type === 'reduce'}⚡
+                  {:else}⚠️{/if}
+                </span>
+                <h4 class="font-semibold">{help.title}</h4>
+              </div>
+              <p class="text-sm text-gray-600">{help.description}</p>
+            </button>
+          {/each}
+        </div>
+
+        <!-- Enhanced Objectives List -->
         <div class="space-y-4">
           {#each objectives as objective, i}
-            <div class="p-4 sm:p-6 bg-white rounded-lg border border-gray-200 hover:border-secondary/20 transition-all duration-300">
+            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:border-secondary/20 transition-all">
               <div class="flex justify-between items-start gap-4">
-                <div class="space-y-4 flex-1 min-w-0">
+                <div class="space-y-4 flex-1">
                   <div class="flex flex-col sm:flex-row gap-4">
-                    <input
-                      type="text"
-                      placeholder="Objective Name"
-                      class="flex-1 rounded-lg border-gray-300 text-sm"
-                      bind:value={objective.name}
-                    />
-                    <select
-                      class="w-full sm:w-48 rounded-lg border-gray-300 text-sm"
-                      bind:value={objective.type}
-                    >
-                      <option value="generate">Generate Revenue</option>
-                      <option value="protect">Protect Revenue</option>
-                      <option value="reduce">Reduce Costs</option>
-                      <option value="avoid">Avoid Costs</option>
-                    </select>
+                    <div class="flex-1">
+                      <label class="text-sm font-medium text-gray-700" for="objective-{i}-name">
+                        Objective Name
+                        <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="objective-{i}-name"
+                        type="text"
+                        class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                        class:border-red-300={errors.some(e => e.field === `objective-${i}-name`)}
+                        placeholder="Name your objective"
+                        bind:value={objective.name}
+                        on:blur={() => touched[`objective-${i}-name`] = true}
+                      />
+                    </div>
+                    
+                    <div class="w-full sm:w-48">
+                      <label class="text-sm font-medium text-gray-700" for="objective-{i}-type">
+                        Type
+                      </label>
+                      <select
+                        id="objective-{i}-type"
+                        class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                        bind:value={objective.type}
+                      >
+                        <option value="generate">Generate Revenue</option>
+                        <option value="protect">Protect Revenue</option>
+                        <option value="reduce">Reduce Costs</option>
+                        <option value="avoid">Avoid Costs</option>
+                      </select>
+                    </div>
                   </div>
 
+                  <!-- Dynamic Input Fields Based on Type -->
                   {#if objective.type === 'generate'}
-                    <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Revenue Per Unit ({currencySymbol})</label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300"
-                          bind:value={objective.details.revenuePerUnit}
-                        />
+                        <label class="text-sm font-medium text-gray-700">
+                          Revenue Per Unit
+                        </label>
+                        <div class="relative">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            {currencySymbol}
+                          </span>
+                          <input
+                            type="number"
+                            class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.revenuePerUnit}
+                          />
+                        </div>
                       </div>
+                      
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Units Sold/Used</label>
+                        <label class="text-sm font-medium text-gray-700">
+                          Units Sold
+                        </label>
                         <input
                           type="number"
-                          class="w-full rounded-lg border-gray-300"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.unitsSold}
                         />
                       </div>
+                      
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Frequency (per year)</label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300"
+                        <label class="text-sm font-medium text-gray-700">
+                          Frequency (per year)
+                        </label>
+                        <select
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.frequency}
-                        />
+                        >
+                          <option value="1">Yearly (×1)</option>
+                          <option value="4">Quarterly (×4)</option>
+                          <option value="12">Monthly (×12)</option>
+                          <option value="52">Weekly (×52)</option>
+                          <option value="365">Daily (×365)</option>
+                        </select>
                       </div>
                     </div>
                   {:else if objective.type === 'protect'}
-                    <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Revenue at Risk ({currencySymbol})</label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300"
-                          bind:value={objective.details.revenueAtRisk}
-                        />
+                        <label class="text-sm font-medium text-gray-700">
+                          Revenue at Risk
+                        </label>
+                        <div class="relative">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            {currencySymbol}
+                          </span>
+                          <input
+                            type="number"
+                            class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.revenueAtRisk}
+                          />
+                        </div>
                       </div>
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Retention Improvement (%)</label>
+                        <label class="text-sm font-medium text-gray-700">
+                          Retention Improvement (%)
+                        </label>
                         <input
                           type="number"
-                          class="w-full rounded-lg border-gray-300"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.retentionImprovement}
                         />
                       </div>
                     </div>
                   {:else if objective.type === 'reduce'}
-                    <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Time Saved (min)</label>
+                        <label class="text-sm font-medium text-gray-700">
+                          Time Saved (min)
+                        </label>
                         <input
                           type="number"
-                          class="w-full rounded-lg border-gray-300"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.timeSaved}
                         />
                       </div>
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Users Affected</label>
+                        <label class="text-sm font-medium text-gray-700">
+                          Users Affected
+                        </label>
                         <input
                           type="number"
-                          class="w-full rounded-lg border-gray-300"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.users}
                         />
                       </div>
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Frequency (per year)</label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300"
+                        <label class="text-sm font-medium text-gray-700">
+                          Frequency (per year)
+                        </label>
+                        <select
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.frequency}
-                        />
-                      </div>
-                      <div class="form-group">
-                        <label class="text-sm text-gray-600">Hourly Rate ({currencySymbol})</label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300"
-                          bind:value={objective.details.hourlyRate}
-                        />
+                        >
+                          <option value="1">Yearly (×1)</option>
+                          <option value="4">Quarterly (×4)</option>
+                          <option value="12">Monthly (×12)</option>
+                          <option value="52">Weekly (×52)</option>
+                          <option value="365">Daily (×365)</option>
+                        </select>
                       </div>
                     </div>
                   {:else if objective.type === 'avoid'}
-                    <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Potential Cost ({currencySymbol})</label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300"
-                          bind:value={objective.details.potentialCost}
-                        />
+                        <label class="text-sm font-medium text-gray-700">
+                          Potential Cost ({currencySymbol})
+                        </label>
+                        <div class="relative">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            {currencySymbol}
+                          </span>
+                          <input
+                            type="number"
+                            class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.potentialCost}
+                          />
+                        </div>
                       </div>
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Probability (%)</label>
+                        <label class="text-sm font-medium text-gray-700">
+                          Probability (%)
+                        </label>
                         <input
                           type="number"
-                          class="w-full rounded-lg border-gray-300"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.probability}
                         />
                       </div>
                       <div class="form-group">
-                        <label class="text-sm text-gray-600">Risk Reduction (%)</label>
+                        <label class="text-sm font-medium text-gray-700">
+                          Risk Reduction (%)
+                        </label>
                         <input
                           type="number"
-                          class="w-full rounded-lg border-gray-300"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
                           bind:value={objective.details.riskReduction}
                         />
                       </div>
@@ -540,7 +984,7 @@
                   </div>
                 </div>
                 <button
-                  class="p-2 text-red-500 hover:text-red-600 flex-shrink-0"
+                  class="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                   on:click={() => removeObjective(i)}
                 >
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -553,13 +997,10 @@
         </div>
       </div>
 
-      <!-- Costs -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <div class="mb-6">
-          <h3 class="text-xl font-semibold text-gray-900">Development & Maintenance</h3>
-          <p class="text-gray-600 mt-1">Estimate implementation and ongoing costs</p>
-        </div>
-        
+    <!-- Step 3: Development Costs -->
+    {:else if currentStep === 3}
+      <div class="space-y-6 animate-fade-in">
+        <h3 class="text-xl font-semibold">Development & Maintenance</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div class="space-y-4">
             <h4 class="text-base font-medium text-gray-800">Initial Development</h4>
@@ -612,53 +1053,57 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Calculate Results Button -->
-  <div class="flex justify-center">
-    <button
-      class="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
-      on:click={calculateResults}
-    >
-      Calculate Results
-    </button>
-  </div>
+    <!-- Step 4: Results -->
+    {:else if currentStep === 4}
+      <div class="space-y-6 animate-fade-in">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-xl font-semibold">{projectName || 'Untitled Project'}</h3>
+            {#if projectDescription}
+              <p class="text-sm text-gray-600 mt-1">{projectDescription}</p>
+            {/if}
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Confidence Score:</span>
+            <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                class="h-full transition-all duration-500"
+                class:bg-red-500={confidenceScore < 40}
+                class:bg-yellow-500={confidenceScore >= 40 && confidenceScore < 70}
+                class:bg-green-500={confidenceScore >= 70}
+                style="width: {confidenceScore}%"
+              ></div>
+            </div>
+            <span class="text-sm font-medium">{confidenceScore}%</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="bg-gradient-to-br from-green-50 to-white p-4 rounded-lg border border-green-200">
+            <div class="text-sm font-medium text-gray-600">Annual Value</div>
+            <div class="text-xl font-bold text-green-500 mt-1">{formatMoney(totalValue)}</div>
+            <div class="text-xs text-gray-500 mt-1">Total value generated annually</div>
+          </div>
 
-  <!-- Results Section -->
-  {#if showResults}
-    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 animate-fade-in">
-      <h2 class="text-2xl font-bold mb-6">Analysis Results</h2>
-      
-      <!-- Key Metrics -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-gradient-to-br from-green-50 to-white p-4 rounded-lg border border-green-200">
-          <div class="text-sm font-medium text-gray-600">Annual Value</div>
-          <div class="text-xl font-bold text-green-500 mt-1">{formatMoney(totalValue)}</div>
-          <div class="text-xs text-gray-500 mt-1">Total value generated annually</div>
+          <div class="bg-gradient-to-br from-rose-50 to-white p-4 rounded-lg border border-rose-200">
+            <div class="text-sm font-medium text-gray-600">First Year Cost</div>
+            <div class="text-xl font-bold text-rose-500 mt-1">{formatMoney(totalCost)}</div>
+            <div class="text-xs text-gray-500 mt-1">Initial investment and maintenance</div>
+          </div>
+
+          <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
+            <div class="text-sm font-medium text-gray-600">ROI</div>
+            <div class="text-xl font-bold text-sky-500 mt-1">{roi.toFixed(1)}%</div>
+            <div class="text-xs text-gray-500 mt-1">Return on investment ratio</div>
+          </div>
+
+          <div class="bg-gradient-to-br from-purple-50 to-white p-4 rounded-lg border border-purple-200">
+            <div class="text-sm font-medium text-gray-600">Break-even</div>
+            <div class="text-xl font-bold text-purple-500 mt-1">{breakEvenMonths.toFixed(1)} months</div>
+            <div class="text-xs text-gray-500 mt-1">Time to recover investment</div>
+          </div>
         </div>
 
-        <div class="bg-gradient-to-br from-rose-50 to-white p-4 rounded-lg border border-rose-200">
-          <div class="text-sm font-medium text-gray-600">First Year Cost</div>
-          <div class="text-xl font-bold text-rose-500 mt-1">{formatMoney(totalCost)}</div>
-          <div class="text-xs text-gray-500 mt-1">Initial investment and maintenance</div>
-        </div>
-
-        <div class="bg-gradient-to-br from-sky-50 to-white p-4 rounded-lg border border-sky-200">
-          <div class="text-sm font-medium text-gray-600">ROI</div>
-          <div class="text-xl font-bold text-sky-500 mt-1">{roi.toFixed(1)}%</div>
-          <div class="text-xs text-gray-500 mt-1">Return on investment ratio</div>
-        </div>
-
-        <div class="bg-gradient-to-br from-purple-50 to-white p-4 rounded-lg border border-purple-200">
-          <div class="text-sm font-medium text-gray-600">Break-even</div>
-          <div class="text-xl font-bold text-purple-500 mt-1">{breakEvenMonths.toFixed(1)} months</div>
-          <div class="text-xs text-gray-500 mt-1">Time to recover investment</div>
-        </div>
-      </div>
-
-      <!-- Charts Grid -->
-      {#if hasCalculated && (totalValue > 0 || totalCost > 0)}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div class="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200 hover:border-secondary/20 transition-all duration-300">
             <h4 class="text-lg font-semibold mb-4">Cost vs Value Comparison</h4>
@@ -702,13 +1147,54 @@
             {/if}
           </div>
         </div>
-      {:else}
-        <div class="text-center py-8 text-gray-600">
-          <p>Add some objectives and costs to see the analysis results</p>
+
+        <!-- New Insights Section -->
+        <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <h4 class="text-lg font-semibold mb-4">Key Insights</h4>
+          <div class="space-y-3">
+            {#each generateInsights() as insight}
+              <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                <span class="text-secondary mt-0.5">💡</span>
+                <p class="text-sm text-gray-700">{insight}</p>
+              </div>
+            {/each}
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- Enhanced Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button
+        class="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        disabled={currentStep === 1}
+        on:click={() => currentStep--}
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Previous
+      </button>
+
+      {#if currentStep < TOTAL_STEPS}
+        <div class="flex items-center gap-2">
+          {#if errors.length > 0}
+            <span class="text-sm text-red-500">Please fix the errors before continuing</span>
+          {/if}
+          <button
+            class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            on:click={handleNext}
+            disabled={errors.length > 0}
+          >
+            Next
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       {/if}
     </div>
-  {/if}
+  </div>
 </div>
 
 <style>
@@ -790,5 +1276,55 @@
       font-size: 0.75rem;
       line-height: 1rem;
     }
+  }
+
+  /* Tooltip animations */
+  .tooltip-enter {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  
+  .tooltip-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 200ms, transform 200ms;
+  }
+  
+  .tooltip-exit {
+    opacity: 1;
+  }
+  
+  .tooltip-exit-active {
+    opacity: 0;
+    transition: opacity 200ms;
+  }
+
+  /* Enhanced form styles */
+  input[type="number"],
+  input[type="text"],
+  select,
+  textarea {
+    @apply px-3 py-2 text-sm text-gray-900 bg-white transition-colors duration-200;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply outline-none ring-2 ring-secondary/20;
+  }
+
+  .form-group {
+    @apply flex flex-col gap-1;
+  }
+
+  /* Validation styles */
+  input.error,
+  select.error,
+  textarea.error {
+    @apply border-red-300 focus:border-red-500 focus:ring-red-500;
+  }
+
+  .error-message {
+    @apply text-sm text-red-500 mt-1;
   }
 </style> 

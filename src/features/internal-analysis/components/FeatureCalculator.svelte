@@ -749,7 +749,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {#each Object.entries(helpText) as [type, help]}
             <button
-              class="p-4 rounded-lg border-2 transition-all text-left relative group hover:scale-[1.02] cursor-pointer"
+              class="p-4 rounded-lg border-2 transition-all text-left relative group hover:scale-[1.02] cursor-pointer flex flex-col"
               class:border-green-200={type === 'generate'}
               class:hover:border-green-400={type === 'generate'}
               class:bg-green-50={type === 'generate'}
@@ -779,222 +779,236 @@
                 </span>
                 <h4 class="font-semibold">{help.title}</h4>
               </div>
-              <p class="text-sm text-gray-600">{help.description}</p>
+              <p class="text-sm text-gray-600 flex-grow">{help.description}</p>
+              <div class="mt-3 flex items-center justify-between border-t border-gray-200 pt-2">
+                <span class="text-xs text-gray-500">Click to add objective</span>
+                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
             </button>
           {/each}
         </div>
 
-        <!-- Enhanced Objectives List -->
-        <div class="space-y-4">
-          {#each objectives as objective, i}
-            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:border-secondary/20 transition-all">
-              <div class="flex justify-between items-start gap-4">
-                <div class="space-y-4 flex-1">
-                  <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="flex-1">
-                      <label class="text-sm font-medium text-gray-700" for="objective-{i}-name">
-                        Objective Name
-                        <span class="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="objective-{i}-name"
-                        type="text"
-                        class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                        class:border-red-300={errors.some(e => e.field === `objective-${i}-name`)}
-                        placeholder="Name your objective"
-                        bind:value={objective.name}
-                        on:blur={() => touched[`objective-${i}-name`] = true}
-                      />
-                    </div>
-                    
-                    <div class="w-full sm:w-48">
-                      <label class="text-sm font-medium text-gray-700" for="objective-{i}-type">
-                        Type
-                      </label>
-                      <select
-                        id="objective-{i}-type"
-                        class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                        bind:value={objective.type}
-                      >
-                        <option value="generate">Generate Revenue</option>
-                        <option value="protect">Protect Revenue</option>
-                        <option value="reduce">Reduce Costs</option>
-                        <option value="avoid">Avoid Costs</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Dynamic Input Fields Based on Type -->
-                  {#if objective.type === 'generate'}
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Revenue Per Unit
-                        </label>
-                        <div class="relative">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                            {currencySymbol}
-                          </span>
-                          <input
-                            type="number"
-                            class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                            bind:value={objective.details.revenuePerUnit}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Units Sold
-                        </label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.unitsSold}
-                        />
-                      </div>
-                      
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Frequency (per year)
-                        </label>
-                        <select
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.frequency}
-                        >
-                          <option value="1">Yearly (×1)</option>
-                          <option value="4">Quarterly (×4)</option>
-                          <option value="12">Monthly (×12)</option>
-                          <option value="52">Weekly (×52)</option>
-                          <option value="365">Daily (×365)</option>
-                        </select>
-                      </div>
-                    </div>
-                  {:else if objective.type === 'protect'}
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Revenue at Risk
-                        </label>
-                        <div class="relative">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                            {currencySymbol}
-                          </span>
-                          <input
-                            type="number"
-                            class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                            bind:value={objective.details.revenueAtRisk}
-                          />
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Retention Improvement (%)
-                        </label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.retentionImprovement}
-                        />
-                      </div>
-                    </div>
-                  {:else if objective.type === 'reduce'}
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Time Saved (min)
-                        </label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.timeSaved}
-                        />
-                      </div>
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Users Affected
-                        </label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.users}
-                        />
-                      </div>
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Frequency (per year)
-                        </label>
-                        <select
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.frequency}
-                        >
-                          <option value="1">Yearly (×1)</option>
-                          <option value="4">Quarterly (×4)</option>
-                          <option value="12">Monthly (×12)</option>
-                          <option value="52">Weekly (×52)</option>
-                          <option value="365">Daily (×365)</option>
-                        </select>
-                      </div>
-                    </div>
-                  {:else if objective.type === 'avoid'}
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Potential Cost ({currencySymbol})
-                        </label>
-                        <div class="relative">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                            {currencySymbol}
-                          </span>
-                          <input
-                            type="number"
-                            class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                            bind:value={objective.details.potentialCost}
-                          />
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Probability (%)
-                        </label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.probability}
-                        />
-                      </div>
-                      <div class="form-group">
-                        <label class="text-sm font-medium text-gray-700">
-                          Risk Reduction (%)
-                        </label>
-                        <input
-                          type="number"
-                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                          bind:value={objective.details.riskReduction}
-                        />
-                      </div>
-                    </div>
-                  {/if}
-
-                  <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <div class="flex justify-between items-center">
-                      <span class="text-sm font-medium text-gray-600">Annual Value:</span>
-                      <span class="text-base font-semibold text-secondary">{formatMoney(objective.value)}</span>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  class="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                  on:click={() => removeObjective(i)}
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <!-- Enhanced Objectives List with Counter -->
+        {#if objectives.length > 0}
+          <div class="bg-white rounded-lg border border-gray-200 p-4 mt-6">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="font-semibold text-gray-900">Added Objectives ({objectives.length})</h4>
+              <div class="text-sm text-gray-500">
+                Click value type cards above to add more objectives
               </div>
             </div>
-          {/each}
-        </div>
+            <div class="space-y-4">
+              {#each objectives as objective, i}
+                <div class="flex justify-between items-start gap-4">
+                  <div class="space-y-4 flex-1">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                      <div class="flex-1">
+                        <label class="text-sm font-medium text-gray-700" for="objective-{i}-name">
+                          Objective Name
+                          <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="objective-{i}-name"
+                          type="text"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                          class:border-red-300={errors.some(e => e.field === `objective-${i}-name`)}
+                          placeholder="Name your objective"
+                          bind:value={objective.name}
+                          on:blur={() => touched[`objective-${i}-name`] = true}
+                        />
+                      </div>
+                      
+                      <div class="w-full sm:w-48">
+                        <label class="text-sm font-medium text-gray-700" for="objective-{i}-type">
+                          Type
+                        </label>
+                        <select
+                          id="objective-{i}-type"
+                          class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                          bind:value={objective.type}
+                        >
+                          <option value="generate">Generate Revenue</option>
+                          <option value="protect">Protect Revenue</option>
+                          <option value="reduce">Reduce Costs</option>
+                          <option value="avoid">Avoid Costs</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Dynamic Input Fields Based on Type -->
+                    {#if objective.type === 'generate'}
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Revenue Per Unit
+                          </label>
+                          <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                              {currencySymbol}
+                            </span>
+                            <input
+                              type="number"
+                              class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                              bind:value={objective.details.revenuePerUnit}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Units Sold
+                          </label>
+                          <input
+                            type="number"
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.unitsSold}
+                          />
+                        </div>
+                        
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Frequency (per year)
+                          </label>
+                          <select
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.frequency}
+                          >
+                            <option value="1">Yearly (×1)</option>
+                            <option value="4">Quarterly (×4)</option>
+                            <option value="12">Monthly (×12)</option>
+                            <option value="52">Weekly (×52)</option>
+                            <option value="365">Daily (×365)</option>
+                          </select>
+                        </div>
+                      </div>
+                    {:else if objective.type === 'protect'}
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Revenue at Risk
+                          </label>
+                          <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                              {currencySymbol}
+                            </span>
+                            <input
+                              type="number"
+                              class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                              bind:value={objective.details.revenueAtRisk}
+                            />
+                          </div>
+                        </div>
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Retention Improvement (%)
+                          </label>
+                          <input
+                            type="number"
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.retentionImprovement}
+                          />
+                        </div>
+                      </div>
+                    {:else if objective.type === 'reduce'}
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Time Saved (min)
+                          </label>
+                          <input
+                            type="number"
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.timeSaved}
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Users Affected
+                          </label>
+                          <input
+                            type="number"
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.users}
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Frequency (per year)
+                          </label>
+                          <select
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.frequency}
+                          >
+                            <option value="1">Yearly (×1)</option>
+                            <option value="4">Quarterly (×4)</option>
+                            <option value="12">Monthly (×12)</option>
+                            <option value="52">Weekly (×52)</option>
+                            <option value="365">Daily (×365)</option>
+                          </select>
+                        </div>
+                      </div>
+                    {:else if objective.type === 'avoid'}
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Potential Cost ({currencySymbol})
+                          </label>
+                          <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                              {currencySymbol}
+                            </span>
+                            <input
+                              type="number"
+                              class="w-full pl-8 rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                              bind:value={objective.details.potentialCost}
+                            />
+                          </div>
+                        </div>
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Probability (%)
+                          </label>
+                          <input
+                            type="number"
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.probability}
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label class="text-sm font-medium text-gray-700">
+                            Risk Reduction (%)
+                          </label>
+                          <input
+                            type="number"
+                            class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                            bind:value={objective.details.riskReduction}
+                          />
+                        </div>
+                      </div>
+                    {/if}
+
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-600">Annual Value:</span>
+                        <span class="text-base font-semibold text-secondary">{formatMoney(objective.value)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    class="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                    on:click={() => removeObjective(i)}
+                  >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
 
     <!-- Step 3: Development Costs -->

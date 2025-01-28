@@ -4,6 +4,7 @@
   import { currencyStore } from '$lib/stores/currencyStore';
   import ExpertConsultationCard from '$lib/components/ui/ExpertConsultationCard.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
+  import BuildBuyForm from '../../../features/build-buy/components/BuildBuyForm.svelte';
   import { goto } from '$app/navigation';
 
   let showExpertModal = false;
@@ -92,56 +93,8 @@
         </div>
       </div>
 
-      <!-- Coming Soon Message -->
-      <div class="bg-white rounded-xl shadow-sm p-8">
-        <div class="flex justify-center">
-          <div class="bg-secondary/10 rounded-lg p-6 max-w-2xl w-full">
-            <div class="flex items-center justify-center mb-4">
-              <svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold text-center text-secondary mb-2">Coming Soon</h3>
-            <p class="text-gray-600 text-center">
-              We're working hard to bring you a comprehensive Build vs Buy analysis tool. This feature will help you:
-            </p>
-            <ul class="mt-4 space-y-2">
-              <li class="flex items-center text-gray-700">
-                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                Score options across key dimensions
-              </li>
-              <li class="flex items-center text-gray-700">
-                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                Visualize strengths and weaknesses
-              </li>
-              <li class="flex items-center text-gray-700">
-                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                Get clear recommendations with confidence levels
-              </li>
-              <li class="flex items-center text-gray-700">
-                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                Receive actionable insights for implementation
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <!-- Build Buy Form -->
+      <BuildBuyForm />
 
       <!-- Expert Consultation Section -->
       <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-8">

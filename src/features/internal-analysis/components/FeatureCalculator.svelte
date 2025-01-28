@@ -31,6 +31,14 @@
     monthly: 0
   };
 
+  // Form validation state
+  interface ValidationError {
+    field: string;
+    message: string;
+  }
+  let errors: ValidationError[] = [];
+  let touched: { [key: string]: boolean } = {};
+
   // Confidence score (0-100)
   $: confidenceScore = calculateConfidenceScore();
 
@@ -481,19 +489,17 @@
     }
   }
 
-  // Form validation
-  interface ValidationError {
-    field: string;
-    message: string;
+  // Add reactive validation
+  $: {
+    if (touched.projectName) {
+      validateForm();
+    }
   }
-
-  let errors: ValidationError[] = [];
-  let touched: { [key: string]: boolean } = {};
 
   function validateField(field: string, value: any): string | null {
     switch (field) {
       case 'projectName':
-        return !value ? 'Project name is required' : null;
+        return !value?.trim() ? 'Project name is required' : null;
       case 'revenuePerUnit':
       case 'hourlyRate':
         return value < 0 ? 'Value must be positive' : null;
@@ -518,7 +524,7 @@
     // Validate objectives
     if (currentStep === 2) {
       objectives.forEach((obj, index) => {
-        if (!obj.name) {
+        if (!obj.name?.trim()) {
           errors.push({ field: `objective-${index}-name`, message: 'Name is required' });
         }
         
@@ -553,9 +559,12 @@
   }
 
   function handleNext() {
+    touched[`step-${currentStep}`] = true;
     if (validateForm()) {
       if (currentStep < TOTAL_STEPS) {
         currentStep++;
+        // Reset touched state for new step
+        touched = {};
         if (currentStep === TOTAL_STEPS) {
           // Automatically show results when reaching the last step
           showResults = true;
@@ -643,7 +652,7 @@
   }
 
   // Add new state for onboarding
-  let showOnboarding = true;
+  let showOnboarding = false;
   let currentOnboardingStep = 1;
   const ONBOARDING_STEPS = 4;
 
@@ -722,7 +731,10 @@
               class:border-red-300={errors.some(e => e.field === 'projectName')}
               placeholder="e.g., Customer Dashboard Redesign"
               bind:value={projectName}
-              on:blur={() => touched.projectName = true}
+              on:input={() => {
+                touched.projectName = true;
+                validateForm();
+              }}
             />
             {#if touched.projectName && errors.some(e => e.field === 'projectName')}
               <p class="text-sm text-red-500 mt-1">
@@ -752,7 +764,23 @@
 
     <!-- Step 2: Value Objectives -->
     {:else if currentStep === 2}
-      <!-- Onboarding Modal -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-semibold">Value Objectives</h3>
+          <button 
+            class="text-sm text-gray-500 hover:text-secondary flex items-center gap-2"
+            on:click={() => showOnboarding = true}
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            How to calculate value?
+          </button>
+        </div>
+        <p class="text-sm text-gray-600">How will this feature create value? Select one or more value types below.</p>
+      </div>
+
+      <!-- Optional Onboarding Modal -->
       {#if showOnboarding}
         <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div class="bg-white rounded-xl max-w-2xl w-full mx-4 p-6 space-y-6">
@@ -867,11 +895,6 @@
           </div>
         </div>
       {/if}
-
-      <div class="space-y-2">
-        <h3 class="text-xl font-semibold">Value Objectives</h3>
-        <p class="text-sm text-gray-600">How will this feature create value? Select one or more value types below.</p>
-      </div>
 
       <!-- New Value Type Selection -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

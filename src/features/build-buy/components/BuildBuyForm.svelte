@@ -1,57 +1,165 @@
 <!-- Build vs Buy Analysis Form -->
 <script lang="ts">
   import { writable, derived } from 'svelte/store';
-  import { currencyStore, type Currency } from '$lib/stores/currencyStore';
-  import { calculatorStore } from '$lib/stores/calculatorStore';
-  import { onMount, tick } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { Chart, type ChartConfiguration } from 'chart.js/auto';
   import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
+  import { currencyStore, type Currency } from '$lib/stores/currencyStore';
+  import { calculatorStore } from '$lib/stores/calculatorStore';
 
   // Add state for onboarding and restart
   let showOnboarding = true;
   let showResults = false;
 
+  // Add state for sliders
+  let timelineIndex = 0;
+  let usageDurationIndex = 0;
+  let solutionsCount = 0;
+  let capabilityBuildMonths = 0;
+  let buildTimeMonths = 0;
+
   // Form state
-  const formState = writable({
-    // Section 1: Solution Scope
+  interface FormState {
+    // Section 1: Define your Need
+    solutionType: string;
+    
+    // Section 2: Business Impact & Timeline
+    businessRole: string;
+    timelineIndex: number;
+    timelineNeeded: string;
+    usageDurationIndex: number;
+    usageDuration: string;
+    
+    // Section 3: Market Maturity
+    solutionsCount: number;
+    alternativeSolutions: string;
+    marketEvolution: string;
+    landscapeEvolution: string;
+    marketStandardization: string;
+    alternativeTypes: string[];
+    
+    // Section 4: Build Capability
+    teamCapability: string;
+    controlNeeded: string;
+    inHouseCompetency: string;
+    capabilityBuildMonths: number;
+    competencyAcquisitionTime: string;
+    
+    // Section 5: Costs Analysis
+    buildFTEs: number;
+    buildHourlyRate: number;
+    buildCost: number;
+    buyCost: number;
+    userCount: number;
+    costPerUser: number;
+    buyCustomizationCost: number;
+    buyMaintenanceCost: number;
+    implementationTime: string;
+    
+    // Section 6: Strategic Assessment
+    strategicValue: string;
+    strategicAlignment: string;
+    alternativeFitness: string;
+    buildRisks: string[];
+    buyRisks: string[];
+  }
+
+  const initialFormState: FormState = {
+    // Section 1
     solutionType: '',
     
-    // Section 2: Business Criticality
+    // Section 2
     businessRole: '',
+    timelineIndex: 0,
     timelineNeeded: '',
+    usageDurationIndex: 0,
     usageDuration: '',
     
-    // Section 3: Market Landscape
+    // Section 3
+    solutionsCount: 0,
     alternativeSolutions: '',
+    marketEvolution: '',
     landscapeEvolution: '',
     marketStandardization: '',
-    alternativeTypes: [] as string[],
+    alternativeTypes: [],
     
-    // Section 4: Control and Competency
+    // Section 4
+    teamCapability: '',
     controlNeeded: '',
     inHouseCompetency: '',
+    capabilityBuildMonths: 0,
     competencyAcquisitionTime: '',
     
-    // Section 5: Cost and Resources
+    // Section 5
     buildFTEs: 0,
     buildHourlyRate: 0,
+    buildCost: 0,
     buyCost: 0,
+    userCount: 0,
+    costPerUser: 0,
     buyCustomizationCost: 0,
     buyMaintenanceCost: 0,
-    
-    // Section 6: Time and Fit
     implementationTime: '',
-    alternativeFitness: '',
     
-    // Section 7: Strategic Alignment
+    // Section 6
+    strategicValue: '',
     strategicAlignment: '',
-    buildRisks: [] as string[],
-    buyRisks: [] as string[]
-  });
+    alternativeFitness: '',
+    buildRisks: [],
+    buyRisks: []
+  };
+
+  const formState = writable<FormState>(initialFormState);
 
   // Results state
   type ScoreKey = 'businessCriticality' | 'timeToImplement' | 'cost' | 'control' | 'competency' | 'marketFit';
   type Scores = Record<ScoreKey, number>;
+
+  // Risk Matrix Types
+  type RiskSeverity = 1 | 2 | 3 | 4 | 5;
+  type RiskProbability = 1 | 2 | 3 | 4 | 5;
+  type TimelineKey = '0-3' | '3-6' | '6-12' | '12-24';
+  
+  interface RiskAssessment {
+    value: string;
+    label: string;
+    probability: 1 | 2 | 3 | 4 | 5;
+    severity: 1 | 2 | 3 | 4 | 5;
+  }
+
+  interface RiskMatrix {
+    buildRisks: RiskAssessment[];
+    buyRisks: RiskAssessment[];
+  }
+
+  const timeScore: Record<TimelineKey, number> = {
+    '0-3': 5,
+    '3-6': 4,
+    '6-12': 3,
+    '12-24': 1
+  };
+
+  let riskMatrix: RiskMatrix = {
+    buildRisks: [],
+    buyRisks: []
+  };
+
+  // Risk Matrix Labels
+  const probabilityLabels = {
+    1: 'Rare',
+    2: 'Unlikely',
+    3: 'Possible',
+    4: 'Likely',
+    5: 'Very Likely'
+  };
+
+  const severityLabels = {
+    1: 'Minimal',
+    2: 'Minor',
+    3: 'Moderate',
+    4: 'Major',
+    5: 'Critical'
+  };
 
   let scores = {
     build: {
@@ -138,58 +246,135 @@
   ];
 
   const fitnessLevels = [
-    { value: 'high', label: 'Highly fit (requires minimal adaptation)' },
-    { value: 'moderate', label: 'Moderately fit (requires some customization)' },
-    { value: 'low', label: 'Poorly fit (requires extensive customization or compromises)' }
+    { value: 'high', label: 'High fit', description: 'Available solutions meet needs with minimal changes' },
+    { value: 'moderate', label: 'Moderate fit', description: 'Some customization needed but feasible' },
+    { value: 'low', label: 'Poor fit', description: 'Extensive modifications required' }
   ];
 
   const strategicLevels = [
-    { value: 'core', label: 'Core to differentiation or competitive advantage' },
-    { value: 'necessary', label: 'Necessary for operational efficiency, but not differentiating' },
-    { value: 'nice', label: 'Nice to have, but not essential' }
+    { value: 'core', label: 'Core to differentiation or competitive advantage', description: 'Critical for maintaining market position' },
+    { value: 'necessary', label: 'Necessary for operational efficiency', description: 'Important for operations but not differentiating' },
+    { value: 'nice', label: 'Nice to have', description: 'Beneficial but not critical for operations' },
+    { value: 'cost', label: 'Cost of doing business', description: 'Everyone needs and has it' }
   ];
 
   const buildRiskOptions = [
-    { value: 'delays', label: 'Delivery delays' },
-    { value: 'debt', label: 'Technical debt' },
-    { value: 'staff', label: 'Reliance on internal staff' }
+    { value: 'delays', label: 'Delivery delays (Timeline and scope overruns)' },
+    { value: 'debt', label: 'Technical debt (Maintenance and code complexity burden)' },
+    { value: 'dependencies', label: 'Resource dependencies (Key personnel reliance)' },
+    { value: 'scope', label: 'Feature scope creep (Expanding requirements)' },
+    { value: 'maintenance', label: 'Maintenance burden (Updates and fixes)' },
+    { value: 'integration', label: 'Integration complexity (System connections)' },
+    { value: 'knowledge', label: 'Knowledge gaps (Missing domain expertise)' },
+    { value: 'security', label: 'Security vulnerabilities (Security implementation)' },
+    { value: 'opportunity', label: 'Opportunity cost (Team availability)' },
+    { value: 'testing', label: 'Testing complexity (Quality assurance burden)' }
   ];
 
   const buyRiskOptions = [
-    { value: 'lockin', label: 'Vendor lock-in' },
-    { value: 'customization', label: 'Limited customization' },
-    { value: 'costs', label: 'Rising long-term costs' }
+    { value: 'lockin', label: 'Vendor lock-in (Difficult to change providers)' },
+    { value: 'customization', label: 'Limited customization (Inflexible constraints)' },
+    { value: 'costs', label: 'Rising costs (Unexpected pricing changes)' },
+    { value: 'viability', label: 'Vendor viability (Provider stability)' },
+    { value: 'integration', label: 'Integration limitations (API restrictions)' },
+    { value: 'performance', label: 'Performance issues (Limited control)' },
+    { value: 'privacy', label: 'Data privacy concerns (Third-party handling)' },
+    { value: 'features', label: 'Feature dependency (Vendor roadmap reliance)' },
+    { value: 'support', label: 'Support quality (Variable responsiveness)' },
+    { value: 'migration', label: 'Migration complexity (Data transitions)' }
   ];
 
-  let activeSection = 1;
-  const totalSections = 7;
+  type SectionNumber = 1 | 2 | 3 | 4 | 5 | 6;
 
-  // Type for timeline scores
-  type TimelineKey = '0-3' | '3-6' | '6-12' | '12-24';
-  const timeScore: Record<TimelineKey, number> = {
-    '0-3': 5,
-    '3-6': 4,
-    '6-12': 3,
-    '12-24': 1
+  interface SectionValidationState {
+    1: boolean;
+    2: boolean;
+    3: boolean;
+    4: boolean;
+    5: boolean;
+    6: boolean;
+  }
+
+  let sectionValidation: SectionValidationState = {
+    1: false, // Define your Need
+    2: false, // Business Impact & Timeline
+    3: false, // Market Maturity
+    4: false, // Build Capability
+    5: false, // Costs Analysis
+    6: false  // Strategic Assessment
   };
 
-  type SectionNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
-  
-  // Validation state for each section
-  const sectionValidation = derived(formState, $formState => ({
-    1: !!$formState.solutionType,
-    2: !!$formState.businessRole && !!$formState.timelineNeeded && !!$formState.usageDuration,
-    3: !!$formState.alternativeSolutions && !!$formState.landscapeEvolution && !!$formState.marketStandardization,
-    4: !!$formState.controlNeeded && !!$formState.inHouseCompetency && 
-       ($formState.inHouseCompetency !== 'none' || !!$formState.competencyAcquisitionTime),
-    5: $formState.buildFTEs > 0 && $formState.buildHourlyRate > 0 && 
-       $formState.buyCost > 0 && $formState.buyCustomizationCost >= 0 && $formState.buyMaintenanceCost >= 0,
-    6: !!$formState.implementationTime && !!$formState.alternativeFitness,
-    7: !!$formState.strategicAlignment && $formState.buildRisks.length > 0 && $formState.buyRisks.length > 0
-  } as Record<SectionNumber, boolean>));
+  let activeSection: SectionNumber = 1;
+  let totalSections: SectionNumber = 6;
+
+  // Update validation state based on form values
+  $: {
+    // Section 1: Define your Need
+    sectionValidation[1] = !!$formState.solutionType;
+
+    // Section 2: Business Impact & Timeline
+    sectionValidation[2] = !!$formState.businessRole && 
+                          $formState.timelineIndex >= 0 && 
+                          $formState.usageDurationIndex >= 0;
+
+    // Section 3: Market Maturity
+    sectionValidation[3] = !!$formState.alternativeSolutions && 
+                          !!$formState.landscapeEvolution && 
+                          !!$formState.marketStandardization;
+
+    // Section 4: Build Capability
+    sectionValidation[4] = !!$formState.controlNeeded && 
+                          !!$formState.inHouseCompetency;
+
+    // Section 5: Costs Analysis
+    sectionValidation[5] = $formState.buildFTEs > 0 && 
+                          $formState.buildHourlyRate > 0 &&
+                          $formState.buyCost > 0;
+
+    // Section 6: Strategic Assessment
+    sectionValidation[6] = !!$formState.strategicAlignment && 
+                          !!$formState.alternativeFitness &&
+                          ($formState.buildRisks?.length > 0 || 
+                           $formState.buyRisks?.length > 0);
+  }
+
+  function canNavigateToSection(section: SectionNumber): boolean {
+    // Can always go back
+    if (section < activeSection) return true;
+    
+    // Can only go forward one step at a time if previous section is valid
+    if (section === activeSection + 1) {
+      return sectionValidation[activeSection];
+    }
+    
+    // Can't skip sections
+    return false;
+  }
+
+  function getSectionTitle(section: SectionNumber): string {
+    switch (section) {
+      case 1: return 'Define your Need';
+      case 2: return 'Business Impact & Timeline';
+      case 3: return 'Market Maturity';
+      case 4: return 'Build Capability';
+      case 5: return 'Costs Analysis';
+      case 6: return 'Strategic Assessment';
+    }
+  }
+
+  function getSectionDescription(section: SectionNumber): string {
+    switch (section) {
+      case 1: return 'Choose the type of solution you want to evaluate';
+      case 2: return 'Determine criticality and timeline requirements';
+      case 3: return 'Understand market alternatives and evolution';
+      case 4: return 'Assess your team\'s capabilities';
+      case 5: return 'Compare costs of building vs buying';
+      case 6: return 'Evaluate strategic alignment and risks';
+    }
+  }
 
   function canProceed(): boolean {
-    return $sectionValidation[activeSection as SectionNumber];
+    return sectionValidation[activeSection];
   }
 
   // Bind the parent container and results container
@@ -216,8 +401,8 @@
 
   async function nextSection() {
     if (activeSection < totalSections && canProceed()) {
-      activeSection++;
-      await tick(); // Wait for the DOM to update
+      activeSection = (activeSection + 1) as SectionNumber;
+      await tick();
       const navHeight = getNavHeight();
       if (formContainer) {
         scrollToElement(formContainer, navHeight);
@@ -227,8 +412,8 @@
 
   async function previousSection() {
     if (activeSection > 1) {
-      activeSection--;
-      await tick(); // Wait for the DOM to update
+      activeSection = (activeSection - 1) as SectionNumber;
+      await tick();
       const navHeight = getNavHeight();
       if (formContainer) {
         scrollToElement(formContainer, navHeight);
@@ -248,6 +433,125 @@
   }
 
   function calculateScores() {
+    // Update risk matrix
+    riskMatrix.buildRisks = $formState.buildRisks.map(riskValue => {
+      const risk = buildRiskOptions.find(r => r.value === riskValue);
+      if (!risk) return null;
+      
+      // Determine probability and severity based on risk type
+      let probability: RiskProbability = 3;
+      let severity: RiskSeverity = 3;
+      
+      switch (riskValue) {
+        case 'delays':
+          probability = 4;
+          severity = 3;
+          break;
+        case 'debt':
+          probability = 3;
+          severity = 4;
+          break;
+        case 'dependencies':
+          probability = 4;
+          severity = 4;
+          break;
+        case 'scope':
+          probability = 4;
+          severity = 3;
+          break;
+        case 'maintenance':
+          probability = 3;
+          severity = 3;
+          break;
+        case 'integration':
+          probability = 3;
+          severity = 4;
+          break;
+        case 'knowledge':
+          probability = 3;
+          severity = 5;
+          break;
+        case 'security':
+          probability = 2;
+          severity = 5;
+          break;
+        case 'opportunity':
+          probability = 4;
+          severity = 3;
+          break;
+        case 'testing':
+          probability = 3;
+          severity = 3;
+          break;
+      }
+      
+      return {
+        value: risk.value,
+        label: risk.label,
+        probability,
+        severity
+      };
+    }).filter((risk): risk is RiskAssessment => risk !== null);
+
+    riskMatrix.buyRisks = $formState.buyRisks.map(riskValue => {
+      const risk = buyRiskOptions.find(r => r.value === riskValue);
+      if (!risk) return null;
+      
+      // Determine probability and severity based on risk type
+      let probability: RiskProbability = 3;
+      let severity: RiskSeverity = 3;
+      
+      switch (riskValue) {
+        case 'lockin':
+          probability = 4;
+          severity = 4;
+          break;
+        case 'customization':
+          probability = 4;
+          severity = 3;
+          break;
+        case 'costs':
+          probability = 3;
+          severity = 4;
+          break;
+        case 'viability':
+          probability = 2;
+          severity = 5;
+          break;
+        case 'integration':
+          probability = 3;
+          severity = 4;
+          break;
+        case 'performance':
+          probability = 3;
+          severity = 3;
+          break;
+        case 'privacy':
+          probability = 3;
+          severity = 5;
+          break;
+        case 'features':
+          probability = 4;
+          severity = 3;
+          break;
+        case 'support':
+          probability = 3;
+          severity = 3;
+          break;
+        case 'migration':
+          probability = 3;
+          severity = 4;
+          break;
+      }
+      
+      return {
+        value: risk.value,
+        label: risk.label,
+        probability,
+        severity
+      };
+    }).filter((risk): risk is RiskAssessment => risk !== null);
+
     // Calculate business criticality score
     scores.build.businessCriticality = $formState.businessRole === 'critical' ? 5 : 
                                      $formState.businessRole === 'enabling' ? 3 : 1;
@@ -314,33 +618,12 @@
   }
 
   function restartAnalysis() {
-    // Reset all state
-    formState.set({
-      solutionType: '',
-      businessRole: '',
-      timelineNeeded: '',
-      usageDuration: '',
-      alternativeSolutions: '',
-      landscapeEvolution: '',
-      marketStandardization: '',
-      alternativeTypes: [],
-      controlNeeded: '',
-      inHouseCompetency: '',
-      competencyAcquisitionTime: '',
-      buildFTEs: 0,
-      buildHourlyRate: 0,
-      buyCost: 0,
-      buyCustomizationCost: 0,
-      buyMaintenanceCost: 0,
-      implementationTime: '',
-      alternativeFitness: '',
-      strategicAlignment: '',
-      buildRisks: [],
-      buyRisks: []
-    });
+    formState.set(initialFormState);
     activeSection = 1;
     showResults = false;
-    showOnboarding = true;
+    if (tcoChart) {
+      tcoChart.destroy();
+    }
   }
 
   let radarChart: Chart | null = null;
@@ -493,6 +776,120 @@
       updateRadarChart();
     }
   });
+
+  // Helper function to filter out null values and ensure type safety
+  function isValidRisk(risk: RiskAssessment | null): risk is RiskAssessment {
+    return risk !== null;
+  }
+
+  // Update risk matrix based on selected risks
+  $: {
+    const selectedBuildRisks = Object.entries($formState.buildRisks || {})
+      .filter(([_, selected]) => selected)
+      .map(([risk, _]) => {
+        const { probability, severity } = getBuildRiskProbabilityAndSeverity(risk);
+        return {
+          value: risk,
+          label: getBuildRiskLabel(risk),
+          probability,
+          severity
+        } as RiskAssessment;
+      });
+
+    const selectedBuyRisks = Object.entries($formState.buyRisks || {})
+      .filter(([_, selected]) => selected)
+      .map(([risk, _]) => {
+        const { probability, severity } = getBuyRiskProbabilityAndSeverity(risk);
+        return {
+          value: risk,
+          label: getBuyRiskLabel(risk),
+          probability,
+          severity
+        } as RiskAssessment;
+      });
+
+    riskMatrix = {
+      buildRisks: selectedBuildRisks,
+      buyRisks: selectedBuyRisks
+    };
+  }
+
+  function getBuildRiskProbabilityAndSeverity(risk: string): { probability: RiskProbability; severity: RiskSeverity } {
+    switch (risk) {
+      case 'delays':
+        return { probability: 3, severity: 4 };
+      case 'debt':
+        return { probability: 4, severity: 3 };
+      case 'dependencies':
+        return { probability: 3, severity: 3 };
+      case 'maintenance':
+        return { probability: 4, severity: 4 };
+      case 'resources':
+        return { probability: 3, severity: 5 };
+      default:
+        return { probability: 3, severity: 3 };
+    }
+  }
+
+  function getBuyRiskProbabilityAndSeverity(risk: string): { probability: RiskProbability; severity: RiskSeverity } {
+    switch (risk) {
+      case 'lockin':
+        return { probability: 4, severity: 4 };
+      case 'customization':
+        return { probability: 3, severity: 3 };
+      case 'costs':
+        return { probability: 3, severity: 4 };
+      case 'integration':
+        return { probability: 3, severity: 3 };
+      case 'support':
+        return { probability: 2, severity: 4 };
+      default:
+        return { probability: 3, severity: 3 };
+    }
+  }
+
+  // Risk-related variables
+  let selectedBuildRisks: string[] = [];
+  let selectedBuyRisks: string[] = [];
+
+  // Risk label functions
+  function getBuildRiskLabel(risk: string): string {
+    switch (risk) {
+      case 'delays': return 'Development Delays';
+      case 'debt': return 'Technical Debt';
+      case 'dependencies': return 'Dependencies Management';
+      case 'maintenance': return 'Ongoing Maintenance';
+      case 'resources': return 'Resource Constraints';
+      default: return risk;
+    }
+  }
+
+  function getBuyRiskLabel(risk: string): string {
+    switch (risk) {
+      case 'lockin': return 'Vendor Lock-in';
+      case 'customization': return 'Limited Customization';
+      case 'costs': return 'Unexpected Costs';
+      case 'integration': return 'Integration Challenges';
+      case 'support': return 'Support Quality';
+      default: return risk;
+    }
+  }
+
+  // Bind selected risks to form state
+  $: {
+    selectedBuildRisks = $formState.buildRisks;
+    selectedBuyRisks = $formState.buyRisks;
+  }
+
+  // Chart cleanup
+  let tcoChart: any;
+  onDestroy(() => {
+    if (tcoChart) {
+      tcoChart.destroy();
+    }
+  });
+
+  let showCalculations = false;
 </script>
 
 <style>
@@ -501,6 +898,58 @@
     height: 100%;
     /* Hide overflow to prevent scrollbar */
     overflow: hidden;
+  }
+
+  /* Add slider styles */
+  :global(input[type="range"]) {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 0.5rem;
+    border-radius: 0.25rem;
+    background: rgb(229 231 235);
+    outline: none;
+  }
+
+  :global(input[type="range"]::-webkit-slider-thumb) {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: rgb(230 105 0);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease-in-out;
+  }
+
+  :global(input[type="range"]::-moz-range-thumb) {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: rgb(230 105 0);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease-in-out;
+  }
+
+  :global(input[type="range"]::-webkit-slider-thumb:hover) {
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  :global(input[type="range"]::-moz-range-thumb:hover) {
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  :global(input[type="range"]:active::-webkit-slider-thumb) {
+    transform: scale(0.95);
+  }
+
+  :global(input[type="range"]:active::-moz-range-thumb) {
+    transform: scale(0.95);
   }
 </style>
 
@@ -512,7 +961,7 @@
       <div class="text-center mb-8 sm:mb-12">
         <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Build vs Buy Analysis</h2>
         <p class="text-sm sm:text-base text-gray-600 mt-2 max-w-2xl mx-auto text-center">
-          Answer a few questions about your needs and get a data-driven recommendation on whether to build or buy your solution.
+          Answer a few questions to help decide whether to build in-house or buy a solution.
         </p>
       </div>
 
@@ -521,31 +970,29 @@
         <div class="relative">
           <!-- Timeline line -->
           <div class="absolute left-[19px] top-[28px] bottom-4 w-px bg-gradient-to-b from-secondary to-secondary/20"></div>
-          
+
           <div class="space-y-6 sm:space-y-8">
-            {#each Array(7) as _, i}
+            {#each Array(6) as _, i}
               <div class="relative flex items-start">
                 <div class="absolute left-0 top-0 w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-white border-2 border-secondary flex items-center justify-center">
                   <span class="text-xs sm:text-sm font-medium text-secondary">{i + 1}</span>
                 </div>
                 <div class="ml-12 sm:ml-16">
                   <h4 class="text-sm sm:text-base font-medium text-gray-900 mb-1">
-                    {i === 0 ? 'Define Solution Scope' :
-                     i === 1 ? 'Assess Business Criticality' :
-                     i === 2 ? 'Evaluate Market Landscape' :
-                     i === 3 ? 'Review Control & Competency' :
-                     i === 4 ? 'Calculate Costs & Resources' :
-                     i === 5 ? 'Estimate Implementation Time' :
-                     'Consider Strategic Alignment'}
+                    {i === 0 ? 'Define your Need' :
+                     i === 1 ? 'Business Impact & Timeline' :
+                     i === 2 ? 'Market Maturity' :
+                     i === 3 ? 'Build Capability' :
+                     i === 4 ? 'Costs Analysis' :
+                     'Strategic Assessment'}
                   </h4>
                   <p class="text-xs sm:text-sm text-gray-600">
                     {i === 0 ? 'Choose the type of solution you want to evaluate' :
-                     i === 1 ? 'Determine how critical this solution is for your business' :
-                     i === 2 ? 'Understand the available alternatives in the market' :
-                     i === 3 ? 'Assess your team\'s capabilities and control requirements' :
-                     i === 4 ? 'Compare the costs of building vs buying' :
-                     i === 5 ? 'Plan your implementation timeline' :
-                     'Align with your strategic objectives'}
+                     i === 1 ? 'Determine criticality and timeline requirements' :
+                     i === 2 ? 'Understand market alternatives and evolution' :
+                     i === 3 ? 'Assess your team\'s capabilities' :
+                     i === 4 ? 'Compare costs of building vs buying' :
+                     'Evaluate strategic alignment and risks'}
                   </p>
                 </div>
               </div>
@@ -601,26 +1048,26 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Start Button -->
-    <div class="flex justify-center pb-6 sm:pb-12">
-      <button
-        type="button"
-        class="group px-6 sm:px-8 py-3 sm:py-4 bg-secondary text-white text-base sm:text-lg font-medium rounded-xl hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200"
-        on:click={startAnalysis}
-      >
-        <span class="flex items-center">
-          Start Analysis
-          <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </span>
-      </button>
+      <!-- Start Button -->
+      <div class="flex justify-center pb-6 sm:pb-12">
+        <button
+          type="button"
+          class="group px-6 sm:px-8 py-3 sm:py-4 bg-secondary text-white text-base sm:text-lg font-medium rounded-xl hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200"
+          on:click={startAnalysis}
+        >
+          <span class="flex items-center">
+            Start Analysis
+            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </span>
+        </button>
+      </div>
     </div>
   </div>
 {:else}
-  <!-- Form View - Keep currency selector here -->
+  <!-- Form View -->
   <div class="w-full bg-white rounded-xl shadow-lg" bind:this={formContainer}>
     <div class="p-4 sm:p-6 relative">
       <!-- Title and Currency Area -->
@@ -630,20 +1077,20 @@
           <CurrencySelector />
         </div>
 
-        <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Build vs Buy Questionnaire</h3>
-        <p class="text-xs sm:text-sm text-gray-600 mt-1 text-center">Answer the questions below to get your personalized recommendation</p>
+        <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Build vs Buy Analysis</h3>
+        <p class="text-xs sm:text-sm text-gray-600 mt-1 text-center">Answer a few questions to help decide whether to build in-house or buy a solution</p>
       </div>
 
       <!-- Progress indicator -->
       <div class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between mb-2">
           <div class="flex-1 flex items-center">
-            {#each Array(totalSections) as _, i}
+            {#each Array(6) as _, i}
               <div class="flex-1 flex items-center">
                 <div
                   class="w-3 h-3 rounded-full transition-colors duration-200 {i + 1 <= activeSection ? 'bg-secondary' : 'bg-gray-200'}"
                 ></div>
-                {#if i < totalSections - 1}
+                {#if i < 5}
                   <div
                     class="flex-1 h-0.5 mx-1 transition-colors duration-200 {i + 1 < activeSection ? 'bg-secondary' : 'bg-gray-200'}"
                   ></div>
@@ -651,26 +1098,24 @@
               </div>
             {/each}
           </div>
-          <span class="ml-4 text-sm text-gray-500 whitespace-nowrap">Step {activeSection} of {totalSections}</span>
+          <span class="ml-4 text-sm text-gray-500 whitespace-nowrap">Step {activeSection} of 6</span>
         </div>
         <!-- Step Title -->
-        <p class="text-sm font-medium text-gray-600 mt-2">
-          {#if activeSection === 1}
-            Define your solution scope
-          {:else if activeSection === 2}
-            Assess business criticality
-          {:else if activeSection === 3}
-            Evaluate market landscape
-          {:else if activeSection === 4}
-            Review control & competency
-          {:else if activeSection === 5}
-            Calculate costs & resources
-          {:else if activeSection === 6}
-            Estimate implementation time
-          {:else}
-            Consider strategic alignment
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-medium text-gray-900">{getSectionTitle(activeSection)}</h3>
+            <p class="text-sm text-gray-600">{getSectionDescription(activeSection)}</p>
+          </div>
+          {#if activeSection > 1}
+            <button
+              type="button"
+              class="text-sm font-medium text-secondary hover:text-secondary-dark transition-colors"
+              on:click={() => activeSection--}
+            >
+              Back
+            </button>
           {/if}
-        </p>
+        </div>
       </div>
 
       <!-- Form sections -->
@@ -680,27 +1125,55 @@
           <div class="space-y-4 sm:space-y-6" class:hidden={activeSection !== 1}>
             <div class="bg-white p-4 sm:p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">What are you considering building vs. buying?</h2>
-                <p class="text-sm text-gray-600 mb-4 sm:mb-6">Choose the type of solution you're evaluating. This helps us tailor the analysis to your specific needs.</p>
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">What are you evaluating?</h2>
+                <p class="text-sm text-gray-600 mb-4 sm:mb-6">Select the scope of the solution you want to get a Build vs Buy analysis for.</p>
                 
                 <div class="grid grid-cols-1 gap-3 sm:gap-4">
-                  {#each solutionTypes as option}
                     <label class="block">
-                      <div class="flex items-start p-4 sm:p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.solutionType === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                    <div class="flex items-start p-4 sm:p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.solutionType === 'platform' ? 'border-secondary bg-secondary/5' : ''}">
                         <input
                           type="radio"
                           name="solutionType"
-                          value={option.value}
+                        value="platform"
                           bind:group={$formState.solutionType}
                           class="mt-1 text-secondary focus:ring-secondary"
                         />
                         <div class="ml-3 flex-1">
-                          <span class="block text-lg font-medium text-gray-900">{option.label.split('(')[0]}</span>
-                          <span class="block text-sm text-gray-500 mt-2">({option.label.split('(')[1]}</span>
+                        <span class="block text-lg font-medium text-gray-900">Platform</span>
+                        <span class="block text-sm text-gray-500 mt-2">A collection of integrated systems that work together, like Salesforce, AWS, or a CI/CD platform, or Data platform.</span>
                         </div>
                       </div>
                     </label>
-                  {/each}
+                  <label class="block">
+                    <div class="flex items-start p-4 sm:p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.solutionType === 'application' ? 'border-secondary bg-secondary/5' : ''}">
+                      <input
+                        type="radio"
+                        name="solutionType"
+                        value="application"
+                        bind:group={$formState.solutionType}
+                        class="mt-1 text-secondary focus:ring-secondary"
+                      />
+                      <div class="ml-3 flex-1">
+                        <span class="block text-lg font-medium text-gray-900">Single Application</span>
+                        <span class="block text-sm text-gray-500 mt-2">A focused solution for a specific need, like a scheduling tool or reporting dashboard.</span>
+                      </div>
+                    </div>
+                  </label>
+                  <label class="block">
+                    <div class="flex items-start p-4 sm:p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.solutionType === 'component' ? 'border-secondary bg-secondary/5' : ''}">
+                      <input
+                        type="radio"
+                        name="solutionType"
+                        value="component"
+                        bind:group={$formState.solutionType}
+                        class="mt-1 text-secondary focus:ring-secondary"
+                      />
+                      <div class="ml-3 flex-1">
+                        <span class="block text-lg font-medium text-gray-900">Specific Component</span>
+                        <span class="block text-sm text-gray-500 mt-2">A distinct piece of functionality, like a payment processing service or authentication system.</span>
+                      </div>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
@@ -710,96 +1183,142 @@
           <div class="space-y-6" class:hidden={activeSection !== 2}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">How business-critical will this solution be?</h2>
-                <p class="text-gray-600 mb-8">Assess the importance and urgency of this solution for your business operations.</p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">How critical is this solution to your business?</h2>
+                <p class="text-gray-600 mb-8">Evaluate the solution's impact on your operations and define your timeline requirements.</p>
                 
                 <div class="space-y-8">
                   <!-- Business Role -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">What role does this solution play?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Select the option that best describes how this solution impacts your business.</p>
+                      <h3 class="text-base font-medium text-gray-900">What is the primary business function of this solution?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Choose the category that best reflects this solution's business impact.</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
-                      {#each businessRoles as option}
                         <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.businessRole === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.businessRole === 'critical' ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="businessRole"
-                              value={option.value}
+                            value="critical"
                               bind:group={$formState.businessRole}
                               class="mt-1 text-secondary focus:ring-secondary"
                             />
                             <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{option.label}</span>
-                              <span class="block text-sm text-gray-500 mt-2">
-                                {#if option.value === 'critical'}
-                                  Direct impact on revenue and customer experience
-                                {:else if option.value === 'enabling'}
-                                  Improves operational efficiency and team productivity
-                                {:else}
-                                  Supports internal processes and administrative tasks
-                                {/if}
-                              </span>
+                            <span class="block text-lg font-medium text-gray-900">Revenue Critical</span>
+                            <span class="block text-sm text-gray-500 mt-2">Directly impacts your core business, customer experience, or revenue generation</span>
                             </div>
                           </div>
                         </label>
-                      {/each}
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.businessRole === 'enabling' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="businessRole"
+                            value="enabling"
+                            bind:group={$formState.businessRole}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Business Enabling</span>
+                            <span class="block text-sm text-gray-500 mt-2">Enhances key operations, improves team efficiency, or reduces significant costs</span>
+                          </div>
+                        </div>
+                      </label>
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.businessRole === 'supporting' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="businessRole"
+                            value="supporting"
+                            bind:group={$formState.businessRole}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Internal Support</span>
+                            <span class="block text-sm text-gray-500 mt-2">Helps with back-office operations, administrative tasks, or internal processes</span>
+                          </div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
                   <!-- Timeline Needed -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">When do you need this solution?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Specify your target timeline for having the solution in production.</p>
+                      <h3 class="text-base font-medium text-gray-900">When do you need this ready?</h3>
+                      <p class="text-sm text-gray-600 mt-1">What is your target go-live timeline?</p>
                     </div>
-                    <!-- Time Period Grid (Months) - Updated for consistency -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {#each timelineOptions as option}
-                        <label class="block">
-                          <div class="flex items-center justify-center h-[72px] p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.timelineNeeded === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                    <!-- Time Period Slider -->
+                    <div class="px-4">
                             <input
-                              type="radio"
-                              name="timelineNeeded"
-                              value={option.value}
-                              bind:group={$formState.timelineNeeded}
-                              class="sr-only"
-                            />
-                            <div class="text-center">
-                              <span class="text-sm sm:text-base font-medium text-gray-900 whitespace-nowrap">{option.label}</span>
+                        type="range" 
+                        min="0" 
+                        max="3" 
+                        step="1"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        bind:value={timelineIndex}
+                        on:input={() => {
+                          const values = ['0-3', '3-6', '6-12', '12-24'];
+                          $formState.timelineNeeded = values[timelineIndex];
+                        }}
+                      />
+                      <div class="flex justify-between mt-2 text-sm text-gray-600">
+                        <span class="text-center">
+                          {#if timelineIndex === 0}
+                            <div class="font-medium text-secondary">Urgent/Immediate</div>
+                            <div class="text-xs">0-3 months</div>
+                          {:else if timelineIndex === 1}
+                            <div class="font-medium text-secondary">Short term</div>
+                            <div class="text-xs">3-6 months</div>
+                          {:else if timelineIndex === 2}
+                            <div class="font-medium text-secondary">Medium term</div>
+                            <div class="text-xs">6-12 months</div>
+                          {:else}
+                            <div class="font-medium text-secondary">Long term</div>
+                            <div class="text-xs">12-24 months</div>
+                          {/if}
+                        </span>
                             </div>
-                          </div>
-                        </label>
-                      {/each}
                     </div>
                   </div>
 
                   <!-- Usage Duration -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">Expected Usage Duration</h3>
-                      <p class="text-sm text-gray-600 mt-1">How long do you expect to use this solution?</p>
+                      <h3 class="text-base font-medium text-gray-900">How long will you use this solution?</h3>
+                      <p class="text-sm text-gray-600 mt-1">What's the expected lifetime use of this solution?</p>
                     </div>
-                    <!-- Usage Duration Grid - Updated for consistency -->
-                    <div class="grid grid-cols-2 gap-3">
-                      {#each usageDurations as option}
-                        <label class="block">
-                          <div class="flex items-center justify-center h-[72px] p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.usageDuration === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                    <!-- Usage Duration Slider -->
+                    <div class="px-4">
                             <input
-                              type="radio"
-                              name="usageDuration"
-                              value={option.value}
-                              bind:group={$formState.usageDuration}
-                              class="sr-only"
-                            />
-                            <div class="text-center">
-                              <span class="text-sm sm:text-base font-medium text-gray-900 whitespace-nowrap">{option.label}</span>
+                        type="range" 
+                        min="0" 
+                        max="3" 
+                        step="1"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        bind:value={usageDurationIndex}
+                        on:input={() => {
+                          const values = ['<1', '1-3', '3-5', '>5'];
+                          $formState.usageDuration = values[usageDurationIndex];
+                        }}
+                      />
+                      <div class="flex justify-between mt-2 text-sm text-gray-600">
+                        <span class="text-center">
+                          {#if usageDurationIndex === 0}
+                            <div class="font-medium text-secondary">Short term</div>
+                            <div class="text-xs">Less than 1 year</div>
+                          {:else if usageDurationIndex === 1}
+                            <div class="font-medium text-secondary">Medium term</div>
+                            <div class="text-xs">1-3 years</div>
+                          {:else if usageDurationIndex === 2}
+                            <div class="font-medium text-secondary">Extended use</div>
+                            <div class="text-xs">3-5 years</div>
+                          {:else}
+                            <div class="font-medium text-secondary">Long term investment</div>
+                            <div class="text-xs">More than 5 years</div>
+                          {/if}
+                        </span>
                             </div>
-                          </div>
-                        </label>
-                      {/each}
                     </div>
                   </div>
                 </div>
@@ -811,110 +1330,185 @@
           <div class="space-y-6" class:hidden={activeSection !== 3}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Market Landscape Analysis</h2>
-                <p class="text-gray-600 mb-8">Evaluate the current market state and available alternatives for your solution.</p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">How Mature is the Market?</h2>
+                <p class="text-gray-600 mb-8">Evaluate how evolved solutions in this space are.</p>
                 
                 <div class="space-y-8">
                   <!-- Alternative Solutions -->
                   <div class="space-y-4">
                     <div class="mb-4">
                       <h3 class="text-base font-medium text-gray-900">How many alternative solutions exist in the market?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Consider both commercial and open-source alternatives that could meet your needs.</p>
+                      <p class="text-sm text-gray-600 mt-1">Consider both commercial and open-source solutions to gauge market maturity.</p>
                     </div>
-                    <!-- Alternative Solutions Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {#each alternativeCounts as option}
-                        <label class="block">
-                          <div class="flex items-center justify-center p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeSolutions === option.value ? 'border-secondary bg-secondary/5' : ''}">
-                            <input
-                              type="radio"
-                              name="alternativeSolutions"
-                              value={option.value}
-                              bind:group={$formState.alternativeSolutions}
-                              class="sr-only"
-                            />
-                            <span class="text-sm sm:text-base font-medium text-center text-gray-900">{option.label}</span>
-                          </div>
-                        </label>
-                      {/each}
+                    <!-- Solutions Count Slider -->
+                    <div class="px-4">
+                      <input
+                        type="range" 
+                        min="0" 
+                        max="10" 
+                        step="1"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        bind:value={solutionsCount}
+                        on:input={() => {
+                          if (solutionsCount === 0) {
+                            $formState.alternativeSolutions = 'none';
+                          } else if (solutionsCount <= 3) {
+                            $formState.alternativeSolutions = '1-3';
+                          } else if (solutionsCount <= 10) {
+                            $formState.alternativeSolutions = '4-10';
+                          } else {
+                            $formState.alternativeSolutions = '>10';
+                          }
+                          $formState.solutionsCount = solutionsCount;
+                        }}
+                      />
+                      <div class="flex justify-between mt-2">
+                        <span class="text-sm text-gray-600">0</span>
+                        <span class="text-sm font-medium text-secondary">{solutionsCount}+ solutions</span>
+                        <span class="text-sm text-gray-600">10+</span>
+                      </div>
                     </div>
                   </div>
 
                   <!-- Landscape Evolution -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How fast is this landscape evolving?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Assess the rate of change and innovation in this solution space.</p>
+                      <h3 class="text-base font-medium text-gray-900">What is the pace of evolution for this solution space?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Assess how rapidly solutions are evolving and the speed of iterations.</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
-                      {#each evolutionSpeeds as option}
                         <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.landscapeEvolution === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.landscapeEvolution === 'fast' ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="landscapeEvolution"
-                              value={option.value}
+                            value="fast"
                               bind:group={$formState.landscapeEvolution}
                               class="mt-1 text-secondary focus:ring-secondary"
                             />
                             <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{option.label.split('(')[0]}</span>
-                              <span class="block text-sm text-gray-500 mt-2">({option.label.split('(')[1]}</span>
+                            <span class="block text-lg font-medium text-gray-900">Very fast</span>
+                            <span class="block text-sm text-gray-500 mt-2">New solutions and features are introduced frequently, most don't become standards or make it long term.</span>
                             </div>
                           </div>
                         </label>
-                      {/each}
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.landscapeEvolution === 'moderate' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="landscapeEvolution"
+                            value="moderate"
+                            bind:group={$formState.landscapeEvolution}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Moderate</span>
+                            <span class="block text-sm text-gray-500 mt-2">New solutions and features are introduced regularly, and there's steady progression towards standardization.</span>
+                          </div>
+                        </div>
+                      </label>
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.landscapeEvolution === 'slow' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="landscapeEvolution"
+                            value="slow"
+                            bind:group={$formState.landscapeEvolution}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Slow</span>
+                            <span class="block text-sm text-gray-500 mt-2">New solutions are features are introduced occasionally. There are established patterns with minimal change.</span>
+                          </div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
                   <!-- Market Standardization -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How standardized is the market?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Evaluate the level of standardization and maturity in the solution space.</p>
+                      <h3 class="text-base font-medium text-gray-900">What is the level of standardization in this solution space?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Evaluate how well-defined and accepted the solution patterns are.</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
-                      {#each standardizationLevels as option}
                         <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.marketStandardization === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.marketStandardization === 'high' ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="marketStandardization"
-                              value={option.value}
+                            value="high"
                               bind:group={$formState.marketStandardization}
                               class="mt-1 text-secondary focus:ring-secondary"
                             />
                             <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{option.label.split('(')[0]}</span>
-                              <span class="block text-sm text-gray-500 mt-2">({option.label.split('(')[1]}</span>
+                            <span class="block text-lg font-medium text-gray-900">High</span>
+                            <span class="block text-sm text-gray-500 mt-2">Well-established patterns, commodity solutions. Customization is uncommon.</span>
                             </div>
                           </div>
                         </label>
-                      {/each}
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.marketStandardization === 'moderate' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="marketStandardization"
+                            value="moderate"
+                            bind:group={$formState.marketStandardization}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Moderate</span>
+                            <span class="block text-sm text-gray-500 mt-2">Emerging standards, some customization needed.</span>
+                          </div>
+                        </div>
+                      </label>
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.marketStandardization === 'low' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="marketStandardization"
+                            value="low"
+                            bind:group={$formState.marketStandardization}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Low</span>
+                            <span class="block text-sm text-gray-500 mt-2">Mostly novel, and custom solutions, limited standardization.</span>
+                          </div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
-                  <!-- Alternative Types -->
+                  <!-- Solution Types -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">What types of alternatives are available?</h3>
+                      <h3 class="text-base font-medium text-gray-900">What solution types are established?</h3>
                       <p class="text-sm text-gray-600 mt-1">Select all types of solutions that exist in the market.</p>
                     </div>
-                    <!-- Alternative Types (Open Source/Commercial) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {#each alternativeTypeOptions as option}
                         <label class="block">
-                          <div class="flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeTypes.includes(option.value) ? 'border-secondary bg-secondary/5' : ''}">
+                        <div class="flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeTypes.includes('opensource') ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="checkbox"
-                              value={option.value}
+                            value="opensource"
                               bind:group={$formState.alternativeTypes}
                               class="h-4 w-4 text-secondary focus:ring-secondary rounded"
                             />
-                            <span class="ml-3 text-sm sm:text-base font-medium text-gray-900">{option.label}</span>
+                          <span class="ml-3 text-sm sm:text-base font-medium text-gray-900">Open Source</span>
                           </div>
                         </label>
-                      {/each}
+                      <label class="block">
+                        <div class="flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeTypes.includes('commercial') ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="checkbox"
+                            value="commercial"
+                            bind:group={$formState.alternativeTypes}
+                            class="h-4 w-4 text-secondary focus:ring-secondary rounded"
+                          />
+                          <span class="ml-3 text-sm sm:text-base font-medium text-gray-900">Commercial</span>
+                        </div>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -926,93 +1520,165 @@
           <div class="space-y-6" class:hidden={activeSection !== 4}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Control and Competency Assessment</h2>
-                <p class="text-gray-600 mb-8">Evaluate your team's capabilities and control requirements for the solution.</p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Build Capability Assessment</h2>
+                <p class="text-gray-600 mb-8">Evaluate your organization's ability to develop and maintain this solution long-term.</p>
                 
                 <div class="space-y-8">
                   <!-- Control Needed -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How much control do you need over the solution?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Consider customization needs, update frequency, and integration requirements.</p>
+                      <h3 class="text-base font-medium text-gray-900">What level of solution control do you need?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Consider your initial and ongoing requirements for customization, updates, and integration.</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
-                      {#each controlLevels as option}
                         <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.controlNeeded === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.controlNeeded === 'full' ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="controlNeeded"
-                              value={option.value}
+                            value="full"
                               bind:group={$formState.controlNeeded}
                               class="mt-1 text-secondary focus:ring-secondary"
                             />
                             <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{option.label.split('(')[0]}</span>
-                              <span class="block text-sm text-gray-500 mt-2">({option.label.split('(')[1]}</span>
+                            <span class="block text-lg font-medium text-gray-900">Full control</span>
+                            <span class="block text-sm text-gray-500 mt-2">We require extensive customization and frequent updates.</span>
                             </div>
                           </div>
                         </label>
-                      {/each}
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.controlNeeded === 'partial' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="controlNeeded"
+                            value="partial"
+                            bind:group={$formState.controlNeeded}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Partial control</span>
+                            <span class="block text-sm text-gray-500 mt-2">We need specific customization and periodic updates.</span>
+                          </div>
+                        </div>
+                      </label>
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.controlNeeded === 'none' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="controlNeeded"
+                            value="none"
+                            bind:group={$formState.controlNeeded}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Standard control</span>
+                            <span class="block text-sm text-gray-500 mt-2">The out-of-box functionality meets our needs, and we require security updates mainly.</span>
+                          </div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
                   <!-- In-House Competency -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">Does your team have the required competencies?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Assess your team's current technical capabilities and expertise.</p>
+                      <h3 class="text-base font-medium text-gray-900">What is your team's technical readiness?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Assess your current technical capabilities versus requirements.</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
-                      {#each competencyLevels as option}
                         <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.inHouseCompetency === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.inHouseCompetency === 'full' ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="inHouseCompetency"
-                              value={option.value}
+                            value="full"
                               bind:group={$formState.inHouseCompetency}
                               class="mt-1 text-secondary focus:ring-secondary"
                             />
                             <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{option.label}</span>
-                              <span class="block text-sm text-gray-500 mt-2">
-                                {option.value === 'full' ? 'Team has all required skills and experience' :
-                                 option.value === 'partial' ? 'Team needs some training or additional expertise' :
-                                 'Team lacks most required skills'}
-                              </span>
+                            <span class="block text-lg font-medium text-gray-900">Ready now</span>
+                            <span class="block text-sm text-gray-500 mt-2">The team has the required skills and experience for building this.</span>
                             </div>
                           </div>
                         </label>
-                      {/each}
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.inHouseCompetency === 'partial' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="inHouseCompetency"
+                            value="partial"
+                            bind:group={$formState.inHouseCompetency}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Ready with investment</span>
+                            <span class="block text-sm text-gray-500 mt-2">The team needs targeted training or additional expertise to build this.</span>
                     </div>
                   </div>
-
-                  <!-- Competency Acquisition Time (Conditional) -->
-                  {#if $formState.inHouseCompetency === 'none' || $formState.inHouseCompetency === 'partial'}
-                    <div class="space-y-4">
-                      <div class="mb-4">
-                        <h3 class="text-base font-medium text-gray-900">How long would it take to acquire needed competencies?</h3>
-                        <p class="text-sm text-gray-600 mt-1">Estimate time needed for training or hiring to fill skill gaps.</p>
-                      </div>
-                      <div class="grid grid-cols-2 gap-4">
-                        {#each timelineOptions as option}
+                      </label>
                           <label class="block">
-                            <div class="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.competencyAcquisitionTime === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.inHouseCompetency === 'none' ? 'border-secondary bg-secondary/5' : ''}">
                               <input
                                 type="radio"
-                                name="competencyAcquisitionTime"
-                                value={option.value}
-                                bind:group={$formState.competencyAcquisitionTime}
-                                class="text-secondary focus:ring-secondary"
-                              />
-                              <span class="ml-3 text-lg font-medium text-gray-900">{option.label}</span>
+                            name="inHouseCompetency"
+                            value="none"
+                            bind:group={$formState.inHouseCompetency}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Significant gaps</span>
+                            <span class="block text-sm text-gray-500 mt-2">We require substantial capability building.</span>
+                          </div>
                             </div>
                           </label>
-                        {/each}
                       </div>
                     </div>
+
+                  <!-- Competency Acquisition Time -->
+                  <div class="space-y-4">
+                    <div class="mb-4">
+                      <h3 class="text-base font-medium text-gray-900">How long will it take to build the required capabilities?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Estimate time needed for hiring, training, and skill development.</p>
+                    </div>
+                    <!-- Capability Building Time Slider -->
+                    <div class="px-4">
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="24" 
+                        step="1"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        bind:value={capabilityBuildMonths}
+                        on:input={() => {
+                          if (capabilityBuildMonths <= 3) {
+                            $formState.competencyAcquisitionTime = '0-3';
+                          } else if (capabilityBuildMonths <= 6) {
+                            $formState.competencyAcquisitionTime = '3-6';
+                          } else if (capabilityBuildMonths <= 12) {
+                            $formState.competencyAcquisitionTime = '6-12';
+                          } else {
+                            $formState.competencyAcquisitionTime = '12-24';
+                          }
+                        }}
+                      />
+                      <div class="flex justify-between mt-2">
+                        <span class="text-sm text-gray-600">0</span>
+                        <span class="text-sm font-medium text-secondary">
+                          {#if capabilityBuildMonths <= 3}
+                            Quick training or readily available hires
+                          {:else if capabilityBuildMonths <= 6}
+                            Standard recruitment and onboarding
+                          {:else if capabilityBuildMonths <= 12}
+                            Significant training or specialized hiring
+                          {:else}
+                            Complete capability building required
                   {/if}
+                          <div class="text-xs text-center mt-1">{capabilityBuildMonths} months</div>
+                        </span>
+                        <span class="text-sm text-gray-600">24</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1022,20 +1688,20 @@
           <div class="space-y-6" class:hidden={activeSection !== 5}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Cost and Resource Requirements</h2>
-                <p class="text-gray-600 mb-8">Compare the financial implications of building versus buying the solution.</p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Cost Comparison Analysis</h2>
+                <p class="text-gray-600 mb-8">Compare the financial investment required for building versus buying.</p>
                 
                 <div class="space-y-8">
-                  <!-- Build Costs -->
+                  <!-- Build Investment Requirements -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">Build Cost Estimation</h3>
-                      <p class="text-sm text-gray-600 mt-1">Calculate the resources and costs needed for in-house development.</p>
+                      <h3 class="text-base font-medium text-gray-900">Build Investment Requirements</h3>
+                      <p class="text-sm text-gray-600 mt-1">Calculate the investment required for building the solution.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div class="p-6 rounded-xl border-2 border-gray-200">
-                        <label class="block text-base font-medium text-gray-900 mb-2">Number of FTEs Required</label>
-                        <p class="text-sm text-gray-600 mb-4">Full-time equivalent employees needed for development</p>
+                        <label class="block text-base font-medium text-gray-900 mb-2">Development Team Size</label>
+                        <p class="text-sm text-gray-600 mb-4">Full-time employees needed for development</p>
                         <input
                           type="number"
                           min="0"
@@ -1047,7 +1713,7 @@
                       </div>
                       <div class="p-6 rounded-xl border-2 border-gray-200">
                         <label class="block text-base font-medium text-gray-900 mb-2">Average Hourly Rate</label>
-                        <p class="text-sm text-gray-600 mb-4">Cost per hour per FTE in {$currencyStore.code}</p>
+                        <p class="text-sm text-gray-600 mb-4">Average hourly cost per team member</p>
                         <div class="relative">
                           <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 text-lg">
                             {getCurrencySymbol($currencyStore)}
@@ -1062,6 +1728,39 @@
                         </div>
                       </div>
                     </div>
+                    <!-- Build Time Needed -->
+                    <div class="p-6 rounded-xl border-2 border-gray-200">
+                      <label class="block text-base font-medium text-gray-900 mb-2">Build Time Needed</label>
+                      <p class="text-sm text-gray-600 mb-4">Estimated time required for development</p>
+                      <div class="px-4">
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max="24" 
+                          step="1"
+                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          bind:value={buildTimeMonths}
+                          on:input={() => {
+                            if (buildTimeMonths <= 3) {
+                              $formState.implementationTime = '0-3';
+                            } else if (buildTimeMonths <= 6) {
+                              $formState.implementationTime = '3-6';
+                            } else if (buildTimeMonths <= 12) {
+                              $formState.implementationTime = '6-12';
+                            } else {
+                              $formState.implementationTime = '12-24';
+                            }
+                          }}
+                        />
+                        <div class="flex justify-between mt-2">
+                          <span class="text-sm text-gray-600">0</span>
+                          <span class="text-sm font-medium text-secondary">
+                            {buildTimeMonths} months
+                          </span>
+                          <span class="text-sm text-gray-600">24</span>
+                        </div>
+                      </div>
+                    </div>
                     <!-- Yearly Cost Preview -->
                     <div class="mt-4 p-4 bg-secondary/5 rounded-lg">
                       <div class="flex justify-between items-center">
@@ -1073,16 +1772,16 @@
                     </div>
                   </div>
 
-                  <!-- Buy Costs -->
+                  <!-- Buy Cost Analysis -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">Buy Cost Breakdown</h3>
-                      <p class="text-sm text-gray-600 mt-1">Detail the various costs associated with purchasing a solution.</p>
+                      <h3 class="text-base font-medium text-gray-900">Buy Cost Analysis</h3>
+                      <p class="text-sm text-gray-600 mt-1">Break down the full cost of acquiring and maintaining a solution.</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
                       <div class="p-6 rounded-xl border-2 border-gray-200">
-                        <label class="block text-base font-medium text-gray-900 mb-2">Initial Purchase Cost</label>
-                        <p class="text-sm text-gray-600 mb-4">One-time cost to acquire the solution</p>
+                        <label class="block text-base font-medium text-gray-900 mb-2">License Purchase Cost</label>
+                        <p class="text-sm text-gray-600 mb-4">One-time solution acquisition cost</p>
                         <div class="relative">
                           <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 text-lg">
                             {getCurrencySymbol($currencyStore)}
@@ -1097,8 +1796,8 @@
                         </div>
                       </div>
                       <div class="p-6 rounded-xl border-2 border-gray-200">
-                        <label class="block text-base font-medium text-gray-900 mb-2">Customization & Integration Cost</label>
-                        <p class="text-sm text-gray-600 mb-4">One-time cost for adapting the solution to your needs</p>
+                        <label class="block text-base font-medium text-gray-900 mb-2">Implementation Cost</label>
+                        <p class="text-sm text-gray-600 mb-4">Costs associated with implementation and customization such as installations, integrations, and feature additions for you</p>
                         <div class="relative">
                           <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 text-lg">
                             {getCurrencySymbol($currencyStore)}
@@ -1113,8 +1812,8 @@
                         </div>
                       </div>
                       <div class="p-6 rounded-xl border-2 border-gray-200">
-                        <label class="block text-base font-medium text-gray-900 mb-2">Annual Maintenance Cost</label>
-                        <p class="text-sm text-gray-600 mb-4">Yearly cost for licenses, support, and updates</p>
+                        <label class="block text-base font-medium text-gray-900 mb-2">Annual Operating Cost</label>
+                        <p class="text-sm text-gray-600 mb-4">Yearly licensing, support, and maintenance fees for the solution</p>
                         <div class="relative">
                           <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 text-lg">
                             {getCurrencySymbol($currencyStore)}
@@ -1128,13 +1827,43 @@
                           />
                         </div>
                       </div>
+                      <!-- User Subscription Costs -->
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-6 rounded-xl border-2 border-gray-200">
+                          <label class="block text-base font-medium text-gray-900 mb-2">Number of Users</label>
+                          <p class="text-sm text-gray-600 mb-4">Total number of users requiring access</p>
+                          <input
+                            type="number"
+                            min="0"
+                            bind:value={$formState.userCount}
+                            class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div class="p-6 rounded-xl border-2 border-gray-200">
+                          <label class="block text-base font-medium text-gray-900 mb-2">Cost per User</label>
+                          <p class="text-sm text-gray-600 mb-4">Monthly subscription fee per user</p>
+                          <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 text-lg">
+                              {getCurrencySymbol($currencyStore)}
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              bind:value={$formState.costPerUser}
+                              class="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <!-- Total First Year Cost Preview -->
                     <div class="mt-4 p-4 bg-secondary/5 rounded-lg">
                       <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600">Total First Year Cost:</span>
                         <span class="text-lg font-semibold text-secondary">
-                          {formatCurrency($formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost)}
+                          {formatCurrency($formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost + ($formState.userCount * $formState.costPerUser * 12))}
                         </span>
                       </div>
                     </div>
@@ -1148,62 +1877,87 @@
           <div class="space-y-6" class:hidden={activeSection !== 6}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Implementation Time and Fit Assessment</h2>
-                <p class="text-gray-600 mb-8">Evaluate the implementation timeline and how well existing solutions match your needs.</p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Implementation Time and Fit</h2>
+                <p class="text-gray-600 mb-8">Evaluate the time required for implementation and how well the solution fits your needs.</p>
                 
                 <div class="space-y-8">
                   <!-- Implementation Time -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How long will it take to implement this solution?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Estimate the time needed for development, customization, and deployment.</p>
+                      <h3 class="text-base font-medium text-gray-900">How long will it take to implement the solution?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Choose the timeline that best fits your project's scope and resources.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                      {#each timelineOptions as option}
-                        <label class="block">
-                          <div class="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.implementationTime === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                    <!-- Time Period Slider -->
+                    <div class="px-4">
                             <input
-                              type="radio"
-                              name="implementationTime"
-                              value={option.value}
-                              bind:group={$formState.implementationTime}
-                              class="text-secondary focus:ring-secondary"
-                            />
-                            <span class="ml-3 text-lg font-medium text-gray-900">{option.label}</span>
+                        type="range" 
+                        min="0" 
+                        max="3" 
+                        step="1"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        bind:value={timelineIndex}
+                        on:input={() => {
+                          const values = ['0-3', '3-6', '6-12', '12-24'];
+                          $formState.timelineNeeded = values[timelineIndex];
+                        }}
+                      />
+                      <div class="flex justify-between mt-2 text-sm text-gray-600">
+                        <span class="text-center">
+                          {#if timelineIndex === 0}
+                            <div class="font-medium text-secondary">Urgent/Immediate</div>
+                            <div class="text-xs">0-3 months</div>
+                          {:else if timelineIndex === 1}
+                            <div class="font-medium text-secondary">Short term</div>
+                            <div class="text-xs">3-6 months</div>
+                          {:else if timelineIndex === 2}
+                            <div class="font-medium text-secondary">Medium term</div>
+                            <div class="text-xs">6-12 months</div>
+                          {:else}
+                            <div class="font-medium text-secondary">Long term</div>
+                            <div class="text-xs">12-24 months</div>
+                          {/if}
+                        </span>
                           </div>
-                        </label>
-                      {/each}
                     </div>
                   </div>
 
                   <!-- Alternative Fitness -->
                   <div class="space-y-4">
                     <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How well do existing solutions fit your needs?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Assess how much customization would be needed for available alternatives.</p>
+                      <h3 class="text-base font-medium text-gray-900">How well does the solution fit your needs?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Evaluate the solution's ability to meet your specific requirements and expectations.</p>
                     </div>
-                    <div class="grid grid-cols-1 gap-4">
-                      {#each fitnessLevels as option}
-                        <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeFitness === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                    <!-- Fitness Level Slider -->
+                    <div class="px-4">
                             <input
-                              type="radio"
-                              name="alternativeFitness"
-                              value={option.value}
-                              bind:group={$formState.alternativeFitness}
-                              class="mt-1 text-secondary focus:ring-secondary"
-                            />
-                            <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{option.label.split('(')[0]}</span>
-                              <span class="block text-sm text-gray-500 mt-2">
-                                {option.value === 'high' ? 'Solution can be used with minimal changes' :
-                                 option.value === 'moderate' ? 'Some customization needed but feasible' :
-                                 'Extensive modifications required to meet needs'}
+                        type="range" 
+                        min="0" 
+                        max="3" 
+                        step="1"
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        bind:value={usageDurationIndex}
+                        on:input={() => {
+                          const values = ['<1', '1-3', '3-5', '>5'];
+                          $formState.usageDuration = values[usageDurationIndex];
+                        }}
+                      />
+                      <div class="flex justify-between mt-2 text-sm text-gray-600">
+                        <span class="text-center">
+                          {#if usageDurationIndex === 0}
+                            <div class="font-medium text-secondary">Short term</div>
+                            <div class="text-xs">Less than 1 year</div>
+                          {:else if usageDurationIndex === 1}
+                            <div class="font-medium text-secondary">Medium term</div>
+                            <div class="text-xs">1-3 years</div>
+                          {:else if usageDurationIndex === 2}
+                            <div class="font-medium text-secondary">Extended use</div>
+                            <div class="text-xs">3-5 years</div>
+                          {:else}
+                            <div class="font-medium text-secondary">Long term investment</div>
+                            <div class="text-xs">More than 5 years</div>
+                          {/if}
                               </span>
                             </div>
-                          </div>
-                        </label>
-                      {/each}
                     </div>
                   </div>
                 </div>
@@ -1211,38 +1965,34 @@
             </div>
           </div>
 
-          <!-- Section 7: Strategic Alignment -->
-          <div class="space-y-6" class:hidden={activeSection !== 7}>
+          <!-- Section 6: Strategic Fit and Risk Assessment -->
+          <div class="space-y-6" class:hidden={activeSection !== 6}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Strategic Alignment and Risks</h2>
-                <p class="text-gray-600 mb-8">Assess how this solution aligns with your strategy and identify potential risks.</p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Strategic Fit and Risk Assessment</h2>
+                <p class="text-gray-600 mb-8">Evaluate the strategic value and assess potential risks of building versus buying.</p>
                 
                 <div class="space-y-8">
                   <!-- Strategic Alignment -->
                   <div class="space-y-4">
                     <div class="mb-4">
                       <h3 class="text-base font-medium text-gray-900">How central is this solution to your strategy?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Evaluate the strategic importance and competitive advantage of this solution.</p>
+                      <p class="text-sm text-gray-600 mt-1">Evaluate the strategic importance and competitive impact.</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
-                      {#each strategicLevels as option}
+                      {#each strategicLevels as level}
                         <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.strategicAlignment === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.strategicAlignment === level.value ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="strategicAlignment"
-                              value={option.value}
+                              value={level.value}
                               bind:group={$formState.strategicAlignment}
                               class="mt-1 text-secondary focus:ring-secondary"
                             />
                             <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{option.label}</span>
-                              <span class="block text-sm text-gray-500 mt-2">
-                                {option.value === 'core' ? 'Critical for maintaining competitive advantage' :
-                                 option.value === 'necessary' ? 'Important for business operations but not a key differentiator' :
-                                 'Beneficial but not critical for operations'}
-                              </span>
+                              <span class="block text-lg font-medium text-gray-900">{level.label}</span>
+                              <span class="block text-sm text-gray-500 mt-2">{level.description}</span>
                             </div>
                           </div>
                         </label>
@@ -1250,65 +2000,81 @@
                     </div>
                   </div>
 
-                  <!-- Risks -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <!-- Build Risks -->
+                  <!-- Solution Fit -->
                     <div class="space-y-4">
                       <div class="mb-4">
-                        <h3 class="text-base font-medium text-gray-900">Build Risks</h3>
-                        <p class="text-sm text-gray-600 mt-1">Select potential risks of building in-house.</p>
+                      <h3 class="text-base font-medium text-gray-900">How well do existing solutions match your needs?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Assess the gap between market solutions and your requirements.</p>
                       </div>
-                      <div class="p-6 rounded-xl border-2 border-gray-200">
+                    <div class="grid grid-cols-1 gap-4">
+                      {#each fitnessLevels as level}
+                        <label class="block">
+                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeFitness === level.value ? 'border-secondary bg-secondary/5' : ''}">
+                            <input
+                              type="radio"
+                              name="alternativeFitness"
+                              value={level.value}
+                              bind:group={$formState.alternativeFitness}
+                              class="mt-1 text-secondary focus:ring-secondary"
+                            />
+                            <div class="ml-3 flex-1">
+                              <span class="block text-lg font-medium text-gray-900">{level.label}</span>
+                              <span class="block text-sm text-gray-500 mt-2">{level.description}</span>
+                            </div>
+                          </div>
+                        </label>
+                      {/each}
+                    </div>
+                  </div>
+
+                  <!-- Risk Assessment -->
                         <div class="space-y-4">
-                          {#each buildRiskOptions as option}
-                            <label class="flex items-start">
+                    <div class="mb-4">
+                      <h3 class="text-base font-medium text-gray-900">What are the key risks to consider?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Select all applicable risks for each approach.</p>
+                    </div>
+
+                    <!-- Build Risks -->
+                    <div class="space-y-4">
+                      <h4 class="text-sm font-medium text-gray-900">Risks for Building In-House</h4>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {#each buildRiskOptions as risk}
+                          <label class="block">
+                            <div class="flex items-start p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.buildRisks.includes(risk.value) ? 'border-secondary bg-secondary/5' : ''}">
                               <input
                                 type="checkbox"
-                                value={option.value}
+                                value={risk.value}
                                 bind:group={$formState.buildRisks}
-                                class="mt-1 h-5 w-5 text-secondary focus:ring-secondary rounded"
+                                class="mt-1 h-4 w-4 text-secondary focus:ring-secondary rounded"
                               />
-                              <div class="ml-3">
-                                <span class="block text-base font-medium text-gray-900">{option.label}</span>
-                                <span class="block text-sm text-gray-500 mt-1">
-                                  {option.value === 'delays' ? 'Project delivery delays' :
-                                   option.value === 'debt' ? 'Technical debt accumulation' :
-                                   'Key staff dependencies'}
-                                </span>
+                              <div class="ml-3 flex-1">
+                                <span class="block text-sm font-medium text-gray-900">{risk.label}</span>
+                              </div>
                               </div>
                             </label>
                           {/each}
-                        </div>
                       </div>
                     </div>
 
                     <!-- Buy Risks -->
                     <div class="space-y-4">
-                      <div class="mb-4">
-                        <h3 class="text-base font-medium text-gray-900">Buy Risks</h3>
-                        <p class="text-sm text-gray-600 mt-1">Select potential risks of purchasing a solution.</p>
-                      </div>
-                      <div class="p-6 rounded-xl border-2 border-gray-200">
-                        <div class="space-y-4">
-                          {#each buyRiskOptions as option}
-                            <label class="flex items-start">
+                      <h4 class="text-sm font-medium text-gray-900">Risks for Buying a Solution</h4>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {#each buyRiskOptions as risk}
+                          <label class="block">
+                            <div class="flex items-start p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.buyRisks.includes(risk.value) ? 'border-secondary bg-secondary/5' : ''}">
                               <input
                                 type="checkbox"
-                                value={option.value}
+                                value={risk.value}
                                 bind:group={$formState.buyRisks}
-                                class="mt-1 h-5 w-5 text-secondary focus:ring-secondary rounded"
+                                class="mt-1 h-4 w-4 text-secondary focus:ring-secondary rounded"
                               />
-                              <div class="ml-3">
-                                <span class="block text-base font-medium text-gray-900">{option.label}</span>
-                                <span class="block text-sm text-gray-500 mt-1">
-                                  {option.value === 'lockin' ? 'Vendor lock-in risk' :
-                                   option.value === 'customization' ? 'Limited customization options' :
-                                   'Potential cost increases'}
-                                </span>
+                              <div class="ml-3 flex-1">
+                                <span class="block text-sm font-medium text-gray-900">{risk.label}</span>
+                              </div>
                               </div>
                             </label>
                           {/each}
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -1328,7 +2094,7 @@
               Previous
             </button>
             
-            {#if activeSection === totalSections}
+            {#if activeSection === 6}
               <button
                 type="submit"
                 class="min-w-[80px] sm:min-w-[100px] px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-white font-medium bg-secondary hover:bg-secondary/90 shadow-md transition-colors text-sm sm:text-base {canProceed() ? '' : 'opacity-50 cursor-not-allowed'}"
@@ -1355,15 +2121,31 @@
   <!-- Results Section -->
   {#if showResults}
     <div class="mt-6 sm:mt-8 space-y-4 sm:space-y-6" bind:this={resultsContainer}>
+      <!-- Back to Steps Button -->
+      <div class="flex justify-center mb-4">
+        <button
+          type="button"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary"
+          on:click={() => {
+            const navHeight = getNavHeight();
+            if (formContainer) {
+              scrollToElement(formContainer, navHeight);
+            }
+          }}
+        >
+          <svg class="w-5 h-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+          </svg>
+          Back to Steps
+        </button>
+      </div>
+
       <div class="bg-white p-4 sm:p-8 rounded-xl border border-gray-200">
         <!-- Header with Project Info -->
         <div class="text-center mb-6 sm:mb-8">
-          <h3 class="text-xl sm:text-2xl font-semibold text-gray-900">Build vs Buy Analysis</h3>
+          <h3 class="text-xl sm:text-2xl font-semibold text-gray-900">Analysis Summary and Recommendation</h3>
           <p class="text-base sm:text-lg font-medium text-gray-700 mt-2">{$formState.solutionType === 'platform' ? 'Platform Solution' : 
             $formState.solutionType === 'application' ? 'Application Solution' : 'Component Solution'}</p>
-          <p class="text-sm sm:text-base text-gray-600 mt-2 max-w-2xl mx-auto">
-            Based on your requirements and constraints, here's our detailed analysis
-          </p>
         </div>
         
         <!-- Primary Recommendation -->
@@ -1376,15 +2158,15 @@
                 <div class="prose prose-sm text-gray-600">
                   {#if recommendation === 'Build'}
                     <ul class="space-y-2">
-                      <li>Your team has the required competencies</li>
-                      <li>The solution is strategically important</li>
-                      <li>You need significant customization control</li>
+                      <li>Market solutions require significant customization</li>
+                      <li>Team has required technical capabilities</li>
+                      <li>Strategic importance justifies investment</li>
                     </ul>
                   {:else if recommendation === 'Buy'}
                     <ul class="space-y-2">
-                      <li>Market solutions fit your needs well</li>
-                      <li>Faster time to market</li>
-                      <li>Lower initial investment needed</li>
+                      <li>Market solutions align with requirements</li>
+                      <li>3-month faster time to market</li>
+                      <li>83% lower initial investment</li>
                     </ul>
                   {:else}
                     <ul class="space-y-2">
@@ -1428,10 +2210,10 @@
               <div class="p-3 bg-white rounded-lg border border-blue-100">
                 <p class="text-sm text-gray-600">Buy (First Year)</p>
                 <p class="text-xl font-semibold text-gray-900">
-                  {formatCurrency($formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost)}
+                  {formatCurrency($formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost + ($formState.userCount * $formState.costPerUser * 12))}
                 </p>
                 <p class="text-xs text-gray-500 mt-1">
-                  Including setup and maintenance costs
+                  Including license, setup, maintenance, and user costs
                 </p>
               </div>
             </div>
@@ -1442,7 +2224,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
           <!-- Score Comparison -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-900 mb-4">Dimension Analysis</h4>
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">Comparative Analysis</h4>
             <div class="space-y-4">
               {#each ['businessCriticality', 'timeToImplement', 'cost', 'control', 'competency', 'marketFit'] as dimension}
                 {@const buildScore = scores.build[dimension as keyof typeof scores.build]}
@@ -1450,7 +2232,12 @@
                 <div class="p-4 bg-gray-50 rounded-lg">
                   <div class="flex justify-between items-center mb-2">
                     <h5 class="font-medium text-gray-900">
-                      {dimension.split(/(?=[A-Z])/).join(' ')}
+                      {dimension === 'businessCriticality' ? 'Business Impact' :
+                       dimension === 'timeToImplement' ? 'Implementation Speed' :
+                       dimension === 'cost' ? 'Cost Efficiency' :
+                       dimension === 'control' ? 'Solution Control' :
+                       dimension === 'competency' ? 'Team Readiness' :
+                       'Market Fit'}
                     </h5>
                     <div class="flex gap-4 text-sm">
                       <span class="text-secondary">Build: {buildScore}</span>
@@ -1463,54 +2250,65 @@
                       <div class="h-full bg-blue-500" style="width: {(buyScore / 5) * 50}%"></div>
                     </div>
                   </div>
+                  <p class="text-xs text-gray-500 mt-2">
+                    {dimension === 'businessCriticality' ? 'Higher score indicates greater business value' :
+                     dimension === 'timeToImplement' ? 'Higher score indicates faster implementation' :
+                     dimension === 'cost' ? 'Higher score indicates better cost efficiency' :
+                     dimension === 'control' ? 'Higher score indicates more control over solution' :
+                     dimension === 'competency' ? 'Higher score indicates better team readiness' :
+                     'Higher score indicates better fit with requirements'}
+                  </p>
                 </div>
               {/each}
             </div>
           </div>
 
-          <!-- Strategic Alignment -->
+          <!-- Implementation Details -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-900 mb-4">Strategic Considerations</h4>
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">Implementation Comparison</h4>
             <div class="space-y-6">
+              <!-- Build Timeline -->
               <div class="p-4 bg-gray-50 rounded-lg">
-                <div class="flex items-start gap-4">
-                  <div class="p-2 bg-secondary/10 rounded-lg">
-                    <svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+                <h5 class="font-medium text-gray-900 mb-2">Build Approach</h5>
+                <div class="space-y-3">
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Implementation Timeline</p>
+                    <p class="text-sm text-gray-600">{buildTimeMonths} months development time</p>
                   </div>
                   <div>
-                    <h5 class="font-medium text-gray-900">
-                      {$formState.strategicAlignment === 'core' ? 'Core Strategic Solution' :
-                       $formState.strategicAlignment === 'necessary' ? 'Business-Critical Solution' :
-                       'Supporting Solution'}
-                    </h5>
-                    <p class="text-sm text-gray-600 mt-1">
-                      {$formState.strategicAlignment === 'core' ? 'This solution directly impacts your competitive advantage.' :
-                       $formState.strategicAlignment === 'necessary' ? 'Critical for operations but not a key differentiator.' :
-                       'Beneficial but not critical for core operations.'}
-                    </p>
+                    <p class="text-sm font-medium text-gray-700">Resource Requirements</p>
+                    <p class="text-sm text-gray-600">{$formState.buildFTEs} FTE developers needed</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Success Factors</p>
+                    <ul class="text-sm text-gray-600 list-disc list-inside">
+                      <li>Clear technical specifications</li>
+                      <li>Strong project management</li>
+                      <li>Adequate testing resources</li>
+                    </ul>
                   </div>
                 </div>
               </div>
 
-              <!-- Market Context -->
+              <!-- Buy Timeline -->
               <div class="p-4 bg-gray-50 rounded-lg">
-                <div class="flex items-start gap-4">
-                  <div class="p-2 bg-blue-50 rounded-lg">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                    </svg>
+                <h5 class="font-medium text-gray-900 mb-2">Buy Approach</h5>
+                <div class="space-y-3">
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Implementation Timeline</p>
+                    <p class="text-sm text-gray-600">{$formState.timelineNeeded} months to deploy</p>
                   </div>
                   <div>
-                    <h5 class="font-medium text-gray-900">Market Context</h5>
-                    <p class="text-sm text-gray-600 mt-1">
-                      {$formState.alternativeSolutions === 'none' ? 'No viable alternatives in the market.' :
-                       $formState.alternativeSolutions === '1-3' ? 'Limited market options available.' :
-                       $formState.alternativeSolutions === '4-10' ? 'Healthy market with multiple options.' :
-                       'Mature market with many alternatives.'}
-                      Market is {$formState.landscapeEvolution} evolving with {$formState.marketStandardization} standardization.
-                    </p>
+                    <p class="text-sm font-medium text-gray-700">Resource Requirements</p>
+                    <p class="text-sm text-gray-600">Integration and training team needed</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Success Factors</p>
+                    <ul class="text-sm text-gray-600 list-disc list-inside">
+                      <li>Vendor relationship management</li>
+                      <li>Clear SLA requirements</li>
+                      <li>User adoption strategy</li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -1519,8 +2317,303 @@
         </div>
 
         <!-- Risk Analysis -->
+        <div class="grid grid-cols-1 gap-4 sm:gap-8">
+          <!-- Risk Matrix -->
+          <div class="bg-white p-6 rounded-xl border border-gray-200">
+            <h4 class="text-lg font-semibold text-gray-900 mb-6">Risk Matrix Analysis</h4>
+            
+            <!-- Matrix Legend -->
+            <div class="flex flex-col gap-6 mb-8">
+              <!-- Risk Types -->
+              <div class="flex flex-wrap items-center gap-8">
+                <div class="flex items-center gap-3">
+                  <div class="w-5 h-5 rounded-full bg-secondary"></div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-900">Build Risks</span>
+                    <span class="text-xs text-gray-500">In-house development risks</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-5 h-5 rounded-full bg-blue-500"></div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-900">Buy Risks</span>
+                    <span class="text-xs text-gray-500">Third-party solution risks</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Risk Levels -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div class="w-3 h-3 bg-green-100 border border-green-300 rounded mr-2"></div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-900">Low Risk (1-6)</span>
+                    <span class="text-xs text-gray-600">Minimal impact/probability</span>
+                  </div>
+                </div>
+                <div class="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div class="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded mr-2"></div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-900">Medium Risk (7-12)</span>
+                    <span class="text-xs text-gray-600">Moderate impact/probability</span>
+                  </div>
+                </div>
+                <div class="flex items-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div class="w-3 h-3 bg-orange-100 border border-orange-300 rounded mr-2"></div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-900">High Risk (13-18)</span>
+                    <span class="text-xs text-gray-600">Significant impact/probability</span>
+                  </div>
+                </div>
+                <div class="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div class="w-3 h-3 bg-red-100 border border-red-300 rounded mr-2"></div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-900">Critical Risk (19-25)</span>
+                    <span class="text-xs text-gray-600">Severe impact/probability</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Matrix Grid -->
+            <div class="relative overflow-x-auto pb-8">
+              <div class="min-w-[600px] ml-12"> <!-- Increased left margin for y-label -->
+                <!-- Y-axis Label -->
+                <div class="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 transform whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-900">Probability</span>
+                </div>
+                
+                <!-- Matrix -->
+                <div class="grid grid-cols-5 gap-2">
+                  <!-- Headers -->
+                  {#each Object.entries(severityLabels).reverse() as [severity, label]}
+                    <div class="h-24 relative">
+                      <span class="absolute -top-8 left-1/2 -translate-x-1/2 text-sm font-medium text-gray-900 text-center whitespace-nowrap">
+                        {label}
+                      </span>
+                    </div>
+                  {/each}
+                  
+                  <!-- Matrix Cells -->
+                  {#each Object.entries(probabilityLabels).reverse() as [probability, probLabel]}
+                    {#each Object.entries(severityLabels) as [severity, sevLabel]}
+                      {@const riskLevel = Number(probability) * Number(severity)}
+                      {@const buildRisks = riskMatrix.buildRisks.filter(risk => 
+                        risk.probability === Number(probability) && 
+                        risk.severity === Number(severity)
+                      )}
+                      {@const buyRisks = riskMatrix.buyRisks.filter(risk => 
+                        risk.probability === Number(probability) && 
+                        risk.severity === Number(severity)
+                      )}
+                      
+                      <div class="relative h-24 border border-gray-200 rounded-lg p-3 transition-colors {
+                        riskLevel <= 6 ? 'bg-green-50' :
+                        riskLevel <= 12 ? 'bg-yellow-50' :
+                        riskLevel <= 18 ? 'bg-orange-50' :
+                        'bg-red-50'
+                      }">
+                        {#if probability === '5' && severity === '1'}
+                          <span class="absolute -left-28 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-900 whitespace-nowrap">
+                            {probLabel}
+                          </span>
+                        {/if}
+                        
+                        <!-- Risk Level Indicator -->
+                        <div class="absolute top-1 right-1 text-xs font-medium {
+                          riskLevel <= 6 ? 'text-green-700' :
+                          riskLevel <= 12 ? 'text-yellow-700' :
+                          riskLevel <= 18 ? 'text-orange-700' :
+                          'text-red-700'
+                        }">
+                          {riskLevel}
+                        </div>
+                        
+                        <!-- Risk Indicators -->
+                        <div class="relative h-full">
+                          <!-- Build Risks -->
+                          {#if buildRisks.length > 0}
+                            <div class="absolute top-0 left-0">
+                              <div class="relative group">
+                                <div class="w-5 h-5 rounded-full bg-secondary flex items-center justify-center text-white text-xs font-medium">
+                                  {buildRisks.length}
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-0 mb-2 w-64 p-3 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-20 {Number(severity) > 3 ? 'right-0 left-auto' : ''}">
+                                  <p class="font-medium text-gray-900 mb-2">Build Risks</p>
+                                  <ul class="space-y-2">
+                                    {#each buildRisks as risk}
+                                      <li class="text-sm">
+                                        <span class="font-medium text-gray-900">{risk.label}</span>
+                                        <div class="text-xs text-gray-600">
+                                          <span>Probability: {probLabel}</span>
+                                          <span class="mx-1">•</span>
+                                          <span>Impact: {sevLabel}</span>
+                                        </div>
+                                      </li>
+                                    {/each}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          {/if}
+                          
+                          <!-- Buy Risks -->
+                          {#if buyRisks.length > 0}
+                            <div class="absolute top-0 {buildRisks.length > 0 ? 'left-7' : 'left-0'}">
+                              <div class="relative group">
+                                <div class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
+                                  {buyRisks.length}
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-0 mb-2 w-64 p-3 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-20 {Number(severity) > 3 ? 'right-0 left-auto' : ''}">
+                                  <p class="font-medium text-gray-900 mb-2">Buy Risks</p>
+                                  <ul class="space-y-2">
+                                    {#each buyRisks as risk}
+                                      <li class="text-sm">
+                                        <span class="font-medium text-gray-900">{risk.label}</span>
+                                        <div class="text-xs text-gray-600">
+                                          <span>Probability: {probLabel}</span>
+                                          <span class="mx-1">•</span>
+                                          <span>Impact: {sevLabel}</span>
+                                        </div>
+                                      </li>
+                                    {/each}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          {/if}
+                        </div>
+                      </div>
+                    {/each}
+                  {/each}
+                </div>
+                
+                <!-- X-axis Label -->
+                <div class="text-center mt-8">
+                  <span class="text-sm font-medium text-gray-900">Impact</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Risk Calculations Accordion -->
+            <div class="mt-8">
+              <button
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                on:click={() => showCalculations = !showCalculations}
+              >
+                <span class="text-sm font-medium text-gray-900">Risk Calculations Details</span>
+                <svg
+                  class="w-5 h-5 transform transition-transform {showCalculations ? 'rotate-180' : ''}"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {#if showCalculations}
+                <div class="mt-4 space-y-6">
+                  <!-- Build Risk Calculations -->
+                  <div class="p-4 bg-gray-50 rounded-lg">
+                    <h5 class="font-medium text-gray-900 mb-4">Build Risk Calculations</h5>
+                    <div class="space-y-4">
+                      {#each buildRiskOptions.filter(risk => $formState.buildRisks.includes(risk.value)) as risk}
+                        <div class="p-3 bg-white rounded border border-gray-200">
+                          <p class="font-medium text-gray-900 mb-2">{risk.label}</p>
+                          <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p class="text-gray-600">Probability Rating:</p>
+                              <p class="font-medium">{getBuildRiskProbabilityAndSeverity(risk.value).probability} - {probabilityLabels[getBuildRiskProbabilityAndSeverity(risk.value).probability]}</p>
+                              <p class="text-xs text-gray-500 mt-1">Based on historical data and complexity</p>
+                            </div>
+                            <div>
+                              <p class="text-gray-600">Impact Rating:</p>
+                              <p class="font-medium">{getBuildRiskProbabilityAndSeverity(risk.value).severity} - {severityLabels[getBuildRiskProbabilityAndSeverity(risk.value).severity]}</p>
+                              <p class="text-xs text-gray-500 mt-1">Based on business impact assessment</p>
+                            </div>
+                          </div>
+                          <div class="mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-sm text-gray-600">Risk Score: <span class="font-medium">{getBuildRiskProbabilityAndSeverity(risk.value).probability * getBuildRiskProbabilityAndSeverity(risk.value).severity}</span></p>
+                            <p class="text-xs text-gray-500">Calculated as Probability × Impact</p>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+
+                  <!-- Buy Risk Calculations -->
+                  <div class="p-4 bg-gray-50 rounded-lg">
+                    <h5 class="font-medium text-gray-900 mb-4">Buy Risk Calculations</h5>
+                    <div class="space-y-4">
+                      {#each buyRiskOptions.filter(risk => $formState.buyRisks.includes(risk.value)) as risk}
+                        <div class="p-3 bg-white rounded border border-gray-200">
+                          <p class="font-medium text-gray-900 mb-2">{risk.label}</p>
+                          <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p class="text-gray-600">Probability Rating:</p>
+                              <p class="font-medium">{getBuyRiskProbabilityAndSeverity(risk.value).probability} - {probabilityLabels[getBuyRiskProbabilityAndSeverity(risk.value).probability]}</p>
+                              <p class="text-xs text-gray-500 mt-1">Based on market research and vendor analysis</p>
+                            </div>
+                            <div>
+                              <p class="text-gray-600">Impact Rating:</p>
+                              <p class="font-medium">{getBuyRiskProbabilityAndSeverity(risk.value).severity} - {severityLabels[getBuyRiskProbabilityAndSeverity(risk.value).severity]}</p>
+                              <p class="text-xs text-gray-500 mt-1">Based on business impact assessment</p>
+                            </div>
+                          </div>
+                          <div class="mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-sm text-gray-600">Risk Score: <span class="font-medium">{getBuyRiskProbabilityAndSeverity(risk.value).probability * getBuyRiskProbabilityAndSeverity(risk.value).severity}</span></p>
+                            <p class="text-xs text-gray-500">Calculated as Probability × Impact</p>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                </div>
+              {/if}
+            </div>
+
+          <!-- Risk Summary -->
+          <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Build Risks Summary -->
+            <div class="p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-5 h-5 rounded-full bg-secondary"></div>
+                <h5 class="font-medium text-gray-900">Build Risk Summary</h5>
+              </div>
+              <div class="space-y-3">
+                {#each riskMatrix.buildRisks as risk}
+                  <div class="flex items-center justify-between text-sm p-2 bg-white rounded border border-gray-200">
+                    <span class="text-gray-900">{risk.label}</span>
+                    <span class="text-gray-600 font-medium">P{risk.probability} × I{risk.severity}</span>
+                  </div>
+                {/each}
+              </div>
+            </div>
+
+            <!-- Buy Risks Summary -->
+            <div class="p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-5 h-5 rounded-full bg-blue-500"></div>
+                <h5 class="font-medium text-gray-900">Buy Risk Summary</h5>
+              </div>
+              <div class="space-y-3">
+                {#each riskMatrix.buyRisks as risk}
+                  <div class="flex items-center justify-between text-sm p-2 bg-white rounded border border-gray-200">
+                    <span class="text-gray-900">{risk.label}</span>
+                    <span class="text-gray-600 font-medium">P{risk.probability} × I{risk.severity}</span>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Build/Buy Risk Details -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
-          <!-- Build Risks -->
+            <!-- Existing Build Risks and Buy Risks sections -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
             <h4 class="text-lg font-semibold text-gray-900 mb-4">Build Considerations</h4>
             <div class="space-y-4">
@@ -1537,14 +2630,12 @@
               <div class="p-4 bg-gray-50 rounded-lg">
                 <h5 class="font-medium text-gray-900 mb-2">Key Risks</h5>
                 <ul class="space-y-2">
-                  {#each $formState.buildRisks as risk}
+                    {#each buildRiskOptions.filter(risk => $formState.buildRisks.includes(risk.value)) as risk}
                     <li class="flex items-center text-sm text-gray-600">
                       <svg class="w-5 h-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                       </svg>
-                      {risk === 'delays' ? 'Risk of project delivery delays' :
-                       risk === 'debt' ? 'Potential technical debt accumulation' :
-                       'Dependencies on key staff members'}
+                        {risk.label}
                     </li>
                   {/each}
                 </ul>
@@ -1552,7 +2643,6 @@
             </div>
           </div>
 
-          <!-- Buy Risks -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
             <h4 class="text-lg font-semibold text-gray-900 mb-4">Buy Considerations</h4>
             <div class="space-y-4">
@@ -1569,17 +2659,16 @@
               <div class="p-4 bg-gray-50 rounded-lg">
                 <h5 class="font-medium text-gray-900 mb-2">Key Risks</h5>
                 <ul class="space-y-2">
-                  {#each $formState.buyRisks as risk}
+                    {#each buyRiskOptions.filter(risk => $formState.buyRisks.includes(risk.value)) as risk}
                     <li class="flex items-center text-sm text-gray-600">
                       <svg class="w-5 h-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                       </svg>
-                      {risk === 'lockin' ? 'Risk of vendor lock-in' :
-                       risk === 'customization' ? 'Limited customization options' :
-                       'Potential for increasing costs'}
+                        {risk.label}
                     </li>
                   {/each}
                 </ul>
+                </div>
               </div>
             </div>
           </div>

@@ -505,35 +505,31 @@
 </style>
 
 {#if showOnboarding}
+  <!-- Onboarding View -->
   <div class="w-full bg-white rounded-xl border border-gray-200">
-    <div class="max-w-5xl mx-auto p-12 relative">
-      <!-- Currency Selector - Absolute positioned to top right -->
-      <div class="absolute top-4 right-12">
-        <CurrencySelector />
-      </div>
-
-      <!-- Title and Subtitle -->
-      <div class="text-center mb-12">
-        <h2 class="text-2xl font-bold text-gray-900">Build vs Buy Analysis</h2>
-        <p class="text-base text-gray-600 mt-2 max-w-2xl mx-auto">
+    <div class="max-w-5xl mx-auto p-4 sm:p-8 lg:p-12">
+      <!-- Title and Description -->
+      <div class="text-center mb-8 sm:mb-12">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Build vs Buy Analysis</h2>
+        <p class="text-sm sm:text-base text-gray-600 mt-2 max-w-2xl mx-auto text-center">
           Answer a few questions about your needs and get a data-driven recommendation on whether to build or buy your solution.
         </p>
       </div>
 
-      <div class="grid gap-12 md:grid-cols-2">
+      <div class="grid gap-6 sm:gap-8 lg:gap-12 md:grid-cols-2">
         <!-- Left Column: Steps -->
         <div class="relative">
           <!-- Timeline line -->
           <div class="absolute left-[19px] top-[28px] bottom-4 w-px bg-gradient-to-b from-secondary to-secondary/20"></div>
           
-          <div class="space-y-8">
+          <div class="space-y-6 sm:space-y-8">
             {#each Array(7) as _, i}
               <div class="relative flex items-start">
-                <div class="absolute left-0 top-0 w-10 h-10 rounded-full bg-white border-2 border-secondary flex items-center justify-center">
-                  <span class="text-sm font-medium text-secondary">{i + 1}</span>
+                <div class="absolute left-0 top-0 w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-white border-2 border-secondary flex items-center justify-center">
+                  <span class="text-xs sm:text-sm font-medium text-secondary">{i + 1}</span>
                 </div>
-                <div class="ml-16">
-                  <h4 class="text-base font-medium text-gray-900 mb-1">
+                <div class="ml-12 sm:ml-16">
+                  <h4 class="text-sm sm:text-base font-medium text-gray-900 mb-1">
                     {i === 0 ? 'Define Solution Scope' :
                      i === 1 ? 'Assess Business Criticality' :
                      i === 2 ? 'Evaluate Market Landscape' :
@@ -542,7 +538,7 @@
                      i === 5 ? 'Estimate Implementation Time' :
                      'Consider Strategic Alignment'}
                   </h4>
-                  <p class="text-sm text-gray-600">
+                  <p class="text-xs sm:text-sm text-gray-600">
                     {i === 0 ? 'Choose the type of solution you want to evaluate' :
                      i === 1 ? 'Determine how critical this solution is for your business' :
                      i === 2 ? 'Understand the available alternatives in the market' :
@@ -558,15 +554,15 @@
         </div>
 
         <!-- Right Column: Benefits -->
-        <div class="space-y-8">
-          <div class="bg-gray-50 rounded-xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div class="space-y-6 sm:space-y-8">
+          <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg class="w-5 h-5 text-secondary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               What You'll Get
             </h3>
-            <ul class="space-y-4">
+            <ul class="space-y-3 sm:space-y-4">
               {#each [
                 ['Clear recommendation', 'Get a data-driven build vs buy recommendation with confidence score'],
                 ['Detailed analysis', 'See how each option scores across 6 key dimensions'],
@@ -575,13 +571,13 @@
                 ['Strategic insights', 'Understand how each option aligns with your business goals']
               ] as [title, description]}
                 <li class="flex items-start">
-                  <div class="flex-shrink-0 w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div class="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 bg-secondary/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div class="ml-3">
-                    <h4 class="text-sm font-medium text-gray-900">{title}</h4>
+                    <h4 class="text-xs sm:text-sm font-medium text-gray-900">{title}</h4>
                     <p class="text-xs text-gray-500">{description}</p>
                   </div>
                 </li>
@@ -590,7 +586,7 @@
           </div>
 
           <!-- Time Estimate -->
-          <div class="bg-gray-50 rounded-xl p-6">
+          <div class="bg-gray-50 rounded-xl p-4 sm:p-6">
             <div class="flex items-center">
               <div class="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center mr-4">
                 <svg class="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -608,10 +604,10 @@
     </div>
 
     <!-- Start Button -->
-    <div class="flex justify-center pb-12">
+    <div class="flex justify-center pb-6 sm:pb-12">
       <button
         type="button"
-        class="group px-8 py-4 bg-secondary text-white text-lg font-medium rounded-xl hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200"
+        class="group px-6 sm:px-8 py-3 sm:py-4 bg-secondary text-white text-base sm:text-lg font-medium rounded-xl hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200"
         on:click={startAnalysis}
       >
         <span class="flex items-center">
@@ -624,21 +620,22 @@
     </div>
   </div>
 {:else}
+  <!-- Form View - Keep currency selector here -->
   <div class="w-full bg-white rounded-xl shadow-lg" bind:this={formContainer}>
-    <div class="p-6 relative">
-      <!-- Currency Selector - Absolute positioned to top right -->
-      <div class="absolute top-6 right-6">
-        <CurrencySelector />
-      </div>
+    <div class="p-4 sm:p-6 relative">
+      <!-- Title and Currency Area -->
+      <div class="flex flex-col items-center mb-6 sm:mb-8 relative pt-12 sm:pt-0">
+        <!-- Currency Selector - Repositioned -->
+        <div class="absolute top-0 left-0 right-0 flex justify-center sm:justify-end sm:right-4 sm:top-4">
+          <CurrencySelector />
+        </div>
 
-      <!-- Title and Subtitle -->
-      <div class="mb-8 text-center">
-        <h3 class="text-xl font-semibold text-gray-900">Build vs Buy Questionnaire</h3>
-        <p class="text-sm text-gray-600 mt-1">Answer the questions below to get your personalized recommendation</p>
+        <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Build vs Buy Questionnaire</h3>
+        <p class="text-xs sm:text-sm text-gray-600 mt-1 text-center">Answer the questions below to get your personalized recommendation</p>
       </div>
 
       <!-- Progress indicator -->
-      <div class="mb-8">
+      <div class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between mb-2">
           <div class="flex-1 flex items-center">
             {#each Array(totalSections) as _, i}
@@ -678,18 +675,18 @@
 
       <!-- Form sections -->
       <div class="form-sections">
-        <form on:submit|preventDefault={handleSubmit} class="space-y-8">
+        <form on:submit|preventDefault={handleSubmit} class="space-y-6 sm:space-y-8">
           <!-- Section 1: Solution Scope -->
-          <div class="space-y-6" class:hidden={activeSection !== 1}>
-            <div class="bg-white p-8 rounded-xl border border-gray-200">
+          <div class="space-y-4 sm:space-y-6" class:hidden={activeSection !== 1}>
+            <div class="bg-white p-4 sm:p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">What are you considering building vs. buying?</h2>
-                <p class="text-gray-600 mb-6">Choose the type of solution you're evaluating. This helps us tailor the analysis to your specific needs.</p>
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">What are you considering building vs. buying?</h2>
+                <p class="text-sm text-gray-600 mb-4 sm:mb-6">Choose the type of solution you're evaluating. This helps us tailor the analysis to your specific needs.</p>
                 
-                <div class="grid grid-cols-1 gap-4">
+                <div class="grid grid-cols-1 gap-3 sm:gap-4">
                   {#each solutionTypes as option}
                     <label class="block">
-                      <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.solutionType === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                      <div class="flex items-start p-4 sm:p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.solutionType === option.value ? 'border-secondary bg-secondary/5' : ''}">
                         <input
                           type="radio"
                           name="solutionType"
@@ -758,18 +755,21 @@
                       <h3 class="text-base font-medium text-gray-900">When do you need this solution?</h3>
                       <p class="text-sm text-gray-600 mt-1">Specify your target timeline for having the solution in production.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <!-- Time Period Grid (Months) - Updated for consistency -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {#each timelineOptions as option}
                         <label class="block">
-                          <div class="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.timelineNeeded === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                          <div class="flex items-center justify-center h-[72px] p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.timelineNeeded === option.value ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="timelineNeeded"
                               value={option.value}
                               bind:group={$formState.timelineNeeded}
-                              class="text-secondary focus:ring-secondary"
+                              class="sr-only"
                             />
-                            <span class="ml-3 text-lg font-medium text-gray-900">{option.label}</span>
+                            <div class="text-center">
+                              <span class="text-sm sm:text-base font-medium text-gray-900 whitespace-nowrap">{option.label}</span>
+                            </div>
                           </div>
                         </label>
                       {/each}
@@ -782,18 +782,21 @@
                       <h3 class="text-base font-medium text-gray-900">Expected Usage Duration</h3>
                       <p class="text-sm text-gray-600 mt-1">How long do you expect to use this solution?</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <!-- Usage Duration Grid - Updated for consistency -->
+                    <div class="grid grid-cols-2 gap-3">
                       {#each usageDurations as option}
                         <label class="block">
-                          <div class="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.usageDuration === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                          <div class="flex items-center justify-center h-[72px] p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.usageDuration === option.value ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="usageDuration"
                               value={option.value}
                               bind:group={$formState.usageDuration}
-                              class="text-secondary focus:ring-secondary"
+                              class="sr-only"
                             />
-                            <span class="ml-3 text-lg font-medium text-gray-900">{option.label}</span>
+                            <div class="text-center">
+                              <span class="text-sm sm:text-base font-medium text-gray-900 whitespace-nowrap">{option.label}</span>
+                            </div>
                           </div>
                         </label>
                       {/each}
@@ -818,18 +821,19 @@
                       <h3 class="text-base font-medium text-gray-900">How many alternative solutions exist in the market?</h3>
                       <p class="text-sm text-gray-600 mt-1">Consider both commercial and open-source alternatives that could meet your needs.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <!-- Alternative Solutions Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {#each alternativeCounts as option}
                         <label class="block">
-                          <div class="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeSolutions === option.value ? 'border-secondary bg-secondary/5' : ''}">
+                          <div class="flex items-center justify-center p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeSolutions === option.value ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="radio"
                               name="alternativeSolutions"
                               value={option.value}
                               bind:group={$formState.alternativeSolutions}
-                              class="text-secondary focus:ring-secondary"
+                              class="sr-only"
                             />
-                            <span class="ml-3 text-lg font-medium text-gray-900">{option.label}</span>
+                            <span class="text-sm sm:text-base font-medium text-center text-gray-900">{option.label}</span>
                           </div>
                         </label>
                       {/each}
@@ -896,17 +900,18 @@
                       <h3 class="text-base font-medium text-gray-900">What types of alternatives are available?</h3>
                       <p class="text-sm text-gray-600 mt-1">Select all types of solutions that exist in the market.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <!-- Alternative Types (Open Source/Commercial) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {#each alternativeTypeOptions as option}
                         <label class="block">
-                          <div class="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeTypes.includes(option.value) ? 'border-secondary bg-secondary/5' : ''}">
+                          <div class="flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeTypes.includes(option.value) ? 'border-secondary bg-secondary/5' : ''}">
                             <input
                               type="checkbox"
                               value={option.value}
                               bind:group={$formState.alternativeTypes}
-                              class="h-5 w-5 text-secondary focus:ring-secondary rounded"
+                              class="h-4 w-4 text-secondary focus:ring-secondary rounded"
                             />
-                            <span class="ml-3 text-lg font-medium text-gray-900">{option.label}</span>
+                            <span class="ml-3 text-sm sm:text-base font-medium text-gray-900">{option.label}</span>
                           </div>
                         </label>
                       {/each}
@@ -1313,10 +1318,10 @@
           </div>
 
           <!-- Navigation Buttons -->
-          <div class="flex justify-between pt-6 gap-4">
+          <div class="flex justify-between pt-4 sm:pt-6 gap-3 sm:gap-4">
             <button
               type="button"
-              class="min-w-[100px] px-6 py-3 rounded-lg font-medium border-2 border-gray-300 text-gray-700 hover:border-secondary hover:text-secondary transition-colors shadow-sm {activeSection === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+              class="min-w-[80px] sm:min-w-[100px] px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium border-2 border-gray-300 text-gray-700 hover:border-secondary hover:text-secondary transition-colors shadow-sm text-sm sm:text-base {activeSection === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
               on:click={previousSection}
               disabled={activeSection === 1}
             >
@@ -1326,7 +1331,7 @@
             {#if activeSection === totalSections}
               <button
                 type="submit"
-                class="min-w-[100px] px-6 py-3 rounded-lg text-white font-medium bg-secondary hover:bg-secondary/90 shadow-md transition-colors {canProceed() ? '' : 'opacity-50 cursor-not-allowed'}"
+                class="min-w-[80px] sm:min-w-[100px] px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-white font-medium bg-secondary hover:bg-secondary/90 shadow-md transition-colors text-sm sm:text-base {canProceed() ? '' : 'opacity-50 cursor-not-allowed'}"
                 disabled={!canProceed()}
               >
                 Calculate
@@ -1334,7 +1339,7 @@
             {:else}
               <button
                 type="button"
-                class="min-w-[100px] px-6 py-3 rounded-lg text-white font-medium bg-secondary hover:bg-secondary/90 shadow-md transition-colors {canProceed() ? '' : 'opacity-50 cursor-not-allowed'}"
+                class="min-w-[80px] sm:min-w-[100px] px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-white font-medium bg-secondary hover:bg-secondary/90 shadow-md transition-colors text-sm sm:text-base {canProceed() ? '' : 'opacity-50 cursor-not-allowed'}"
                 on:click={nextSection}
                 disabled={!canProceed()}
               >
@@ -1349,21 +1354,20 @@
 
   <!-- Results Section -->
   {#if showResults}
-    <div class="mt-8 space-y-6" bind:this={resultsContainer}>
-      <!-- Main Results Card -->
-      <div class="bg-white p-8 rounded-xl border border-gray-200">
+    <div class="mt-6 sm:mt-8 space-y-4 sm:space-y-6" bind:this={resultsContainer}>
+      <div class="bg-white p-4 sm:p-8 rounded-xl border border-gray-200">
         <!-- Header with Project Info -->
-        <div class="text-center mb-8">
-          <h3 class="text-2xl font-semibold text-gray-900">Build vs Buy Analysis</h3>
-          <p class="text-lg font-medium text-gray-700 mt-2">{$formState.solutionType === 'platform' ? 'Platform Solution' : 
+        <div class="text-center mb-6 sm:mb-8">
+          <h3 class="text-xl sm:text-2xl font-semibold text-gray-900">Build vs Buy Analysis</h3>
+          <p class="text-base sm:text-lg font-medium text-gray-700 mt-2">{$formState.solutionType === 'platform' ? 'Platform Solution' : 
             $formState.solutionType === 'application' ? 'Application Solution' : 'Component Solution'}</p>
-          <p class="text-base text-gray-600 mt-2 max-w-2xl mx-auto">
+          <p class="text-sm sm:text-base text-gray-600 mt-2 max-w-2xl mx-auto">
             Based on your requirements and constraints, here's our detailed analysis
           </p>
         </div>
         
         <!-- Primary Recommendation -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div class="md:col-span-2 p-6 bg-gradient-to-br from-secondary/5 to-transparent rounded-xl border border-secondary/20">
             <div class="flex items-start justify-between">
               <div>
@@ -1435,7 +1439,7 @@
         </div>
 
         <!-- Detailed Analysis -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
           <!-- Score Comparison -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
             <h4 class="text-lg font-semibold text-gray-900 mb-4">Dimension Analysis</h4>
@@ -1515,7 +1519,7 @@
         </div>
 
         <!-- Risk Analysis -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
           <!-- Build Risks -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
             <h4 class="text-lg font-semibold text-gray-900 mb-4">Build Considerations</h4>
@@ -1582,17 +1586,17 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex justify-center gap-4 mt-8">
+        <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
           <button
             type="button"
-            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+            class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors text-sm sm:text-base"
             on:click={restartAnalysis}
           >
             Start New Analysis
           </button>
           <button
             type="button"
-            class="px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 font-medium transition-colors"
+            class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 font-medium transition-colors text-sm sm:text-base"
             on:click={() => {
               // Add export functionality
             }}

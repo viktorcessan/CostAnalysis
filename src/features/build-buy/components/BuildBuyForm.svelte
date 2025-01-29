@@ -6,6 +6,7 @@
   import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
   import { currencyStore, type Currency } from '$lib/stores/currencyStore';
   import { calculatorStore } from '$lib/stores/calculatorStore';
+  import { calculateRiskMatrix, type RiskFormState, type RiskMatrix, type RiskAssessment, type RiskProbability, type RiskSeverity } from '$lib/utils/riskMatrixCalculator';
 
   // Add state for onboarding and restart
   let showOnboarding = true;
@@ -64,6 +65,7 @@
     buyRisks: string[];
   }
 
+  // Update the initial form state
   const initialFormState: FormState = {
     // Section 1
     solutionType: '',
@@ -79,7 +81,6 @@
     solutionsCount: 0,
     alternativeSolutions: '',
     marketEvolution: '',
-    landscapeEvolution: '',
     marketStandardization: '',
     alternativeTypes: [],
     
@@ -116,29 +117,8 @@
   type Scores = Record<ScoreKey, number>;
 
   // Risk Matrix Types
-  type RiskSeverity = 1 | 2 | 3 | 4 | 5;
-  type RiskProbability = 1 | 2 | 3 | 4 | 5;
   type TimelineKey = '0-3' | '3-6' | '6-12' | '12-24';
   
-  interface RiskAssessment {
-    value: string;
-    label: string;
-    probability: 1 | 2 | 3 | 4 | 5;
-    severity: 1 | 2 | 3 | 4 | 5;
-  }
-
-  interface RiskMatrix {
-    buildRisks: RiskAssessment[];
-    buyRisks: RiskAssessment[];
-  }
-
-  const timeScore: Record<TimelineKey, number> = {
-    '0-3': 5,
-    '3-6': 4,
-    '6-12': 3,
-    '12-24': 1
-  };
-
   let riskMatrix: RiskMatrix = {
     buildRisks: [],
     buyRisks: []
@@ -433,133 +413,43 @@
   }
 
   function calculateScores() {
-    // Update risk matrix
-    riskMatrix.buildRisks = $formState.buildRisks.map(riskValue => {
-      const risk = buildRiskOptions.find(r => r.value === riskValue);
-      if (!risk) return null;
-      
-      // Determine probability and severity based on risk type
-      let probability: RiskProbability = 3;
-      let severity: RiskSeverity = 3;
-      
-      switch (riskValue) {
-        case 'delays':
-          probability = 4;
-          severity = 3;
-          break;
-        case 'debt':
-          probability = 3;
-          severity = 4;
-          break;
-        case 'dependencies':
-          probability = 4;
-          severity = 4;
-          break;
-        case 'scope':
-          probability = 4;
-          severity = 3;
-          break;
-        case 'maintenance':
-          probability = 3;
-          severity = 3;
-          break;
-        case 'integration':
-          probability = 3;
-          severity = 4;
-          break;
-        case 'knowledge':
-          probability = 3;
-          severity = 5;
-          break;
-        case 'security':
-          probability = 2;
-          severity = 5;
-          break;
-        case 'opportunity':
-          probability = 4;
-          severity = 3;
-          break;
-        case 'testing':
-          probability = 3;
-          severity = 3;
-          break;
-      }
-      
-      return {
-        value: risk.value,
-        label: risk.label,
-        probability,
-        severity
-      };
-    }).filter((risk): risk is RiskAssessment => risk !== null);
+    // Create RiskFormState from form values
+    const riskFormState: RiskFormState = {
+      solutionType: $formState.solutionType,
+      businessRole: $formState.businessRole,
+      timelineNeeded: $formState.timelineNeeded || '6-12', // Default to medium timeline if not set
+      usageDuration: $formState.usageDuration || '1-3', // Default to medium duration if not set
+      alternativeSolutions: $formState.alternativeSolutions || '4-10', // Default to moderate alternatives if not set
+      marketEvolution: $formState.marketEvolution || 'moderate', // Default to moderate evolution if not set
+      marketStandardization: $formState.marketStandardization || 'moderate', // Default to moderate standardization if not set
+      teamCompetency: $formState.inHouseCompetency || 'partial', // Default to partial competency if not set
+      controlNeeded: $formState.controlNeeded || 'partial', // Default to partial control if not set
+      buildFTEs: $formState.buildFTEs || 3, // Default to medium team size if not set
+      strategicAlignment: $formState.strategicAlignment || 'necessary', // Default to necessary if not set
+      alternativeFitness: $formState.alternativeFitness || 'moderate' // Default to moderate fitness if not set
+    };
 
-    riskMatrix.buyRisks = $formState.buyRisks.map(riskValue => {
-      const risk = buyRiskOptions.find(r => r.value === riskValue);
-      if (!risk) return null;
-      
-      // Determine probability and severity based on risk type
-      let probability: RiskProbability = 3;
-      let severity: RiskSeverity = 3;
-      
-      switch (riskValue) {
-        case 'lockin':
-          probability = 4;
-          severity = 4;
-          break;
-        case 'customization':
-          probability = 4;
-          severity = 3;
-          break;
-        case 'costs':
-          probability = 3;
-          severity = 4;
-          break;
-        case 'viability':
-          probability = 2;
-          severity = 5;
-          break;
-        case 'integration':
-          probability = 3;
-          severity = 4;
-          break;
-        case 'performance':
-          probability = 3;
-          severity = 3;
-          break;
-        case 'privacy':
-          probability = 3;
-          severity = 5;
-          break;
-        case 'features':
-          probability = 4;
-          severity = 3;
-          break;
-        case 'support':
-          probability = 3;
-          severity = 3;
-          break;
-        case 'migration':
-          probability = 3;
-          severity = 4;
-          break;
-      }
-      
-      return {
-        value: risk.value,
-        label: risk.label,
-        probability,
-        severity
-      };
-    }).filter((risk): risk is RiskAssessment => risk !== null);
+    // Calculate risk matrix using the utility function
+    const calculatedMatrix = calculateRiskMatrix(riskFormState);
+    
+    // Update risk matrix state
+    riskMatrix = calculatedMatrix;
 
     // Calculate business criticality score
     scores.build.businessCriticality = $formState.businessRole === 'critical' ? 5 : 
                                      $formState.businessRole === 'enabling' ? 3 : 1;
     scores.buy.businessCriticality = scores.build.businessCriticality;
 
-    // Calculate time to implement score
-    scores.build.timeToImplement = timeScore[$formState.implementationTime as TimelineKey] || 3;
-    scores.buy.timeToImplement = timeScore[$formState.timelineNeeded as TimelineKey] || 3;
+    // Calculate time to implement score using the timeline mapping
+    const timelineScores = {
+      '0-3': 5,
+      '3-6': 4,
+      '6-12': 3,
+      '12-24': 1
+    };
+    
+    scores.build.timeToImplement = timelineScores[$formState.implementationTime as TimelineKey] || 3;
+    scores.buy.timeToImplement = timelineScores[$formState.timelineNeeded as TimelineKey] || 3;
 
     // Calculate cost scores
     const buildCost = ($formState.buildFTEs * $formState.buildHourlyRate * 2080); // Yearly cost
@@ -2520,24 +2410,81 @@
                   <div class="p-4 bg-gray-50 rounded-lg">
                     <h5 class="font-medium text-gray-900 mb-4">Build Risk Calculations</h5>
                     <div class="space-y-4">
-                      {#each buildRiskOptions.filter(risk => $formState.buildRisks.includes(risk.value)) as risk}
-                        <div class="p-3 bg-white rounded border border-gray-200">
-                          <p class="font-medium text-gray-900 mb-2">{risk.label}</p>
-                          <div class="grid grid-cols-2 gap-4 text-sm">
+                      {#each riskMatrix.buildRisks as risk}
+                        <div class="p-4 bg-white rounded-lg border border-gray-200">
+                          <div class="flex justify-between items-start mb-3">
                             <div>
-                              <p class="text-gray-600">Probability Rating:</p>
-                              <p class="font-medium">{getBuildRiskProbabilityAndSeverity(risk.value).probability} - {probabilityLabels[getBuildRiskProbabilityAndSeverity(risk.value).probability]}</p>
-                              <p class="text-xs text-gray-500 mt-1">Based on historical data and complexity</p>
+                              <h6 class="font-medium text-gray-900">{risk.label}</h6>
+                              <p class="text-sm text-gray-600 mt-1">{risk.description}</p>
                             </div>
-                            <div>
-                              <p class="text-gray-600">Impact Rating:</p>
-                              <p class="font-medium">{getBuildRiskProbabilityAndSeverity(risk.value).severity} - {severityLabels[getBuildRiskProbabilityAndSeverity(risk.value).severity]}</p>
-                              <p class="text-xs text-gray-500 mt-1">Based on business impact assessment</p>
+                            <div class="flex items-center gap-2 text-sm">
+                              <span class="px-2 py-1 rounded bg-secondary/10 text-secondary">
+                                P{risk.probability} × S{risk.severity}
+                              </span>
                             </div>
                           </div>
-                          <div class="mt-2 pt-2 border-t border-gray-100">
-                            <p class="text-sm text-gray-600">Risk Score: <span class="font-medium">{getBuildRiskProbabilityAndSeverity(risk.value).probability * getBuildRiskProbabilityAndSeverity(risk.value).severity}</span></p>
-                            <p class="text-xs text-gray-500">Calculated as Probability × Impact</p>
+
+                          <!-- Key Considerations -->
+                          <div class="mb-4">
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Key Considerations</h6>
+                            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                              {#each risk.details.reasoning as reason}
+                                <li>{reason}</li>
+                              {/each}
+                            </ul>
+                          </div>
+
+                          <!-- Probability Factors -->
+                          <div class="mb-4">
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Probability Factors</h6>
+                            <div class="bg-gray-50 p-3 rounded">
+                              <ul class="list-none text-sm text-gray-600 space-y-1">
+                                {#each risk.details.probabilityFactors as factor}
+                                  <li class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full bg-secondary mr-2"></span>
+                                    {factor}
+                                  </li>
+                                {/each}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <!-- Severity Factors -->
+                          <div class="mb-4">
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Severity Factors</h6>
+                            <div class="bg-gray-50 p-3 rounded">
+                              <ul class="list-none text-sm text-gray-600 space-y-1">
+                                {#each risk.details.severityFactors as factor}
+                                  <li class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                                    {factor}
+                                  </li>
+                                {/each}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <!-- Calculation Method -->
+                          <div>
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Calculation Method</h6>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <h7 class="text-xs font-medium text-gray-700">Probability</h7>
+                                <ul class="mt-1 text-xs text-gray-600 space-y-1">
+                                  {#each risk.details.calculation.probability as step}
+                                    <li>{step}</li>
+                                  {/each}
+                                </ul>
+                              </div>
+                              <div>
+                                <h7 class="text-xs font-medium text-gray-700">Severity</h7>
+                                <ul class="mt-1 text-xs text-gray-600 space-y-1">
+                                  {#each risk.details.calculation.severity as step}
+                                    <li>{step}</li>
+                                  {/each}
+                                </ul>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       {/each}
@@ -2548,24 +2495,81 @@
                   <div class="p-4 bg-gray-50 rounded-lg">
                     <h5 class="font-medium text-gray-900 mb-4">Buy Risk Calculations</h5>
                     <div class="space-y-4">
-                      {#each buyRiskOptions.filter(risk => $formState.buyRisks.includes(risk.value)) as risk}
-                        <div class="p-3 bg-white rounded border border-gray-200">
-                          <p class="font-medium text-gray-900 mb-2">{risk.label}</p>
-                          <div class="grid grid-cols-2 gap-4 text-sm">
+                      {#each riskMatrix.buyRisks as risk}
+                        <div class="p-4 bg-white rounded-lg border border-gray-200">
+                          <div class="flex justify-between items-start mb-3">
                             <div>
-                              <p class="text-gray-600">Probability Rating:</p>
-                              <p class="font-medium">{getBuyRiskProbabilityAndSeverity(risk.value).probability} - {probabilityLabels[getBuyRiskProbabilityAndSeverity(risk.value).probability]}</p>
-                              <p class="text-xs text-gray-500 mt-1">Based on market research and vendor analysis</p>
+                              <h6 class="font-medium text-gray-900">{risk.label}</h6>
+                              <p class="text-sm text-gray-600 mt-1">{risk.description}</p>
                             </div>
-                            <div>
-                              <p class="text-gray-600">Impact Rating:</p>
-                              <p class="font-medium">{getBuyRiskProbabilityAndSeverity(risk.value).severity} - {severityLabels[getBuyRiskProbabilityAndSeverity(risk.value).severity]}</p>
-                              <p class="text-xs text-gray-500 mt-1">Based on business impact assessment</p>
+                            <div class="flex items-center gap-2 text-sm">
+                              <span class="px-2 py-1 rounded bg-blue-500/10 text-blue-500">
+                                P{risk.probability} × S{risk.severity}
+                              </span>
                             </div>
                           </div>
-                          <div class="mt-2 pt-2 border-t border-gray-100">
-                            <p class="text-sm text-gray-600">Risk Score: <span class="font-medium">{getBuyRiskProbabilityAndSeverity(risk.value).probability * getBuyRiskProbabilityAndSeverity(risk.value).severity}</span></p>
-                            <p class="text-xs text-gray-500">Calculated as Probability × Impact</p>
+
+                          <!-- Key Considerations -->
+                          <div class="mb-4">
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Key Considerations</h6>
+                            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                              {#each risk.details.reasoning as reason}
+                                <li>{reason}</li>
+                              {/each}
+                            </ul>
+                          </div>
+
+                          <!-- Probability Factors -->
+                          <div class="mb-4">
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Probability Factors</h6>
+                            <div class="bg-gray-50 p-3 rounded">
+                              <ul class="list-none text-sm text-gray-600 space-y-1">
+                                {#each risk.details.probabilityFactors as factor}
+                                  <li class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                                    {factor}
+                                  </li>
+                                {/each}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <!-- Severity Factors -->
+                          <div class="mb-4">
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Severity Factors</h6>
+                            <div class="bg-gray-50 p-3 rounded">
+                              <ul class="list-none text-sm text-gray-600 space-y-1">
+                                {#each risk.details.severityFactors as factor}
+                                  <li class="flex items-center">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                                    {factor}
+                                  </li>
+                                {/each}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <!-- Calculation Method -->
+                          <div>
+                            <h6 class="text-sm font-medium text-gray-900 mb-2">Calculation Method</h6>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <h7 class="text-xs font-medium text-gray-700">Probability</h7>
+                                <ul class="mt-1 text-xs text-gray-600 space-y-1">
+                                  {#each risk.details.calculation.probability as step}
+                                    <li>{step}</li>
+                                  {/each}
+                                </ul>
+                              </div>
+                              <div>
+                                <h7 class="text-xs font-medium text-gray-700">Severity</h7>
+                                <ul class="mt-1 text-xs text-gray-600 space-y-1">
+                                  {#each risk.details.calculation.severity as step}
+                                    <li>{step}</li>
+                                  {/each}
+                                </ul>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       {/each}

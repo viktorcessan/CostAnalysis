@@ -585,7 +585,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="p-4 rounded-lg border border-green-200 bg-green-50 hover:shadow-md transition-shadow">
             <div class="flex items-center gap-3 mb-2">
-              <span class="text-2xl">💰</span>
+              <span class="text-2xl">📈</span>
               <h4 class="font-semibold text-green-800">Generate Value</h4>
             </div>
             <p class="text-sm text-gray-600">New revenue streams, increased sales, or improved customer value that generates additional income.</p>
@@ -593,7 +593,7 @@
           
           <div class="p-4 rounded-lg border border-blue-200 bg-blue-50 hover:shadow-md transition-shadow">
             <div class="flex items-center gap-3 mb-2">
-              <span class="text-2xl">🛡️</span>
+              <span class="text-2xl">🔒</span>
               <h4 class="font-semibold text-blue-800">Protect Value</h4>
             </div>
             <p class="text-sm text-gray-600">Safeguard existing revenue, maintain market position, and protect customer relationships.</p>
@@ -601,7 +601,7 @@
           
           <div class="p-4 rounded-lg border border-amber-200 bg-amber-50 hover:shadow-md transition-shadow">
             <div class="flex items-center gap-3 mb-2">
-              <span class="text-2xl">⚡</span>
+              <span class="text-2xl">✂️</span>
               <h4 class="font-semibold text-amber-800">Reduce Cost</h4>
             </div>
             <p class="text-sm text-gray-600">Operational efficiency, automation, and improvements that lower expenses.</p>
@@ -609,7 +609,7 @@
           
           <div class="p-4 rounded-lg border border-red-200 bg-red-50 hover:shadow-md transition-shadow">
             <div class="flex items-center gap-3 mb-2">
-              <span class="text-2xl">⚠️</span>
+              <span class="text-2xl">🛡️</span>
               <h4 class="font-semibold text-red-800">Avoid Risk</h4>
             </div>
             <p class="text-sm text-gray-600">Prevent potential losses, mitigate risks, and ensure compliance.</p>
@@ -691,7 +691,7 @@
     {:else if currentStep === 2}
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <span class="text-3xl">💰</span>
+          <span class="text-3xl">📈</span>
           <div>
             <h3 class="text-xl font-semibold">Generate Value</h3>
             <p class="text-sm text-gray-600">Select impacts that will generate new value or revenue</p>
@@ -770,7 +770,7 @@
     {:else if currentStep === 3}
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <span class="text-3xl">🛡️</span>
+          <span class="text-3xl">🔒</span>
           <div>
             <h3 class="text-xl font-semibold">Protect Value</h3>
             <p class="text-sm text-gray-600">Select impacts that will protect existing value</p>
@@ -850,7 +850,7 @@
     {:else if currentStep === 4}
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <span class="text-3xl">⚡</span>
+          <span class="text-3xl">✂️</span>
           <div>
             <h3 class="text-xl font-semibold">Reduce Cost</h3>
             <p class="text-sm text-gray-600">Select impacts that will reduce operational costs</p>
@@ -930,7 +930,7 @@
     {:else if currentStep === 5}
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <span class="text-3xl">⚠️</span>
+          <span class="text-3xl">🛡️</span>
           <div>
             <h3 class="text-xl font-semibold">Avoid Risk</h3>
             <p class="text-sm text-gray-600">Select impacts that will help avoid risks or losses</p>

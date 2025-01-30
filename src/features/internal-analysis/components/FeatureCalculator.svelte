@@ -18,7 +18,6 @@
   let currentStep = 0;
   const TOTAL_STEPS = 8;
   let projectName = '';
-  let projectDescription = '';
 
   // Form data
   let selectedImpacts: SelectedImpact[] = [];
@@ -74,7 +73,6 @@
     
     // Project info completeness (20%)
     if (projectName) score += 10;
-    if (projectDescription) score += 10;
     
     // Value impacts completeness (40%)
     if (selectedImpacts.length > 0) {
@@ -574,20 +572,6 @@
                 bind:value={projectName}
               />
             </div>
-            
-            <div class="form-group">
-              <label class="text-sm font-medium text-gray-700" for="projectDescription">
-                Description
-                <span class="text-gray-400">(optional)</span>
-              </label>
-              <textarea
-                id="projectDescription"
-                class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
-                rows="3"
-                placeholder="Brief description of the feature and its goals"
-                bind:value={projectDescription}
-              ></textarea>
-            </div>
           </div>
         </div>
       </div>
@@ -1027,9 +1011,6 @@
       <div class="space-y-8 animate-fade-in">
         <div class="bg-white rounded-xl p-6 border border-gray-200">
           <h3 class="text-xl font-semibold mb-4">Results Summary for {projectName}</h3>
-          {#if projectDescription}
-            <p class="text-gray-600 mb-6">{projectDescription}</p>
-          {/if}
 
           <!-- Selected Impacts Summary -->
           <div class="space-y-4 mb-8">

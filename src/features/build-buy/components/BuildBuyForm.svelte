@@ -81,6 +81,7 @@
     solutionsCount: 0,
     alternativeSolutions: '',
     marketEvolution: '',
+    landscapeEvolution: '',
     marketStandardization: '',
     alternativeTypes: [],
     
@@ -313,9 +314,7 @@
 
     // Section 6: Strategic Assessment
     sectionValidation[6] = !!$formState.strategicAlignment && 
-                          !!$formState.alternativeFitness &&
-                          ($formState.buildRisks?.length > 0 || 
-                           $formState.buyRisks?.length > 0);
+                          !!$formState.alternativeFitness;
   }
 
   function canNavigateToSection(section: SectionNumber): boolean {
@@ -679,10 +678,21 @@
       .map(([risk, _]) => {
         const { probability, severity } = getBuildRiskProbabilityAndSeverity(risk);
         return {
+          id: `build-${risk}`,
           value: risk,
           label: getBuildRiskLabel(risk),
           probability,
-          severity
+          severity,
+          description: getBuildRiskDescription(risk),
+          details: {
+            reasoning: [],
+            probabilityFactors: [],
+            severityFactors: [],
+            calculation: {
+              probability: [],
+              severity: []
+            }
+          }
         } as RiskAssessment;
       });
 
@@ -691,10 +701,21 @@
       .map(([risk, _]) => {
         const { probability, severity } = getBuyRiskProbabilityAndSeverity(risk);
         return {
+          id: `buy-${risk}`,
           value: risk,
           label: getBuyRiskLabel(risk),
           probability,
-          severity
+          severity,
+          description: getBuyRiskDescription(risk),
+          details: {
+            reasoning: [],
+            probabilityFactors: [],
+            severityFactors: [],
+            calculation: {
+              probability: [],
+              severity: []
+            }
+          }
         } as RiskAssessment;
       });
 
@@ -779,7 +800,91 @@
     }
   });
 
+  // Helper functions for risk descriptions
+  function getBuildRiskDescription(risk: string): string {
+    switch (risk) {
+      case 'delays': return 'Risk of project timeline delays and scope overruns';
+      case 'debt': return 'Risk of accumulating technical debt';
+      case 'dependencies': return 'Risk of critical resource dependencies';
+      case 'maintenance': return 'Risk of ongoing maintenance burden';
+      case 'resources': return 'Risk of resource constraints';
+      default: return '';
+    }
+  }
+
+  function getBuyRiskDescription(risk: string): string {
+    switch (risk) {
+      case 'lockin': return 'Risk of vendor lock-in';
+      case 'customization': return 'Risk of limited customization options';
+      case 'costs': return 'Risk of unexpected cost increases';
+      case 'integration': return 'Risk of integration challenges';
+      case 'support': return 'Risk of inadequate support';
+      default: return '';
+    }
+  }
+
   let showCalculations = false;
+  let showLegend = false;
+
+  let showRiskDetails = false;
+  let selectedRisks: RiskAssessment[] = [];
+  let selectedCell: { probability: number; severity: number; riskLevel: number } | null = null;
+
+  function generateMitigationStrategies(riskLevel: number, risks: RiskAssessment[]): string[] {
+    const strategies: string[] = [];
+    
+    if (riskLevel <= 6) {
+      strategies.push('Regular monitoring and documentation of potential issues');
+      strategies.push('Standard risk management procedures');
+    } else if (riskLevel <= 12) {
+      strategies.push('Develop specific mitigation plans for each identified risk');
+      strategies.push('Monthly risk assessment reviews');
+      strategies.push('Assign risk owners for active monitoring');
+    } else if (riskLevel <= 18) {
+      strategies.push('Weekly risk assessment meetings');
+      strategies.push('Detailed contingency plans for each high-impact risk');
+      strategies.push('Continuous stakeholder communication');
+      strategies.push('Regular testing of mitigation measures');
+    } else {
+      strategies.push('Daily monitoring and reporting');
+      strategies.push('Immediate escalation procedures');
+      strategies.push('Crisis management team activation');
+      strategies.push('Stakeholder emergency communication plan');
+    }
+
+    // Add risk-specific strategies
+    risks.forEach(risk => {
+      if (risk.id.startsWith('build-')) {
+        strategies.push(`For ${risk.label}: ${getBuildRiskMitigation(risk.value)}`);
+      } else {
+        strategies.push(`For ${risk.label}: ${getBuyRiskMitigation(risk.value)}`);
+      }
+    });
+
+    return strategies;
+  }
+
+  function getBuildRiskMitigation(risk: string): string {
+    switch (risk) {
+      case 'delays': return 'Implement agile methodologies with shorter delivery cycles';
+      case 'debt': return 'Regular code reviews and technical debt tracking';
+      case 'dependencies': return 'Cross-training team members and documentation';
+      case 'maintenance': return 'Automated testing and monitoring systems';
+      case 'resources': return 'Resource allocation planning and backup staffing';
+      default: return 'Develop specific mitigation plan';
+    }
+  }
+
+  function getBuyRiskMitigation(risk: string): string {
+    switch (risk) {
+      case 'lockin': return 'Maintain data portability and standardized interfaces';
+      case 'customization': return 'Detailed vendor capability assessment pre-purchase';
+      case 'costs': return 'Clear SLAs and cost escalation clauses in contracts';
+      case 'integration': return 'Proof of concept testing before full implementation';
+      case 'support': return 'Multiple support channels and internal expertise building';
+      default: return 'Develop specific mitigation plan';
+    }
+  }
 </script>
 
 <style>
@@ -1859,8 +1964,8 @@
           <div class="space-y-6" class:hidden={activeSection !== 6}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Strategic Fit and Risk Assessment</h2>
-                <p class="text-gray-600 mb-8">Evaluate the strategic value and assess potential risks of building versus buying.</p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Strategic Fit Assessment</h2>
+                <p class="text-gray-600 mb-8">Evaluate the strategic value and market fit of the solution.</p>
                 
                 <div class="space-y-8">
                   <!-- Strategic Alignment -->
@@ -1891,11 +1996,11 @@
                   </div>
 
                   <!-- Solution Fit -->
-                    <div class="space-y-4">
-                      <div class="mb-4">
+                  <div class="space-y-4">
+                    <div class="mb-4">
                       <h3 class="text-base font-medium text-gray-900">How well do existing solutions match your needs?</h3>
                       <p class="text-sm text-gray-600 mt-1">Assess the gap between market solutions and your requirements.</p>
-                      </div>
+                    </div>
                     <div class="grid grid-cols-1 gap-4">
                       {#each fitnessLevels as level}
                         <label class="block">
@@ -1914,58 +2019,6 @@
                           </div>
                         </label>
                       {/each}
-                    </div>
-                  </div>
-
-                  <!-- Risk Assessment -->
-                        <div class="space-y-4">
-                    <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">What are the key risks to consider?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Select all applicable risks for each approach.</p>
-                    </div>
-
-                    <!-- Build Risks -->
-                    <div class="space-y-4">
-                      <h4 class="text-sm font-medium text-gray-900">Risks for Building In-House</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {#each buildRiskOptions as risk}
-                          <label class="block">
-                            <div class="flex items-start p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.buildRisks.includes(risk.value) ? 'border-secondary bg-secondary/5' : ''}">
-                              <input
-                                type="checkbox"
-                                value={risk.value}
-                                bind:group={$formState.buildRisks}
-                                class="mt-1 h-4 w-4 text-secondary focus:ring-secondary rounded"
-                              />
-                              <div class="ml-3 flex-1">
-                                <span class="block text-sm font-medium text-gray-900">{risk.label}</span>
-                              </div>
-                              </div>
-                            </label>
-                          {/each}
-                      </div>
-                    </div>
-
-                    <!-- Buy Risks -->
-                    <div class="space-y-4">
-                      <h4 class="text-sm font-medium text-gray-900">Risks for Buying a Solution</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {#each buyRiskOptions as risk}
-                          <label class="block">
-                            <div class="flex items-start p-4 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.buyRisks.includes(risk.value) ? 'border-secondary bg-secondary/5' : ''}">
-                              <input
-                                type="checkbox"
-                                value={risk.value}
-                                bind:group={$formState.buyRisks}
-                                class="mt-1 h-4 w-4 text-secondary focus:ring-secondary rounded"
-                              />
-                              <div class="ml-3 flex-1">
-                                <span class="block text-sm font-medium text-gray-900">{risk.label}</span>
-                              </div>
-                              </div>
-                            </label>
-                          {/each}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -2212,81 +2265,57 @@
           <div class="bg-white p-6 rounded-xl border border-gray-200">
             <h4 class="text-lg font-semibold text-gray-900 mb-6">Risk Matrix Analysis</h4>
             
-            <!-- Matrix Legend -->
-            <div class="flex flex-col gap-6 mb-8">
-              <!-- Risk Types -->
-              <div class="flex flex-wrap items-center gap-8">
-                <div class="flex items-center gap-3">
+            <!-- Risk Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <!-- Build Risks Summary Card -->
+              <div class="p-4 bg-secondary/5 rounded-xl border border-secondary/20">
+                <div class="flex items-center gap-3 mb-3">
                   <div class="w-5 h-5 rounded-full bg-secondary"></div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-900">Build Risks</span>
-                    <span class="text-xs text-gray-500">In-house development risks</span>
+                  <h5 class="font-medium text-gray-900">Build Risks</h5>
+                </div>
+                <div class="flex justify-between items-center">
+                  <div class="text-sm text-gray-600">Total Risk Score</div>
+                  <div class="text-2xl font-bold text-secondary">
+                    {riskMatrix.buildRisks.reduce((sum, risk) => sum + (risk.probability * risk.severity), 0)}
                   </div>
                 </div>
-                <div class="flex items-center gap-3">
-                  <div class="w-5 h-5 rounded-full bg-blue-500"></div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-900">Buy Risks</span>
-                    <span class="text-xs text-gray-500">Third-party solution risks</span>
-                  </div>
-                </div>
+                <div class="mt-2 text-xs text-gray-500">{riskMatrix.buildRisks.length} identified risks</div>
               </div>
-              
-              <!-- Risk Levels -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div class="w-3 h-3 bg-green-100 border border-green-300 rounded mr-2"></div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-900">Low Risk (1-6)</span>
-                    <span class="text-xs text-gray-600">Minimal impact/probability</span>
+
+              <!-- Buy Risks Summary Card -->
+              <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-5 h-5 rounded-full bg-blue-500"></div>
+                  <h5 class="font-medium text-gray-900">Buy Risks</h5>
+                </div>
+                <div class="flex justify-between items-center">
+                  <div class="text-sm text-gray-600">Total Risk Score</div>
+                  <div class="text-2xl font-bold text-blue-600">
+                    {riskMatrix.buyRisks.reduce((sum, risk) => sum + (risk.probability * risk.severity), 0)}
                   </div>
                 </div>
-                <div class="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div class="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded mr-2"></div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-900">Medium Risk (7-12)</span>
-                    <span class="text-xs text-gray-600">Moderate impact/probability</span>
-                  </div>
-                </div>
-                <div class="flex items-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <div class="w-3 h-3 bg-orange-100 border border-orange-300 rounded mr-2"></div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-900">High Risk (13-18)</span>
-                    <span class="text-xs text-gray-600">Significant impact/probability</span>
-                  </div>
-                </div>
-                <div class="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <div class="w-3 h-3 bg-red-100 border border-red-300 rounded mr-2"></div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-900">Critical Risk (19-25)</span>
-                    <span class="text-xs text-gray-600">Severe impact/probability</span>
-                  </div>
-                </div>
+                <div class="mt-2 text-xs text-gray-500">{riskMatrix.buyRisks.length} identified risks</div>
               </div>
             </div>
 
             <!-- Matrix Grid -->
-            <div class="relative overflow-x-auto pb-8">
-              <div class="min-w-[600px] ml-12"> <!-- Increased left margin for y-label -->
+            <div class="relative w-full py-6">
+              <div class="w-full max-w-6xl mx-auto pl-20">
                 <!-- Y-axis Label -->
-                <div class="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 transform whitespace-nowrap">
-                  <span class="text-sm font-medium text-gray-900">Probability</span>
+                <div class="absolute -left-2 top-1/2 -translate-y-1/2 -rotate-90 transform whitespace-nowrap">
+                  <span class="text-base font-medium text-gray-900">Probability</span>
                 </div>
                 
                 <!-- Matrix -->
-                <div class="grid grid-cols-5 gap-2">
-                  <!-- Headers -->
-                  {#each Object.entries(severityLabels).reverse() as [severity, label]}
-                    <div class="h-24 relative">
-                      <span class="absolute -top-8 left-1/2 -translate-x-1/2 text-sm font-medium text-gray-900 text-center whitespace-nowrap">
-                        {label}
-                      </span>
-                    </div>
+                <div class="grid grid-cols-5 gap-4">
+                  <!-- Headers - Empty spaces for layout -->
+                  {#each Array(5) as _}
+                    <div class="h-40 relative"></div>
                   {/each}
                   
                   <!-- Matrix Cells -->
-                  {#each Object.entries(probabilityLabels).reverse() as [probability, probLabel]}
-                    {#each Object.entries(severityLabels) as [severity, sevLabel]}
+                  {#each Object.entries(probabilityLabels).reverse() as [probability]}
+                    {#each Object.entries(severityLabels) as [severity]}
                       {@const riskLevel = Number(probability) * Number(severity)}
                       {@const buildRisks = riskMatrix.buildRisks.filter(risk => 
                         risk.probability === Number(probability) && 
@@ -2297,20 +2326,26 @@
                         risk.severity === Number(severity)
                       )}
                       
-                      <div class="relative h-24 border border-gray-200 rounded-lg p-3 transition-colors {
-                        riskLevel <= 6 ? 'bg-green-50' :
-                        riskLevel <= 12 ? 'bg-yellow-50' :
-                        riskLevel <= 18 ? 'bg-orange-50' :
-                        'bg-red-50'
-                      }">
-                        {#if probability === '5' && severity === '1'}
-                          <span class="absolute -left-28 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-900 whitespace-nowrap">
-                            {probLabel}
-                          </span>
-                        {/if}
-                        
+                      <div class="relative h-40 border border-gray-200 rounded-lg p-4 transition-colors {
+                        riskLevel <= 6 ? 'bg-green-50 hover:bg-green-100' :
+                        riskLevel <= 12 ? 'bg-yellow-50 hover:bg-yellow-100' :
+                        riskLevel <= 18 ? 'bg-orange-50 hover:bg-orange-100' :
+                        'bg-red-50 hover:bg-red-100'
+                      } {(buildRisks.length > 0 || buyRisks.length > 0) ? 'cursor-pointer' : ''}"
+                      on:click={() => {
+                        if (buildRisks.length > 0 || buyRisks.length > 0) {
+                          console.log('Cell clicked:', { buildRisks, buyRisks }); // Debug log
+                          selectedRisks = [...buildRisks, ...buyRisks];
+                          selectedCell = { 
+                            probability: Number(probability), 
+                            severity: Number(severity), 
+                            riskLevel 
+                          };
+                          showRiskDetails = true;
+                        }
+                      }}>
                         <!-- Risk Level Indicator -->
-                        <div class="absolute top-1 right-1 text-xs font-medium {
+                        <div class="absolute top-2 right-2 text-sm font-medium {
                           riskLevel <= 6 ? 'text-green-700' :
                           riskLevel <= 12 ? 'text-yellow-700' :
                           riskLevel <= 18 ? 'text-orange-700' :
@@ -2319,62 +2354,46 @@
                           {riskLevel}
                         </div>
                         
-                        <!-- Risk Indicators -->
-                        <div class="relative h-full">
-                          <!-- Build Risks -->
-                          {#if buildRisks.length > 0}
-                            <div class="absolute top-0 left-0">
-                              <div class="relative group">
-                                <div class="w-5 h-5 rounded-full bg-secondary flex items-center justify-center text-white text-xs font-medium">
-                                  {buildRisks.length}
-                                </div>
-                                <!-- Tooltip -->
-                                <div class="absolute bottom-full left-0 mb-2 w-64 p-3 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-20 {Number(severity) > 3 ? 'right-0 left-auto' : ''}">
-                                  <p class="font-medium text-gray-900 mb-2">Build Risks</p>
-                                  <ul class="space-y-2">
-                                    {#each buildRisks as risk}
-                                      <li class="text-sm">
-                                        <span class="font-medium text-gray-900">{risk.label}</span>
-                                        <div class="text-xs text-gray-600">
-                                          <span>Probability: {probLabel}</span>
-                                          <span class="mx-1">•</span>
-                                          <span>Impact: {sevLabel}</span>
-                                        </div>
-                                      </li>
-                                    {/each}
-                                  </ul>
-                                </div>
+                        <!-- Risk Counts and Preview -->
+                        {#if buildRisks.length > 0 || buyRisks.length > 0}
+                          <div class="absolute inset-0 p-4">
+                            <div class="h-full flex flex-col justify-between">
+                              <!-- Risk Counts -->
+                              <div class="flex gap-3">
+                                {#if buildRisks.length > 0}
+                                  <div class="flex items-center gap-1.5 bg-white/80 rounded-full px-2.5 py-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                                    <span class="text-sm font-medium text-gray-900">{buildRisks.length}</span>
+                                  </div>
+                                {/if}
+                                {#if buyRisks.length > 0}
+                                  <div class="flex items-center gap-1.5 bg-white/80 rounded-full px-2.5 py-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                                    <span class="text-sm font-medium text-gray-900">{buyRisks.length}</span>
+                                  </div>
+                                {/if}
+                              </div>
+                              
+                              <!-- Risk Preview -->
+                              <div class="text-sm text-gray-600">
+                                {#if buildRisks.length > 0 || buyRisks.length > 0}
+                                  <div class="bg-white/80 rounded-lg p-2">
+                                    {#if buildRisks.length > 0}
+                                      <div class="truncate">
+                                        {buildRisks[0].label}{buildRisks.length > 1 ? ` +${buildRisks.length - 1}` : ''}
+                                      </div>
+                                    {/if}
+                                    {#if buyRisks.length > 0}
+                                      <div class="truncate">
+                                        {buyRisks[0].label}{buyRisks.length > 1 ? ` +${buyRisks.length - 1}` : ''}
+                                      </div>
+                                    {/if}
+                                  </div>
+                                {/if}
                               </div>
                             </div>
-                          {/if}
-                          
-                          <!-- Buy Risks -->
-                          {#if buyRisks.length > 0}
-                            <div class="absolute top-0 {buildRisks.length > 0 ? 'left-7' : 'left-0'}">
-                              <div class="relative group">
-                                <div class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
-                                  {buyRisks.length}
-                                </div>
-                                <!-- Tooltip -->
-                                <div class="absolute bottom-full left-0 mb-2 w-64 p-3 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-20 {Number(severity) > 3 ? 'right-0 left-auto' : ''}">
-                                  <p class="font-medium text-gray-900 mb-2">Buy Risks</p>
-                                  <ul class="space-y-2">
-                                    {#each buyRisks as risk}
-                                      <li class="text-sm">
-                                        <span class="font-medium text-gray-900">{risk.label}</span>
-                                        <div class="text-xs text-gray-600">
-                                          <span>Probability: {probLabel}</span>
-                                          <span class="mx-1">•</span>
-                                          <span>Impact: {sevLabel}</span>
-                                        </div>
-                                      </li>
-                                    {/each}
-                                  </ul>
-                                </div>
-                              </div>
-                            </div>
-                          {/if}
-                        </div>
+                          </div>
+                        {/if}
                       </div>
                     {/each}
                   {/each}
@@ -2382,10 +2401,95 @@
                 
                 <!-- X-axis Label -->
                 <div class="text-center mt-8">
-                  <span class="text-sm font-medium text-gray-900">Impact</span>
+                  <span class="text-base font-medium text-gray-900">Impact</span>
                 </div>
               </div>
             </div>
+
+            <!-- Simplified Risk Details Modal -->
+            {#if showRiskDetails && selectedCell}
+              <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                  <div class="p-6">
+                    <!-- Modal Header -->
+                    <div class="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Risks in Cell</h3>
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                          <span class="font-medium">P{selectedCell.probability}</span>
+                          <span>×</span>
+                          <span class="font-medium">I{selectedCell.severity}</span>
+                          <span>=</span>
+                          <span class="px-2 py-1 text-sm font-medium rounded-full {
+                            selectedCell.riskLevel <= 6 ? 'bg-green-100 text-green-800' :
+                            selectedCell.riskLevel <= 12 ? 'bg-yellow-100 text-yellow-800' :
+                            selectedCell.riskLevel <= 18 ? 'bg-orange-100 text-orange-800' :
+                            'bg-red-100 text-red-800'
+                          }">{selectedCell.riskLevel}</span>
+                        </div>
+                      </div>
+                      <button
+                        class="text-gray-400 hover:text-gray-500"
+                        on:click={() => {
+                          showRiskDetails = false;
+                          selectedRisks = [];
+                          selectedCell = null;
+                        }}
+                      >
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Risks List -->
+                    <div class="space-y-6">
+                      <!-- Build Risks -->
+                      {#if selectedRisks.filter(risk => !risk.id.includes('vendor-') && !risk.id.includes('cost-') && !risk.id.includes('integration-')).length > 0}
+                        <div>
+                          <div class="flex items-center gap-2 mb-3">
+                            <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                            <h4 class="text-lg font-medium text-gray-900">Build Risks</h4>
+                          </div>
+                          <div class="space-y-3">
+                            {#each selectedRisks.filter(risk => !risk.id.includes('vendor-') && !risk.id.includes('cost-') && !risk.id.includes('integration-')) as risk}
+                              <div class="p-4 bg-gray-50 rounded-lg">
+                                <h5 class="font-medium text-gray-900 mb-2">{risk.label}</h5>
+                                <p class="text-sm text-gray-600">{risk.description}</p>
+                              </div>
+                            {/each}
+                          </div>
+                        </div>
+                      {/if}
+
+                      <!-- Buy Risks -->
+                      {#if selectedRisks.filter(risk => risk.id.includes('vendor-') || risk.id.includes('cost-') || risk.id.includes('integration-')).length > 0}
+                        <div>
+                          <div class="flex items-center gap-2 mb-3">
+                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                            <h4 class="text-lg font-medium text-gray-900">Buy Risks</h4>
+                          </div>
+                          <div class="space-y-3">
+                            {#each selectedRisks.filter(risk => risk.id.includes('vendor-') || risk.id.includes('cost-') || risk.id.includes('integration-')) as risk}
+                              <div class="p-4 bg-gray-50 rounded-lg">
+                                <h5 class="font-medium text-gray-900 mb-2">{risk.label}</h5>
+                                <p class="text-sm text-gray-600">{risk.description}</p>
+                              </div>
+                            {/each}
+                          </div>
+                        </div>
+                      {/if}
+
+                      {#if selectedRisks.length === 0}
+                        <div class="text-center py-6 text-gray-500">
+                          No risks found in this cell.
+                        </div>
+                      {/if}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {/if}
 
             <!-- Risk Calculations Accordion -->
             <div class="mt-8">
@@ -2406,6 +2510,41 @@
               
               {#if showCalculations}
                 <div class="mt-4 space-y-6">
+                  <!-- Risk Level Legend -->
+                  <div class="p-4 bg-gray-50 rounded-lg">
+                    <h5 class="font-medium text-gray-900 mb-4">Risk Level Categories</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="w-3 h-3 bg-green-100 border border-green-300 rounded mr-2"></div>
+                        <div class="flex flex-col">
+                          <span class="text-sm font-medium text-gray-900">Low Risk (1-6)</span>
+                          <span class="text-xs text-gray-600">Minimal impact/probability</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded mr-2"></div>
+                        <div class="flex flex-col">
+                          <span class="text-sm font-medium text-gray-900">Medium Risk (7-12)</span>
+                          <span class="text-xs text-gray-600">Moderate impact/probability</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div class="w-3 h-3 bg-orange-100 border border-orange-300 rounded mr-2"></div>
+                        <div class="flex flex-col">
+                          <span class="text-sm font-medium text-gray-900">High Risk (13-18)</span>
+                          <span class="text-xs text-gray-600">Significant impact/probability</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div class="w-3 h-3 bg-red-100 border border-red-300 rounded mr-2"></div>
+                        <div class="flex flex-col">
+                          <span class="text-sm font-medium text-gray-900">Critical Risk (19-25)</span>
+                          <span class="text-xs text-gray-600">Severe impact/probability</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- Build Risk Calculations -->
                   <div class="p-4 bg-gray-50 rounded-lg">
                     <h5 class="font-medium text-gray-900 mb-4">Build Risk Calculations</h5>
@@ -2614,68 +2753,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Build/Buy Risk Details -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
-            <!-- Existing Build Risks and Buy Risks sections -->
-          <div class="bg-white p-6 rounded-xl border border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-900 mb-4">Build Considerations</h4>
-            <div class="space-y-4">
-              <!-- Competency -->
-              <div class="p-4 bg-gray-50 rounded-lg">
-                <h5 class="font-medium text-gray-900 mb-2">Team Competency</h5>
-                <p class="text-sm text-gray-600">
-                  {$formState.inHouseCompetency === 'full' ? 'Team has full competency for development.' :
-                   $formState.inHouseCompetency === 'partial' ? 'Some upskilling needed but basic competency exists.' :
-                   'Significant training or hiring would be required.'}
-                </p>
-              </div>
-              <!-- Risks -->
-              <div class="p-4 bg-gray-50 rounded-lg">
-                <h5 class="font-medium text-gray-900 mb-2">Key Risks</h5>
-                <ul class="space-y-2">
-                    {#each buildRiskOptions.filter(risk => $formState.buildRisks.includes(risk.value)) as risk}
-                    <li class="flex items-center text-sm text-gray-600">
-                      <svg class="w-5 h-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                      </svg>
-                        {risk.label}
-                    </li>
-                  {/each}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-xl border border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-900 mb-4">Buy Considerations</h4>
-            <div class="space-y-4">
-              <!-- Solution Fit -->
-              <div class="p-4 bg-gray-50 rounded-lg">
-                <h5 class="font-medium text-gray-900 mb-2">Solution Fit</h5>
-                <p class="text-sm text-gray-600">
-                  {$formState.alternativeFitness === 'high' ? 'Available solutions highly match requirements.' :
-                   $formState.alternativeFitness === 'moderate' ? 'Solutions need moderate customization.' :
-                   'Extensive customization would be required.'}
-                </p>
-              </div>
-              <!-- Risks -->
-              <div class="p-4 bg-gray-50 rounded-lg">
-                <h5 class="font-medium text-gray-900 mb-2">Key Risks</h5>
-                <ul class="space-y-2">
-                    {#each buyRiskOptions.filter(risk => $formState.buyRisks.includes(risk.value)) as risk}
-                    <li class="flex items-center text-sm text-gray-600">
-                      <svg class="w-5 h-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                      </svg>
-                        {risk.label}
-                    </li>
-                  {/each}
-                </ul>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Action Buttons -->

@@ -1076,40 +1076,33 @@
         <p class="text-xs sm:text-sm text-gray-600 mt-1 text-center">Answer a few questions to help decide whether to build in-house or buy a solution</p>
       </div>
 
-      <!-- Progress indicator -->
-      <div class="mb-6 sm:mb-8">
-        <div class="flex items-center justify-between mb-2">
-          <div class="flex-1 flex items-center">
-            {#each Array(6) as _, i}
-              <div class="flex-1 flex items-center">
-                <div
-                  class="w-3 h-3 rounded-full transition-colors duration-200 {i + 1 <= activeSection ? 'bg-secondary' : 'bg-gray-200'}"
-                ></div>
-                {#if i < 5}
-                  <div
-                    class="flex-1 h-0.5 mx-1 transition-colors duration-200 {i + 1 < activeSection ? 'bg-secondary' : 'bg-gray-200'}"
-                  ></div>
-                {/if}
-              </div>
-            {/each}
+      <!-- Progress Bar -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="relative pt-1">
+          <div class="flex mb-2 items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-secondary bg-secondary/10">
+                {getSectionTitle(activeSection)}
+              </span>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-semibold inline-block text-secondary">
+                {Math.round((activeSection / totalSections) * 100)}%
+              </span>
+            </div>
           </div>
-          <span class="ml-4 text-sm text-gray-500 whitespace-nowrap">Step {activeSection} of 6</span>
+          <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-secondary/10">
+            <div
+              style="width: {(activeSection / totalSections) * 100}%"
+              class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-secondary transition-all duration-500"
+            ></div>
+          </div>
         </div>
+
         <!-- Step Title -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-medium text-gray-900">{getSectionTitle(activeSection)}</h3>
-            <p class="text-sm text-gray-600">{getSectionDescription(activeSection)}</p>
-          </div>
-          {#if activeSection > 1}
-            <button
-              type="button"
-              class="text-sm font-medium text-secondary hover:text-secondary-dark transition-colors"
-              on:click={() => activeSection--}
-            >
-              Back
-            </button>
-          {/if}
+        <div>
+          <h3 class="text-lg font-medium text-gray-900">{getSectionTitle(activeSection)}</h3>
+          <p class="text-sm text-gray-600">{getSectionDescription(activeSection)}</p>
         </div>
       </div>
 

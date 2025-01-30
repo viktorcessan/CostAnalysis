@@ -50,7 +50,7 @@
   const stepTitles = [
     'Project Info',
     'Value Categories',
-    'Generate Value',
+    'Increase Revenue',
     'Protect Value', 
     'Reduce Cost',
     'Avoid Risk',
@@ -580,39 +580,175 @@
     {:else if currentStep === 1}
       <div class="space-y-6 animate-fade-in">
         <h3 class="text-xl font-semibold">Understanding Value Categories</h3>
-        <p class="text-gray-600">Before we dive into calculations, let's understand the four types of value your feature can deliver:</p>
+        <p class="text-gray-600">Select the types of value your feature will deliver:</p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="p-4 rounded-lg border border-green-200 bg-green-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-2">
+          <div class="p-6 rounded-lg border border-green-200 bg-green-50 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">📈</span>
-              <h4 class="font-semibold text-green-800">Generate Value</h4>
+              <h4 class="font-semibold text-green-800">Increase Revenue</h4>
             </div>
-            <p class="text-sm text-gray-600">New revenue streams, increased sales, or improved customer value that generates additional income.</p>
+            <p class="text-sm text-gray-600 mb-6">New sales opportunities, revenue streams, and market expansion. Breakthrough features that excite customers or disrupt markets to grow your business footprint.</p>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
+                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Market Expansion</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
+                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Platform & Partnership Revenue</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
+                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Premium Features</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
+                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Add-on Services</span>
+              </label>
+            </div>
           </div>
-          
-          <div class="p-4 rounded-lg border border-blue-200 bg-blue-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-2">
+
+          <div class="p-6 rounded-lg border border-blue-200 bg-blue-50 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">🔒</span>
-              <h4 class="font-semibold text-blue-800">Protect Value</h4>
+              <h4 class="font-semibold text-blue-800">Protect Revenue</h4>
             </div>
-            <p class="text-sm text-gray-600">Safeguard existing revenue, maintain market position, and protect customer relationships.</p>
+            <p class="text-sm text-gray-600 mb-6">Essential upkeep and competitive maintenance. The ongoing improvements needed to maintain your current market position and revenue streams.</p>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Core Product Experience</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Platform Reliability</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Customer Success</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
+                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Competitive Position</span>
+              </label>
+            </div>
           </div>
           
-          <div class="p-4 rounded-lg border border-amber-200 bg-amber-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-2">
+          <div class="p-6 rounded-lg border border-amber-200 bg-amber-50 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">✂️</span>
-              <h4 class="font-semibold text-amber-800">Reduce Cost</h4>
+              <h4 class="font-semibold text-amber-800">Reduce Costs</h4>
             </div>
-            <p class="text-sm text-gray-600">Operational efficiency, automation, and improvements that lower expenses.</p>
+            <p class="text-sm text-gray-600 mb-6">Currently active expenses that can be lowered. Direct savings through efficiency gains and process improvements in today's operations.</p>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
+                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Operational Efficiency</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
+                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Infrastructure Optimization</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
+                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Support Load</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
+                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Development Velocity</span>
+              </label>
+            </div>
           </div>
           
-          <div class="p-4 rounded-lg border border-red-200 bg-red-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-2">
+          <div class="p-6 rounded-lg border border-red-200 bg-red-50 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">🛡️</span>
-              <h4 class="font-semibold text-red-800">Avoid Risk</h4>
+              <h4 class="font-semibold text-red-800">Avoid Costs</h4>
             </div>
-            <p class="text-sm text-gray-600">Prevent potential losses, mitigate risks, and ensure compliance.</p>
+            <p class="text-sm text-gray-600 mb-6">Future expenses and risks we can prevent today. Costs not yet on our books but likely to appear without preventive action.</p>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
+                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Risk Management</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
+                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Technical Sustainability</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
+                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Future-Proofing</span>
+              </label>
+              <label class="flex items-center gap-3 text-sm text-gray-700">
+                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
+                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Disaster Prevention</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -687,13 +823,13 @@
         </div>
       </div>
 
-    <!-- Generate Value Step -->
+    <!-- Increase Revenue Step -->
     {:else if currentStep === 2}
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
           <span class="text-3xl">📈</span>
           <div>
-            <h3 class="text-xl font-semibold">Generate Value</h3>
+            <h3 class="text-xl font-semibold">Increase Revenue</h3>
             <p class="text-sm text-gray-600">Select impacts that will generate new value or revenue</p>
         </div>
         </div>
@@ -777,7 +913,7 @@
           </div>
                       </div>
                       
-        <!-- Similar structure as Generate Value step but with protect impacts -->
+        <!-- Similar structure as Increase Revenue step but with protect impacts -->
         <div class="space-y-4">
           {#each impactsByCategory.protect as impact}
             <div class="bg-white rounded-lg border border-gray-200 p-4">
@@ -911,15 +1047,15 @@
                         </div>
                       </div>
                       {/each}
-                      </div>
+                    </div>
                     <!-- Value preview -->
                     <div class="flex justify-end mt-4">
                       <span class="text-sm font-medium text-amber-600">
                         Annual Value: {formatMoney(selectedImpact.calculatedValue)}
                       </span>
-                      </div>
                     </div>
-                  {/if}
+                  </div>
+                {/if}
               {/if}
             </div>
           {/each}

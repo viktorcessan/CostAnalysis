@@ -68,6 +68,9 @@
   let valueDistributionChart: Chart | null = null;
   let costBreakdownChart: Chart | null = null;
 
+  // Add modal state
+  let showQuizModal = false;
+
   function calculateConfidenceScore(): number {
     let score = 0;
     
@@ -505,6 +508,45 @@
     }, 100);
   }
 
+  // Function to initialize quiz
+  function initializeQuiz() {
+    if (typeof window !== 'undefined') {
+      const quizScript = `
+        (function(i,s,o,g,r,a,m){
+          var ql=document.querySelectorAll('A[data-quiz],DIV[data-quiz]');
+          if(ql){
+            if(ql.length){
+              for(var k=0;k<ql.length;k++){
+                ql[k].id='quiz-embed-'+k;
+                ql[k].href="javascript:var i=document.getElementById('quiz-embed-"+k+"');try{qz.startQuiz(i)}catch(e){i.start=1;i.style.cursor='wait';i.style.opacity='0.5'};void(0);";
+              }
+            }
+          };
+          i['QP']=r;
+          i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();
+          a=s.createElement(o),m=s.getElementsByTagName(o)[0];
+          a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://take.quiz-maker.com/3012/CDN/quiz-embed-v1.js','qp');
+      `;
+
+      // Create and append the initialization script
+      const script = document.createElement('script');
+      script.textContent = quizScript;
+      document.body.appendChild(script);
+    }
+  }
+
+  // Initialize quiz when modal opens
+  function toggleQuizModal() {
+    showQuizModal = !showQuizModal;
+    if (showQuizModal) {
+      // Wait for modal to be in DOM
+      setTimeout(() => {
+        initializeQuiz();
+      }, 100);
+    }
+  }
+
   onMount(() => {
     updateCharts();
   });
@@ -518,6 +560,67 @@
   >
     <div class="space-y-2">
       <h4 class="font-semibold">{tooltipContent}</h4>
+    </div>
+  </div>
+{/if}
+
+<!-- Quiz Modal Component -->
+{#if showQuizModal}
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col relative">
+      <!-- Header -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🎯</span>
+            <h3 class="text-xl font-semibold">Test Your Knowledge</h3>
+          </div>
+          <button
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+            on:click={toggleQuizModal}
+            aria-label="Close modal"
+          >
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <p class="text-sm text-gray-600 mt-2">Challenge yourself to understand the different types of value your features can deliver. Good luck!</p>
+      </div>
+      
+      <!-- Quiz Content -->
+      <div class="flex-1 overflow-y-auto p-6">
+        <div class="quiz-container bg-gray-50 rounded-lg p-4">
+          <a data-quiz="Q12UOG7P5" data-type="4" href="https://take.quiz-maker.com/Q12UOG7P5">Loading Quiz...</a>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="p-6 border-t border-gray-200 bg-gray-50">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-600">You can retake the quiz as many times as you want</p>
+          <div class="flex gap-3">
+            <button
+              class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+              on:click={toggleQuizModal}
+            >
+              Close Quiz
+            </button>
+            <button
+              class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+              on:click={() => {
+                toggleQuizModal();
+                if (currentStep === 1) handleNext();
+              }}
+            >
+              Continue to Selection
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 {/if}
@@ -581,6 +684,19 @@
       <div class="space-y-6 animate-fade-in">
         <h3 class="text-xl font-semibold">Understanding Value Categories</h3>
         <p class="text-gray-600">Select the types of value your feature will deliver:</p>
+        
+        <!-- Add Test Your Knowledge button -->
+        <div class="flex justify-end mb-4">
+          <button
+            class="px-4 py-2 bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors flex items-center gap-2"
+            on:click={toggleQuizModal}
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            Test Your Knowledge
+          </button>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="p-6 rounded-lg border border-green-200 bg-green-50 hover:shadow-md transition-shadow">
@@ -1404,5 +1520,37 @@
 
   .error-message {
     @apply text-sm text-red-500 mt-1;
+  }
+
+  /* Quiz modal styles */
+  .quiz-container {
+    width: 100%;
+    min-height: 500px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+  }
+  
+  /* Ensure modal scrolls properly on mobile */
+  @media (max-width: 640px) {
+    .quiz-container {
+      min-height: 400px;
+    }
+  }
+
+  /* Modal animation */
+  .modal-enter {
+    animation: modalEnter 0.3s ease-out;
+  }
+
+  @keyframes modalEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 </style> 

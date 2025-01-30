@@ -827,7 +827,7 @@
   let showLegend = false;
 
   let showRiskDetails = false;
-  let selectedRisks: RiskAssessment[] = [];
+  let selectedRisks: RiskAssessment[] | null = null;
   let selectedCell: { probability: number; severity: number; riskLevel: number } | null = null;
 
   function generateMitigationStrategies(riskLevel: number, risks: RiskAssessment[]): string[] {
@@ -1994,11 +1994,11 @@
         
         <!-- Primary Recommendation -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div class="md:col-span-2 p-6 bg-gradient-to-br from-secondary/5 to-transparent rounded-xl border border-secondary/20">
+          <div class="md:col-span-2 p-6 bg-gradient-to-br from-purple-50 to-transparent rounded-xl border border-purple-200">
             <div class="flex items-start justify-between">
               <div>
                 <h4 class="text-lg font-semibold text-gray-900 mb-2">Recommendation</h4>
-                <p class="text-3xl font-bold text-secondary mb-4">{recommendation}</p>
+                <p class="text-3xl font-bold text-purple-600 mb-4">{recommendation}</p>
                 <div class="prose prose-sm text-gray-600">
                   {#if recommendation === 'Build'}
                     <ul class="space-y-2">
@@ -2023,15 +2023,15 @@
               </div>
               <!-- Confidence Score -->
               <div class="text-right">
-                <div class="inline-flex items-center justify-center w-32 h-32 rounded-full bg-white border-4 border-secondary relative">
+                <div class="inline-flex items-center justify-center w-32 h-32 rounded-full bg-white border-4 border-purple-500 relative">
                   <div class="text-center">
-                    <p class="text-3xl font-bold text-secondary">{confidence}%</p>
+                    <p class="text-3xl font-bold text-purple-600">{confidence}%</p>
                     <p class="text-xs text-gray-600">Confidence</p>
                   </div>
                   <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="4" class="text-secondary/20"/>
+                    <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="4" class="text-purple-100"/>
                     <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="4" 
-                      stroke-dasharray={`${confidence * 3.02} 302`} class="text-secondary transition-all duration-1000"/>
+                      stroke-dasharray={`${confidence * 3.02} 302`} class="text-purple-500 transition-all duration-1000"/>
                   </svg>
                 </div>
               </div>
@@ -2039,10 +2039,10 @@
           </div>
 
           <!-- Cost Summary -->
-          <div class="p-6 bg-blue-50 rounded-xl border border-blue-200">
+          <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-200">
             <h4 class="text-lg font-semibold text-gray-900 mb-4">Cost Analysis</h4>
             <div class="space-y-4">
-              <div class="p-3 bg-white rounded-lg border border-blue-100">
+              <div class="p-3 bg-white rounded-lg border border-emerald-100">
                 <p class="text-sm text-gray-600">Build (First Year)</p>
                 <p class="text-xl font-semibold text-gray-900">
                   {formatCurrency($formState.buildFTEs * $formState.buildHourlyRate * 2080)}
@@ -2051,7 +2051,7 @@
                   Based on {$formState.buildFTEs} FTEs at {formatCurrency($formState.buildHourlyRate)}/hour
                 </p>
               </div>
-              <div class="p-3 bg-white rounded-lg border border-blue-100">
+              <div class="p-3 bg-white rounded-lg border border-emerald-100">
                 <p class="text-sm text-gray-600">Buy (First Year)</p>
                 <p class="text-xl font-semibold text-gray-900">
                   {formatCurrency($formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost + ($formState.userCount * $formState.costPerUser * 12))}
@@ -2164,7 +2164,7 @@
         <div class="grid grid-cols-1 gap-4 sm:gap-8">
           <!-- Risk Matrix -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-900 mb-6">Risk Matrix Analysis</h4>
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">Risk Matrix Analysis</h4>
             
             <!-- Risk Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -2200,7 +2200,7 @@
             </div>
 
             <!-- Matrix Grid -->
-            <div class="relative w-full py-6">
+            <div class="relative w-full py-4">
               <div class="w-full max-w-6xl mx-auto pl-20">
                 <!-- Y-axis Label -->
                 <div class="absolute -left-2 top-1/2 -translate-y-1/2 -rotate-90 transform whitespace-nowrap">
@@ -2235,8 +2235,10 @@
                       } {(buildRisks.length > 0 || buyRisks.length > 0) ? 'cursor-pointer' : ''}"
                       on:click={() => {
                         if (buildRisks.length > 0 || buyRisks.length > 0) {
-                          console.log('Cell clicked:', { buildRisks, buyRisks }); // Debug log
-                          selectedRisks = [...buildRisks, ...buyRisks];
+                          selectedRisks = {
+                            buildRisks,
+                            buyRisks
+                          };
                           selectedCell = { 
                             probability: Number(probability), 
                             severity: Number(severity), 
@@ -2315,11 +2317,17 @@
                     <!-- Modal Header -->
                     <div class="flex justify-between items-start mb-6">
                       <div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Risks in Cell</h3>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Risk Analysis</h3>
                         <div class="flex items-center gap-2 text-sm text-gray-600">
-                          <span class="font-medium">P{selectedCell.probability}</span>
+                          <div class="flex items-center gap-1">
+                            <span class="font-medium">Probability:</span>
+                            <span class="px-2 py-1 bg-gray-100 rounded">{selectedCell.probability}</span>
+                          </div>
                           <span>×</span>
-                          <span class="font-medium">I{selectedCell.severity}</span>
+                          <div class="flex items-center gap-1">
+                            <span class="font-medium">Impact:</span>
+                            <span class="px-2 py-1 bg-gray-100 rounded">{selectedCell.severity}</span>
+                          </div>
                           <span>=</span>
                           <span class="px-2 py-1 text-sm font-medium rounded-full {
                             selectedCell.riskLevel <= 6 ? 'bg-green-100 text-green-800' :
@@ -2333,7 +2341,7 @@
                         class="text-gray-400 hover:text-gray-500"
                         on:click={() => {
                           showRiskDetails = false;
-                          selectedRisks = [];
+                          selectedRisks = null;
                           selectedCell = null;
                         }}
                       >
@@ -2345,43 +2353,97 @@
 
                     <!-- Risks List -->
                     <div class="space-y-6">
-                      <!-- Build Risks -->
-                      {#if selectedRisks.filter(risk => !risk.id.includes('vendor-') && !risk.id.includes('cost-') && !risk.id.includes('integration-')).length > 0}
-                        <div>
-                          <div class="flex items-center gap-2 mb-3">
-                            <div class="w-3 h-3 rounded-full bg-secondary"></div>
-                            <h4 class="text-lg font-medium text-gray-900">Build Risks</h4>
+                      {#if selectedRisks}
+                        <!-- Build Risks -->
+                        {#if selectedRisks.buildRisks.length > 0}
+                          <div class="p-4 bg-secondary/5 rounded-xl border border-secondary/20">
+                            <div class="flex items-center gap-2 mb-4">
+                              <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                              <h4 class="text-lg font-medium text-gray-900">Build Risks ({selectedRisks.buildRisks.length})</h4>
+                            </div>
+                            <div class="space-y-4">
+                              {#each selectedRisks.buildRisks as risk}
+                                <div class="p-4 bg-white rounded-lg border border-gray-100">
+                                  <div class="flex justify-between items-start mb-2">
+                                    <h5 class="font-medium text-gray-900">{risk.label}</h5>
+                                    <span class="px-2 py-1 text-xs font-medium bg-secondary/10 text-secondary rounded-full">
+                                      P{risk.probability} × I{risk.severity}
+                                    </span>
+                                  </div>
+                                  <p class="text-sm text-gray-600 mb-3">{risk.description}</p>
+                                  {#if risk.details}
+                                    <div class="mt-3 pt-3 border-t border-gray-100">
+                                      <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <h6 class="text-xs font-medium text-gray-700 mb-2">Probability Factors</h6>
+                                          <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                                            {#each risk.details.probabilityFactors || [] as factor}
+                                              <li>{factor}</li>
+                                            {/each}
+                                          </ul>
+                                        </div>
+                                        <div>
+                                          <h6 class="text-xs font-medium text-gray-700 mb-2">Severity Factors</h6>
+                                          <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                                            {#each risk.details.severityFactors || [] as factor}
+                                              <li>{factor}</li>
+                                            {/each}
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  {/if}
+                                </div>
+                              {/each}
+                            </div>
                           </div>
-                          <div class="space-y-3">
-                            {#each selectedRisks.filter(risk => !risk.id.includes('vendor-') && !risk.id.includes('cost-') && !risk.id.includes('integration-')) as risk}
-                              <div class="p-4 bg-gray-50 rounded-lg">
-                                <h5 class="font-medium text-gray-900 mb-2">{risk.label}</h5>
-                                <p class="text-sm text-gray-600">{risk.description}</p>
-                              </div>
-                            {/each}
-                          </div>
-                        </div>
-                      {/if}
+                        {/if}
 
-                      <!-- Buy Risks -->
-                      {#if selectedRisks.filter(risk => risk.id.includes('vendor-') || risk.id.includes('cost-') || risk.id.includes('integration-')).length > 0}
-                        <div>
-                          <div class="flex items-center gap-2 mb-3">
-                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                            <h4 class="text-lg font-medium text-gray-900">Buy Risks</h4>
+                        <!-- Buy Risks -->
+                        {#if selectedRisks.buyRisks.length > 0}
+                          <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                            <div class="flex items-center gap-2 mb-4">
+                              <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                              <h4 class="text-lg font-medium text-gray-900">Buy Risks ({selectedRisks.buyRisks.length})</h4>
+                            </div>
+                            <div class="space-y-4">
+                              {#each selectedRisks.buyRisks as risk}
+                                <div class="p-4 bg-white rounded-lg border border-gray-100">
+                                  <div class="flex justify-between items-start mb-2">
+                                    <h5 class="font-medium text-gray-900">{risk.label}</h5>
+                                    <span class="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+                                      P{risk.probability} × I{risk.severity}
+                                    </span>
+                                  </div>
+                                  <p class="text-sm text-gray-600 mb-3">{risk.description}</p>
+                                  {#if risk.details}
+                                    <div class="mt-3 pt-3 border-t border-gray-100">
+                                      <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <h6 class="text-xs font-medium text-gray-700 mb-2">Probability Factors</h6>
+                                          <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                                            {#each risk.details.probabilityFactors || [] as factor}
+                                              <li>{factor}</li>
+                                            {/each}
+                                          </ul>
+                                        </div>
+                                        <div>
+                                          <h6 class="text-xs font-medium text-gray-700 mb-2">Severity Factors</h6>
+                                          <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                                            {#each risk.details.severityFactors || [] as factor}
+                                              <li>{factor}</li>
+                                            {/each}
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  {/if}
+                                </div>
+                              {/each}
+                            </div>
                           </div>
-                          <div class="space-y-3">
-                            {#each selectedRisks.filter(risk => risk.id.includes('vendor-') || risk.id.includes('cost-') || risk.id.includes('integration-')) as risk}
-                              <div class="p-4 bg-gray-50 rounded-lg">
-                                <h5 class="font-medium text-gray-900 mb-2">{risk.label}</h5>
-                                <p class="text-sm text-gray-600">{risk.description}</p>
-                              </div>
-                            {/each}
-                          </div>
-                        </div>
-                      {/if}
-
-                      {#if selectedRisks.length === 0}
+                        {/if}
+                      {:else}
                         <div class="text-center py-6 text-gray-500">
                           No risks found in this cell.
                         </div>

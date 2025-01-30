@@ -1468,6 +1468,33 @@
                     </div>
                   </div>
 
+                  <!-- Solution Fit -->
+                  <div class="space-y-4">
+                    <div class="mb-4">
+                      <h3 class="text-base font-medium text-gray-900">How well do existing solutions match your needs?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Assess the gap between market solutions and your requirements.</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                      {#each fitnessLevels as level}
+                        <label class="block">
+                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeFitness === level.value ? 'border-secondary bg-secondary/5' : ''}">
+                            <input
+                              type="radio"
+                              name="alternativeFitness"
+                              value={level.value}
+                              bind:group={$formState.alternativeFitness}
+                              class="mt-1 text-secondary focus:ring-secondary"
+                            />
+                            <div class="ml-3 flex-1">
+                              <span class="block text-lg font-medium text-gray-900">{level.label}</span>
+                              <span class="block text-sm text-gray-500 mt-2">{level.description}</span>
+                            </div>
+                          </div>
+                        </label>
+                      {/each}
+                    </div>
+                  </div>
+
                   <!-- Solution Types -->
                   <div class="space-y-4">
                     <div class="mb-4">
@@ -1861,104 +1888,12 @@
             </div>
           </div>
 
-          <!-- Section 6: Time and Fit -->
-          <div class="space-y-6" class:hidden={activeSection !== 6}>
-            <div class="bg-white p-8 rounded-xl border border-gray-200">
-              <div class="w-full">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Implementation Time and Fit</h2>
-                <p class="text-gray-600 mb-8">Evaluate the time required for implementation and how well the solution fits your needs.</p>
-                
-                <div class="space-y-8">
-                  <!-- Implementation Time -->
-                  <div class="space-y-4">
-                    <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How long will it take to implement the solution?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Choose the timeline that best fits your project's scope and resources.</p>
-                    </div>
-                    <!-- Time Period Slider -->
-                    <div class="px-4">
-                            <input
-                        type="range" 
-                        min="0" 
-                        max="3" 
-                        step="1"
-                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        bind:value={timelineIndex}
-                        on:input={() => {
-                          const values = ['0-3', '3-6', '6-12', '12-24'];
-                          $formState.timelineNeeded = values[timelineIndex];
-                        }}
-                      />
-                      <div class="flex justify-between mt-2 text-sm text-gray-600">
-                        <span class="text-center">
-                          {#if timelineIndex === 0}
-                            <div class="font-medium text-secondary">Urgent/Immediate</div>
-                            <div class="text-xs">0-3 months</div>
-                          {:else if timelineIndex === 1}
-                            <div class="font-medium text-secondary">Short term</div>
-                            <div class="text-xs">3-6 months</div>
-                          {:else if timelineIndex === 2}
-                            <div class="font-medium text-secondary">Medium term</div>
-                            <div class="text-xs">6-12 months</div>
-                          {:else}
-                            <div class="font-medium text-secondary">Long term</div>
-                            <div class="text-xs">12-24 months</div>
-                          {/if}
-                        </span>
-                          </div>
-                    </div>
-                  </div>
-
-                  <!-- Alternative Fitness -->
-                  <div class="space-y-4">
-                    <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How well does the solution fit your needs?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Evaluate the solution's ability to meet your specific requirements and expectations.</p>
-                    </div>
-                    <!-- Fitness Level Slider -->
-                    <div class="px-4">
-                            <input
-                        type="range" 
-                        min="0" 
-                        max="3" 
-                        step="1"
-                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        bind:value={usageDurationIndex}
-                        on:input={() => {
-                          const values = ['<1', '1-3', '3-5', '>5'];
-                          $formState.usageDuration = values[usageDurationIndex];
-                        }}
-                      />
-                      <div class="flex justify-between mt-2 text-sm text-gray-600">
-                        <span class="text-center">
-                          {#if usageDurationIndex === 0}
-                            <div class="font-medium text-secondary">Short term</div>
-                            <div class="text-xs">Less than 1 year</div>
-                          {:else if usageDurationIndex === 1}
-                            <div class="font-medium text-secondary">Medium term</div>
-                            <div class="text-xs">1-3 years</div>
-                          {:else if usageDurationIndex === 2}
-                            <div class="font-medium text-secondary">Extended use</div>
-                            <div class="text-xs">3-5 years</div>
-                          {:else}
-                            <div class="font-medium text-secondary">Long term investment</div>
-                            <div class="text-xs">More than 5 years</div>
-                          {/if}
-                              </span>
-                            </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 6: Strategic Fit and Risk Assessment -->
+          <!-- Section 6: Strategic Fit Assessment -->
           <div class="space-y-6" class:hidden={activeSection !== 6}>
             <div class="bg-white p-8 rounded-xl border border-gray-200">
               <div class="w-full">
                 <h2 class="text-xl font-semibold text-gray-900 mb-2">Strategic Fit Assessment</h2>
-                <p class="text-gray-600 mb-8">Evaluate the strategic value and market fit of the solution.</p>
+                <p class="text-gray-600 mb-8">Evaluate the strategic value and risk factors of the solution.</p>
                 
                 <div class="space-y-8">
                   <!-- Strategic Alignment -->
@@ -1976,33 +1911,6 @@
                               name="strategicAlignment"
                               value={level.value}
                               bind:group={$formState.strategicAlignment}
-                              class="mt-1 text-secondary focus:ring-secondary"
-                            />
-                            <div class="ml-3 flex-1">
-                              <span class="block text-lg font-medium text-gray-900">{level.label}</span>
-                              <span class="block text-sm text-gray-500 mt-2">{level.description}</span>
-                            </div>
-                          </div>
-                        </label>
-                      {/each}
-                    </div>
-                  </div>
-
-                  <!-- Solution Fit -->
-                  <div class="space-y-4">
-                    <div class="mb-4">
-                      <h3 class="text-base font-medium text-gray-900">How well do existing solutions match your needs?</h3>
-                      <p class="text-sm text-gray-600 mt-1">Assess the gap between market solutions and your requirements.</p>
-                    </div>
-                    <div class="grid grid-cols-1 gap-4">
-                      {#each fitnessLevels as level}
-                        <label class="block">
-                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.alternativeFitness === level.value ? 'border-secondary bg-secondary/5' : ''}">
-                            <input
-                              type="radio"
-                              name="alternativeFitness"
-                              value={level.value}
-                              bind:group={$formState.alternativeFitness}
                               class="mt-1 text-secondary focus:ring-secondary"
                             />
                             <div class="ml-3 flex-1">

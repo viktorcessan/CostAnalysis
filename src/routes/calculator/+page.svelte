@@ -21,6 +21,7 @@
     defaultModel?: CalculatorModel;
     icon: string;
     path: string;
+    comingSoon?: boolean;
   }
 
   let activeModel: CalculatorModel = 'team';
@@ -117,6 +118,25 @@
       path: 'target_analysis',
       icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>`
+    },
+    {
+      id: 'team-size-budget',
+      name: 'Determine Team Size Budget',
+      description: 'Identify and determine the optimal team size based on the potential value they have for your company, and your total headcount budget.',
+      longDescription: 'Calculate and visualize the optimal team size based on value creation potential, cost constraints, and organizational goals to make data-driven decisions about team scaling.',
+      benefits: [
+        'Set cost and value creation targets',
+        'Calculate the potential value of each team',
+        'Visualize ROI per team',
+        'Create a organization plan'
+      ],
+      mode: 'solutions',
+      requiresModel: true,
+      comingSoon: true,
+      path: 'team_size_budget',
+      icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>`
     }
   ];
@@ -215,34 +235,67 @@
 
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {#each goals as goal}
-              <button
-                class="group relative bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-gray-200 hover:border-secondary/20 
-                       transition-all duration-300 overflow-hidden hover:scale-[1.02]"
-                on:click={() => handleGoalSelect(goal)}
-                data-goal={goal.id}
-              >
-                <div class="p-8">
-                  <div class="flex items-center mb-6">
-                    <div class="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
-                      {@html goal.icon}
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 ml-4">{goal.name}</h3>
+              {#if goal.comingSoon}
+                <div
+                  class="group relative bg-white rounded-xl shadow-sm border-2 border-gray-100 
+                         overflow-hidden"
+                  data-goal={goal.id}
+                >
+                  <div class="absolute -right-12 top-6 rotate-45 bg-secondary/90 text-white px-12 py-1 text-sm font-medium shadow-sm">
+                    Coming Soon
                   </div>
-                  <p class="text-sm text-gray-600 mb-6 leading-relaxed">{goal.description}</p>
-                  <div class="space-y-3">
-                    {#each goal.benefits as benefit}
-                      <div class="flex items-center text-sm text-gray-700">
-                        <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                          <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        {benefit}
+                  <div class="p-8 opacity-60">
+                    <div class="flex items-center mb-6">
+                      <div class="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center">
+                        {@html goal.icon}
                       </div>
-                    {/each}
+                      <h3 class="text-xl font-semibold text-gray-900 ml-4">{goal.name}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-6 leading-relaxed">{goal.description}</p>
+                    <div class="space-y-3">
+                      {#each goal.benefits as benefit}
+                        <div class="flex items-center text-sm text-gray-700">
+                          <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          {benefit}
+                        </div>
+                      {/each}
+                    </div>
                   </div>
                 </div>
-              </button>
+              {:else}
+                <button
+                  class="group relative bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-gray-200 hover:border-secondary/20 
+                         transition-all duration-300 overflow-hidden hover:scale-[1.02]"
+                  on:click={() => handleGoalSelect(goal)}
+                  data-goal={goal.id}
+                >
+                  <div class="p-8">
+                    <div class="flex items-center mb-6">
+                      <div class="w-16 h-16 rounded-xl bg-secondary/10 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                        {@html goal.icon}
+                      </div>
+                      <h3 class="text-xl font-semibold text-gray-900 ml-4">{goal.name}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-6 leading-relaxed">{goal.description}</p>
+                    <div class="space-y-3">
+                      {#each goal.benefits as benefit}
+                        <div class="flex items-center text-sm text-gray-700">
+                          <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          {benefit}
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                </button>
+              {/if}
             {/each}
           </div>
         </div>

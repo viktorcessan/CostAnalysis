@@ -70,6 +70,20 @@
       icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
       </svg>`
+    },
+    {
+      title: 'Determine Team Size Budget',
+      description: 'Identify and determine the optimal team size based on the potential value they have for your company, and your total headcount budget.',
+      details: [
+        'Set cost and value creation targets',
+        'Calculate the potential value of each team',
+        'Visualize ROI per team',
+        'Create a organization plan'
+      ],
+      comingSoon: true,
+      icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>`
     }
   ];
 </script>
@@ -160,42 +174,71 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         {#each features as feature}
-          <a
-            href="{base}/calculator"
-            class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
-            data-analysis={feature.title === 'Build a Business Case' ? 'breakeven' : 
-                         feature.title === 'Find Platform Budget' ? 'target' : 
-                         feature.title === 'Build vs Buy Analysis' ? 'build-buy' :
-                         feature.title === 'Feature Value Calculator' ? 'feature-calculator' : 'team-analysis'}
-            on:click|preventDefault={(e) => {
-              const analysis = e.currentTarget.getAttribute('data-analysis');
-              if (analysis === 'build-buy') {
-                goto(`${base}/calculator/build_buy`);
-              } else if (analysis === 'feature-calculator') {
-                goto(`${base}/calculator/feature_calculator`);
-              } else {
-                goto(`${base}/calculator?goal=${analysis}`);
-              }
-            }}
-          >
-            <div class="flex items-center gap-4 mb-6">
-              {@html feature.icon}
-              <h3 class="text-xl font-semibold text-gray-900">{feature.title}</h3>
+          {#if feature.comingSoon}
+            <div
+              class="bg-white p-8 rounded-xl border-2 border-gray-100 shadow-sm relative group overflow-hidden"
+            >
+              <div class="absolute -right-12 top-6 rotate-45 bg-secondary/90 text-white px-12 py-1 text-sm font-medium shadow-sm">
+                Coming Soon
+              </div>
+              <div class="opacity-60">
+                <div class="flex items-center gap-4 mb-6">
+                  {@html feature.icon}
+                  <h3 class="text-xl font-semibold text-gray-900">{feature.title}</h3>
+                </div>
+                <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
+                <ul class="space-y-3">
+                  {#each feature.details as detail}
+                    <li class="flex items-center text-gray-700">
+                      <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                        <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      {detail}
+                    </li>
+                  {/each}
+                </ul>
+              </div>
             </div>
-            <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
-            <ul class="space-y-3">
-              {#each feature.details as detail}
-                <li class="flex items-center text-gray-700">
-                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  {detail}
-                </li>
-              {/each}
-            </ul>
-          </a>
+          {:else}
+            <a
+              href="{base}/calculator"
+              class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+              data-analysis={feature.title === 'Build a Business Case' ? 'breakeven' : 
+                           feature.title === 'Find Platform Budget' ? 'target' : 
+                           feature.title === 'Build vs Buy Analysis' ? 'build-buy' :
+                           feature.title === 'Feature Value Calculator' ? 'feature-calculator' : 'team-analysis'}
+              on:click|preventDefault={(e) => {
+                const analysis = e.currentTarget.getAttribute('data-analysis');
+                if (analysis === 'build-buy') {
+                  goto(`${base}/calculator/build_buy`);
+                } else if (analysis === 'feature-calculator') {
+                  goto(`${base}/calculator/feature_calculator`);
+                } else {
+                  goto(`${base}/calculator?goal=${analysis}`);
+                }
+              }}
+            >
+              <div class="flex items-center gap-4 mb-6">
+                {@html feature.icon}
+                <h3 class="text-xl font-semibold text-gray-900">{feature.title}</h3>
+              </div>
+              <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
+              <ul class="space-y-3">
+                {#each feature.details as detail}
+                  <li class="flex items-center text-gray-700">
+                    <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                      <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    {detail}
+                  </li>
+                {/each}
+              </ul>
+            </a>
+          {/if}
         {/each}
       </div>
     </div>

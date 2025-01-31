@@ -33,13 +33,13 @@
       </svg>`
     },
     {
-      title: 'Feature Value Calculator',
-      description: 'Quantify the business impact of a feature by evaluating how it generates revenue, protects revenue, reduces costs, or avoids costs.',
+      title: 'Calculate Feature Value',
+      description: 'Quantify the business impact of a project, initiative, feature, or idea by evaluating how it either increases or protects revenue, or reduces or avoids costs.',
       details: [
-        'Revenue impact analysis',
-        'Cost reduction tracking',
-        'ROI visualization',
-        'Break-even calculations'
+        'Calculate the aggregated total value',
+        'Analyze the value across value dimensions',
+        'Visualize the ROI, and identify the break even point',
+        'Build strong business cases'
       ],
       icon: `<svg class="w-12 h-12 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
@@ -189,13 +189,13 @@
                 <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
                 <ul class="space-y-3">
                   {#each feature.details as detail}
-                    <li class="flex items-center text-gray-700">
-                      <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                    <li class="flex items-start text-gray-700">
+                      <div class="w-6 h-6 rounded-full bg-secondary/10 flex-shrink-0 flex items-center justify-center mr-3 mt-0.5">
                         <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      {detail}
+                      <span class="text-left">{detail}</span>
                     </li>
                   {/each}
                 </ul>
@@ -208,13 +208,13 @@
               data-analysis={feature.title === 'Build a Business Case' ? 'breakeven' : 
                            feature.title === 'Find Platform Budget' ? 'target' : 
                            feature.title === 'Build vs Buy Analysis' ? 'build-buy' :
-                           feature.title === 'Feature Value Calculator' ? 'feature-calculator' : 'team-analysis'}
+                           feature.title === 'Calculate Feature Value' ? 'feature-value' : 'team-analysis'}
               on:click|preventDefault={(e) => {
                 const analysis = e.currentTarget.getAttribute('data-analysis');
                 if (analysis === 'build-buy') {
                   goto(`${base}/calculator/build_buy`);
-                } else if (analysis === 'feature-calculator') {
-                  goto(`${base}/calculator/feature_calculator`);
+                } else if (analysis === 'feature-value') {
+                  goto(`${base}/calculator/feature_value`);
                 } else {
                   goto(`${base}/calculator?goal=${analysis}`);
                 }
@@ -227,13 +227,13 @@
               <p class="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
               <ul class="space-y-3">
                 {#each feature.details as detail}
-                  <li class="flex items-center text-gray-700">
-                    <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
+                  <li class="flex items-start text-gray-700">
+                    <div class="w-6 h-6 rounded-full bg-secondary/10 flex-shrink-0 flex items-center justify-center mr-3 mt-0.5">
                       <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    {detail}
+                    <span class="text-left">{detail}</span>
                   </li>
                 {/each}
               </ul>

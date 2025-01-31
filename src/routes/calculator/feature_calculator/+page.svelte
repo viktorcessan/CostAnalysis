@@ -38,12 +38,13 @@
                 </svg>
               </div>
               <div>
-                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Feature Value Calculator</h2>
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Calculate Feature Value</h2>
                 <p class="text-base sm:text-lg text-gray-600 mt-2">
                   This tool helps you understand and quantify the business impact of your initiatives whether a
                   project, epic, or a story. You can use this whether you're building new features, improving
-                  existing ones, or tackling technical improvements. The feature value calculator guides you in
-                  evaluating your ideas’ full potential value across four key dimensions.                    
+                  existing ones, or tackling technical improvements. The calculator guides you in
+                  evaluating your ideas' full potential value across four key dimensions: Increase Revenue, Protect Revenue, 
+                  Reduce Costs, and Avoid Costs.                    
                 </p>
               </div>
             </div>

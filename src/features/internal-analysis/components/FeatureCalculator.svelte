@@ -225,7 +225,7 @@
     'Welcome',
     isInTutorial ? 'Tutorial' : 'Project Info',
     'Increase Revenue',
-    'Protect Value',
+    'Protect Revenue',
     'Reduce Cost',
     'Avoid Risk',
     'Development Costs',
@@ -524,7 +524,7 @@
       valueDistributionChart = new Chart(valueCtx, {
         type: 'doughnut',
         data: {
-          labels: ['Generate', 'Protect', 'Reduce', 'Avoid'],
+          labels: ['Increase', 'Protect', 'Reduce', 'Avoid'],
           datasets: [{
             data: [
               selectedImpacts.filter(i => i.impact.category === 'generate').reduce((sum, i) => sum + i.calculatedValue, 0),
@@ -947,7 +947,9 @@
     <!-- Calculator Content -->
   <div class="bg-white rounded-xl shadow-sm p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl font-bold">Feature Value Calculator</h2>
+      <div class="w-full text-center">
+        <h2 class="text-2xl font-bold">Calculate Feature Value</h2>
+      </div>
       <CurrencySelector />
     </div>
     
@@ -987,34 +989,34 @@
 
         <!-- Value Categories Overview -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto mb-8">
-          <div class="p-6 rounded-lg border border-green-200 bg-green-50">
+          <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">📈</span>
-              <h4 class="font-semibold text-green-800">Generate Value</h4>
+              <h4 class="font-semibold text-gray-900">Increase Revenue</h4>
             </div>
             <p class="text-sm text-gray-600">Features that create new revenue streams through market expansion, partnerships, or premium offerings. These drive business growth and new opportunities.</p>
           </div>
 
-          <div class="p-6 rounded-lg border border-blue-200 bg-blue-50">
+          <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">🔒</span>
-              <h4 class="font-semibold text-blue-800">Protect Value</h4>
+              <h4 class="font-semibold text-gray-900">Protect Revenue</h4>
             </div>
             <p class="text-sm text-gray-600">Features that maintain existing revenue by improving reliability, user experience, and competitive position. Essential for business continuity.</p>
           </div>
 
-          <div class="p-6 rounded-lg border border-amber-200 bg-amber-50">
+          <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">✂️</span>
-              <h4 class="font-semibold text-amber-800">Reduce Costs</h4>
+              <h4 class="font-semibold text-gray-900">Reduce Costs</h4>
             </div>
             <p class="text-sm text-gray-600">Features that optimize operations and lower existing expenses through efficiency gains. Direct impact on bottom-line performance.</p>
           </div>
 
-          <div class="p-6 rounded-lg border border-red-200 bg-red-50">
+          <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
               <span class="text-2xl">🛡️</span>
-              <h4 class="font-semibold text-red-800">Avoid Costs</h4>
+              <h4 class="font-semibold text-gray-900">Avoid Costs</h4>
             </div>
             <p class="text-sm text-gray-600">Features that prevent future expenses and mitigate potential risks. Strategic investments in long-term sustainability.</p>
           </div>
@@ -1024,20 +1026,20 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
           <button
             class="px-6 py-3 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium"
-            on:click={toggleQuizModal}
-          >
-            Test Your Knowledge
-          </button>
-
-          <button
-            class="px-6 py-3 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium"
             on:click={() => {
               isInTutorial = true;
               currentTutorialStep = 0;
               handleNext();
             }}
           >
-            Take the Tutorial
+            Learn More About Value
+          </button>
+
+          <button
+            class="px-6 py-3 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium"
+            on:click={toggleQuizModal}
+          >
+            Test Your Knowledge
           </button>
 
           <button
@@ -1157,12 +1159,12 @@
                         </div>
                       </div>
     {:else if currentStep === 3}
-          <!-- Protect Value Step -->
+          <!-- Protect Revenue Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
           <span class="text-3xl">🔒</span>
           <div>
-            <h3 class="text-xl font-semibold">Protect Value</h3>
+            <h3 class="text-xl font-semibold">Protect Revenue</h3>
             <p class="text-sm text-gray-600">Select impacts that will protect existing value</p>
           </div>
         </div>
@@ -1240,7 +1242,7 @@
         <div class="flex items-center gap-3">
           <span class="text-3xl">✂️</span>
           <div>
-            <h3 class="text-xl font-semibold">Reduce Cost</h3>
+            <h3 class="text-xl font-semibold">Reduce Costs</h3>
             <p class="text-sm text-gray-600">Select impacts that will reduce operational costs</p>
           </div>
         </div>
@@ -1318,7 +1320,7 @@
         <div class="flex items-center gap-3">
           <span class="text-3xl">🛡️</span>
           <div>
-            <h3 class="text-xl font-semibold">Avoid Risk</h3>
+            <h3 class="text-xl font-semibold">Avoid Costs</h3>
             <p class="text-sm text-gray-600">Select impacts that will help avoid risks or losses</p>
           </div>
         </div>

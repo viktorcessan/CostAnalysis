@@ -16,8 +16,182 @@
 
   // Wizard state
   let currentStep = 0;
-  const TOTAL_STEPS = 8;
+  const TOTAL_STEPS = 8; // Reduced by 1 since we removed a step
   let projectName = '';
+
+  // Tutorial state
+  let isInTutorial = false;
+  let currentTutorialStep = 0;
+  const TUTORIAL_STEPS = [
+    {
+      title: 'Increase Value',
+      subtitle: 'Strategic Growth & Innovation',
+      description: 'Features that expand your market reach and create new revenue streams. These are strategic investments that drive business growth through customer delight and market expansion.',
+      color: 'green',
+      icon: '📈',
+      details: [
+        'Create premium features customers value enough to pay for',
+        'Enable new business models and revenue streams',
+        'Expand into untapped market segments',
+        'Build strategic partnerships and integrations',
+        'Drive disruptive innovation in your market'
+      ]
+    },
+    {
+      title: 'Increase Value',
+      subtitle: 'Examples in Practice',
+      description: 'Discover how features can create new value streams and expand market opportunities.',
+      color: 'green',
+      icon: '💡',
+      examples: {
+        generate: [
+          {
+            title: 'Total Addressable Market',
+            description: 'Expand into new segments or territories',
+            impact: 'Market expansion'
+          },
+          {
+            title: 'Lifetime Value',
+            description: 'Improve revenue per customer over time',
+            impact: 'Revenue growth'
+          },
+          {
+            title: 'Premium Adoption',
+            description: 'Increase users on premium tiers',
+            impact: 'Revenue per user'
+          }
+        ]
+      }
+    },
+    {
+      title: 'Protect Value',
+      subtitle: 'Sustaining Your Core Business',
+      description: 'Features that defend existing revenue by maintaining competitive position and customer satisfaction. Essential for building a moat around your core business.',
+      color: 'blue',
+      icon: '🔒',
+      details: [
+        'Keep pace with competitor offerings',
+        'Remove friction points causing churn',
+        'Enhance core product reliability',
+        'Improve essential user experiences',
+        'Strengthen your market position'
+      ]
+    },
+    {
+      title: 'Protect Value',
+      subtitle: 'Examples in Practice',
+      description: 'Learn how features can protect and enhance your existing business value.',
+      color: 'blue',
+      icon: '🛡️',
+      examples: {
+        protect: [
+          {
+            title: 'System Reliability',
+            description: 'Minimize revenue loss from outages',
+            impact: 'Business continuity'
+          },
+          {
+            title: 'Incident Recovery',
+            description: 'Reduce impact through faster recovery',
+            impact: 'Service resilience'
+          },
+          {
+            title: 'Customer Retention',
+            description: 'Maintain competitive features',
+            impact: 'Revenue protection'
+          }
+        ]
+      }
+    },
+    {
+      title: 'Reduce Costs',
+      subtitle: 'Operational Excellence',
+      description: 'Features that optimize operations while maintaining or improving customer experience. Focus on eliminating waste without compromising value.',
+      color: 'amber',
+      icon: '✂️',
+      details: [
+        'Streamline internal processes',
+        'Automate repetitive tasks',
+        'Optimize resource allocation',
+        'Reduce operational friction',
+        'Improve team productivity'
+      ]
+    },
+    {
+      title: 'Reduce Costs',
+      subtitle: 'Examples in Practice',
+      description: 'Explore how optimization can reduce costs while maintaining service quality.',
+      color: 'amber',
+      icon: '⚡',
+      examples: {
+        reduce: [
+          {
+            title: 'Coordination Efficiency',
+            description: 'Reduce team coordination overhead',
+            impact: 'Time savings'
+          },
+          {
+            title: 'Process Automation',
+            description: 'Automate repetitive tasks',
+            impact: 'Resource optimization'
+          },
+          {
+            title: 'Workflow Improvement',
+            description: 'Streamline operational processes',
+            impact: 'Productivity gain'
+          }
+        ]
+      }
+    },
+    {
+      title: 'Avoid Costs',
+      subtitle: 'Strategic Risk Management',
+      description: 'Features that prevent future expenses and mitigate strategic risks. Invest in long-term sustainability and resilience.',
+      color: 'red',
+      icon: '🛡️',
+      details: [
+        'Address technical debt proactively',
+        'Mitigate compliance risks',
+        'Future-proof architecture',
+        'Prevent scalability issues',
+        'Protect brand reputation'
+      ]
+    },
+    {
+      title: 'Avoid Costs',
+      subtitle: 'Examples in Practice',
+      description: 'See how features can protect against future risks and costs.',
+      color: 'red',
+      icon: '🎯',
+      examples: {
+        avoid: [
+          {
+            title: 'Infrastructure Scaling',
+            description: 'Prevent additional infrastructure costs',
+            impact: 'Cost prevention'
+          },
+          {
+            title: 'Legal Compliance',
+            description: 'Minimize compliance issues',
+            impact: 'Risk reduction'
+          },
+          {
+            title: 'Incident Prevention',
+            description: 'Reduce production incidents',
+            impact: 'Cost avoidance'
+          }
+        ]
+      }
+    },
+    {
+      title: 'Balancing Value',
+      subtitle: 'Making Strategic Choices',
+      description: 'Success lies in balancing customer delight with economic sustainability. Use this framework to make informed trade-offs and prioritize your scarce resources effectively.',
+      color: 'secondary',
+      icon: '🎯',
+      isConclusionStep: true
+    }
+  ];
 
   // Form data
   let selectedImpacts: SelectedImpact[] = [];
@@ -48,10 +222,10 @@
 
   // Step titles for navigation
   const stepTitles = [
-    'Project Info',
-    'Value Categories',
+    'Welcome',
+    isInTutorial ? 'Tutorial' : 'Project Info',
     'Increase Revenue',
-    'Protect Value', 
+    'Protect Value',
     'Reduce Cost',
     'Avoid Risk',
     'Development Costs',
@@ -192,12 +366,16 @@
     });
   }
 
-  // Calculate totals
-  $: totalValue = selectedImpacts.reduce((sum, si) => sum + si.calculatedValue, 0);
-  $: annualMaintenance = maintenanceCost.monthly * 12;
-  $: developmentCostTotal = developmentCost.hourlyRate * developmentCost.hours;
-  $: totalCost = developmentCostTotal + annualMaintenance;
+  // Computed values
+  $: totalValue = selectedImpacts.reduce((sum, impact) => sum + impact.calculatedValue, 0);
+  $: totalDevelopmentCost = developmentCost.hourlyRate * developmentCost.hours;
+  $: totalMaintenanceCost = maintenanceCost.monthly * 12;
+  $: totalCost = totalDevelopmentCost + totalMaintenanceCost;
+  
+  // ROI calculation
   $: roi = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;
+  
+  // Break-even calculation (in months)
   $: breakEvenMonths = totalValue > 0 ? (totalCost / (totalValue / 12)) : 0;
 
   // Add reactive validation
@@ -251,17 +429,19 @@
   function canProceedToNext(): boolean {
     switch (currentStep) {
       case 0:
-        return !!projectName.trim();
+        return true; // Can always proceed from welcome
       case 1:
-        return true; // Can always proceed from overview
+        return isInTutorial || !!projectName.trim(); // Require project name if not in tutorial
       case 2:
+        return true; // Can always proceed from value categories overview
       case 3:
       case 4:
       case 5:
-        return true; // Can proceed from value steps (they're optional)
       case 6:
-        return developmentCost.hourlyRate > 0 && developmentCost.hours > 0; // Require basic cost info
+        return true; // Can proceed from value steps (they're optional)
       case 7:
+        return developmentCost.hourlyRate > 0 && developmentCost.hours > 0; // Require basic cost info
+      case 8:
         return true; // Can always view results
       default:
         return true;
@@ -278,6 +458,20 @@
     }
 
     completedSteps.add(currentStep);
+    
+    // Special handling for tutorial flow
+    if (isInTutorial && currentStep === 1) {
+      if (currentTutorialStep < TUTORIAL_STEPS.length - 1) {
+        currentTutorialStep++;
+        return;
+      } else {
+        isInTutorial = false;
+        // Go directly to Increase Revenue step after tutorial
+        currentStep = 2;
+        return;
+      }
+    }
+
     if (currentStep < TOTAL_STEPS - 1) {
       currentStep++;
       // Reset errors when moving to next step
@@ -325,105 +519,104 @@
     }
 
     // Create new charts
-    updateValueDistributionChart();
-    updateCostBreakdownChart();
-  }
-
-  function updateValueDistributionChart() {
-    const ctx = document.getElementById('valueDistributionChart') as HTMLCanvasElement;
-    if (!ctx) return;
-
-    // Group values by category
-    const valuesByCategory = selectedImpacts.reduce((acc, si) => {
-      const category = si.impact.category;
-      acc[category] = (acc[category] || 0) + si.calculatedValue;
-      return acc;
-    }, {} as { [key: string]: number });
-
-    valueDistributionChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: Object.keys(valuesByCategory).map(category => 
-          category.charAt(0).toUpperCase() + category.slice(1)
-        ),
-        datasets: [{
-          data: Object.values(valuesByCategory),
-          backgroundColor: [
-            'rgba(34, 197, 94, 0.2)',  // generate - green
-            'rgba(59, 130, 246, 0.2)', // protect - blue
-            'rgba(245, 158, 11, 0.2)', // reduce - amber
-            'rgba(239, 68, 68, 0.2)'   // avoid - red
-          ],
-          borderColor: [
-            'rgb(34, 197, 94)',
-            'rgb(59, 130, 246)',
-            'rgb(245, 158, 11)',
-            'rgb(239, 68, 68)'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const value = context.raw as number || 0;
-                const total = Object.values(valuesByCategory).reduce((a, b) => a + b, 0);
-                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                return `${context.label}: ${formatMoney(value)} (${percentage}%)`;
+    const valueCtx = document.getElementById('valueDistributionChart') as HTMLCanvasElement;
+    if (valueCtx) {
+      valueDistributionChart = new Chart(valueCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Generate', 'Protect', 'Reduce', 'Avoid'],
+          datasets: [{
+            data: [
+              selectedImpacts.filter(i => i.impact.category === 'generate').reduce((sum, i) => sum + i.calculatedValue, 0),
+              selectedImpacts.filter(i => i.impact.category === 'protect').reduce((sum, i) => sum + i.calculatedValue, 0),
+              selectedImpacts.filter(i => i.impact.category === 'reduce').reduce((sum, i) => sum + i.calculatedValue, 0),
+              selectedImpacts.filter(i => i.impact.category === 'avoid').reduce((sum, i) => sum + i.calculatedValue, 0)
+            ],
+            backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: (context: any) => {
+                  const value = context.raw || 0;
+                  const total = selectedImpacts.reduce((sum, i) => sum + i.calculatedValue, 0);
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                  return `${context.label}: ${formatMoney(value)} (${percentage}%)`;
+                }
               }
             }
           }
         }
-      }
-    });
-  }
+      });
+    }
 
-  function updateCostBreakdownChart() {
-    const ctx = document.getElementById('costBreakdownChart') as HTMLCanvasElement;
-    if (!ctx) return;
-
-    costBreakdownChart = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: ['Development', 'Annual Maintenance'],
-        datasets: [{
-          data: [developmentCostTotal, annualMaintenance],
-          backgroundColor: [
-            'rgba(99, 102, 241, 0.2)',
-            'rgba(168, 85, 247, 0.2)'
-          ],
-          borderColor: [
-            'rgb(99, 102, 241)',
-            'rgb(168, 85, 247)'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const value = context.raw as number || 0;
-                const total = developmentCostTotal + annualMaintenance;
-                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                return `${context.label}: ${formatMoney(value)} (${percentage}%)`;
+    const costCtx = document.getElementById('costBreakdownChart') as HTMLCanvasElement;
+    if (costCtx) {
+      costBreakdownChart = new Chart(costCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Development', 'Annual Maintenance'],
+          datasets: [{
+            data: [totalDevelopmentCost, totalMaintenanceCost],
+            backgroundColor: ['#6366f1', '#a855f7'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: (context: any) => {
+                  const value = context.raw || 0;
+                  const total = totalDevelopmentCost + totalMaintenanceCost;
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                  return `${context.label}: ${formatMoney(value)} (${percentage}%)`;
+                }
               }
             }
           }
         }
+      });
+    }
+  }
+
+  // Update charts when entering results step
+  $: if (currentStep === 7) {
+    setTimeout(() => {
+      updateCharts();
+    }, 100);
+  }
+
+  // Update scroll behavior with improved positioning
+  $: if (currentStep !== undefined) {
+    setTimeout(() => {
+      const calculator = document.querySelector('.calculator-steps');
+      if (calculator) {
+        const navHeight = 64; // Height of the navigation menu
+        const marginTop = 120; // Increased margin for better visibility
+        const elementRect = calculator.getBoundingClientRect();
+        const absoluteElementTop = elementRect.top + window.pageYOffset;
+        const scrollTop = absoluteElementTop - navHeight - marginTop;
+        
+        window.scrollTo({
+          top: Math.max(0, scrollTop),
+          behavior: 'smooth'
+        });
       }
-    });
+    }, 50);
   }
 
   // Add cleanup on component destroy
@@ -436,56 +629,41 @@
     }
   });
 
-  // Add insights generation
-  function generateInsights(): string[] {
-    const insights: string[] = [];
+  // Function to generate insights based on the calculations
+  function generateInsights() {
+    const insights = [];
     
-    // ROI insights
-    const roiValue = Number(roi);
-    if (roiValue > 100) {
-      insights.push(`Exceptional ROI of ${roiValue.toFixed(1)}% indicates this is a highly profitable investment.`);
-    } else if (roiValue > 50) {
-      insights.push(`Strong ROI of ${roiValue.toFixed(1)}% suggests this is a worthwhile investment.`);
-    } else if (roiValue > 0) {
-      insights.push(`Positive ROI of ${roiValue.toFixed(1)}% indicates this investment will generate returns, but consider ways to improve value or reduce costs.`);
-    } else {
-      insights.push(`The current ROI of ${roiValue.toFixed(1)}% suggests this investment needs optimization. Consider ways to increase value or reduce costs.`);
-    }
-
-    // Break-even insights
-    const breakEvenValue = Number(breakEvenMonths);
-    if (breakEvenValue < 6) {
-      insights.push(`Quick break-even period of ${breakEvenValue.toFixed(1)} months indicates rapid value realization.`);
-    } else if (breakEvenValue < 12) {
-      insights.push(`Break-even within ${breakEvenValue.toFixed(1)} months suggests moderate time to value.`);
-    } else {
-      insights.push(`Long break-even period of ${breakEvenValue.toFixed(1)} months. Consider ways to accelerate value delivery.`);
-    }
-
     // Value distribution insights
-    const valuesByCategory = selectedImpacts.reduce((acc, si) => {
-      const category = si.impact.category;
-      acc[category] = (acc[category] || 0) + si.calculatedValue;
-      return acc;
-    }, {} as { [key: string]: number });
-
-    const topCategory = Object.entries(valuesByCategory)
-      .sort((a, b) => b[1] - a[1])[0];
+    const valueTypes = {
+      generate: selectedImpacts.filter(i => i.impact.category === 'generate').reduce((sum, i) => sum + i.calculatedValue, 0),
+      protect: selectedImpacts.filter(i => i.impact.category === 'protect').reduce((sum, i) => sum + i.calculatedValue, 0),
+      reduce: selectedImpacts.filter(i => i.impact.category === 'reduce').reduce((sum, i) => sum + i.calculatedValue, 0),
+      avoid: selectedImpacts.filter(i => i.impact.category === 'avoid').reduce((sum, i) => sum + i.calculatedValue, 0)
+    };
     
-    if (topCategory) {
-      const [category, value] = topCategory;
-      const percentage = ((value / totalValue) * 100).toFixed(1);
-      insights.push(`${percentage}% of value comes from ${category} impacts. ${
-        Number(percentage) > 70 ? 'Consider diversifying value streams.' : 'This shows a balanced value distribution.'
-      }`);
+    // Add value distribution insight
+    const topValueType = Object.entries(valueTypes)
+      .sort(([,a], [,b]) => b - a)[0];
+    if (topValueType[1] > 0) {
+      insights.push(`The largest value contribution comes from ${topValueType[0]} impacts at ${formatMoney(topValueType[1])} annually.`);
     }
-
-    // Cost structure insights
-    const maintenanceRatio = (annualMaintenance / totalCost) * 100;
-    if (maintenanceRatio > 50) {
-      insights.push(`High maintenance costs (${maintenanceRatio.toFixed(1)}% of total cost). Consider ways to reduce ongoing costs.`);
+    
+    // ROI insight
+    if (roi > 0) {
+      insights.push(`With an ROI of ${roi.toFixed(1)}%, this feature is expected to provide positive returns on investment.`);
     }
-
+    
+    // Break-even insight
+    if (breakEvenMonths > 0 && breakEvenMonths < 12) {
+      insights.push(`The feature is expected to break even in ${breakEvenMonths.toFixed(1)} months.`);
+    } else if (breakEvenMonths >= 12) {
+      insights.push(`The feature will take over a year to break even (${breakEvenMonths.toFixed(1)} months).`);
+    }
+    
+    // Cost structure insight
+    const developmentPercentage = (totalDevelopmentCost / totalCost) * 100;
+    insights.push(`Development costs represent ${developmentPercentage.toFixed(1)}% of total costs.`);
+    
     return insights;
   }
 
@@ -494,19 +672,12 @@
   }
 
   // Update navigation buttons
-  $: showSkip = currentStep > 1 && currentStep < 6; // Only show skip for value category steps
-  $: showNext = currentStep < TOTAL_STEPS - 1;
-  $: nextButtonText = currentStep === 0 ? "Let's Start" : 
-                     currentStep === 1 ? "Start Selection" :
+  $: showSkip = !isInTutorial && currentStep > 1 && currentStep < 6; // Adjusted step numbers
+  $: showNext = currentStep < TOTAL_STEPS - 1 && currentStep !== 0; // Hide next button on welcome page
+  $: nextButtonText = isInTutorial && currentStep === 1 ? "Continue" :
+                     currentStep === 1 ? "Next" :
                      currentStep === 6 ? "Calculate Results" :
                      "Next";
-
-  // Update charts when entering results step
-  $: if (currentStep === 7) {
-    setTimeout(() => {
-      updateCharts();
-    }, 100);
-  }
 
   // Function to initialize quiz
   function initializeQuiz() {
@@ -548,7 +719,11 @@
   }
 
   onMount(() => {
-    updateCharts();
+    if (currentStep === 7) {
+      setTimeout(() => {
+        updateCharts();
+      }, 100);
+    }
   });
 </script>
 
@@ -625,8 +800,151 @@
   </div>
 {/if}
 
+<!-- Main Container -->
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-8">
-  <!-- Progress Bar -->
+  {#if isInTutorial}
+    <!-- Tutorial Content -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-4">
+          <h2 class="text-2xl font-bold">Feature Value Tutorial</h2>
+          <span class="px-3 py-1 text-xs font-semibold bg-secondary/10 text-secondary rounded-full">
+            Step {currentTutorialStep + 1} of {TUTORIAL_STEPS.length}
+          </span>
+        </div>
+        <button
+          class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium flex items-center gap-2 rounded-lg hover:bg-gray-50 transition-colors"
+          on:click={() => {
+            isInTutorial = false;
+            currentStep = 1;
+          }}
+        >
+          Skip Tutorial
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tutorial Progress Bar -->
+      <div class="mb-8">
+        <div class="overflow-hidden h-1 mb-4 flex rounded bg-secondary/10">
+          <div
+            class="bg-secondary rounded-full transition-all duration-500 ease-out"
+            style="width: {Math.round(((currentTutorialStep + 1) / TUTORIAL_STEPS.length) * 100)}%"
+          ></div>
+        </div>
+      </div>
+
+      <div class="space-y-8 animate-fade-in">
+        {#if currentTutorialStep < TUTORIAL_STEPS.length - 1}
+          <!-- Regular Tutorial Steps -->
+          <div class="space-y-6">
+            <div class="flex items-start gap-6 mb-8">
+              <div class={"text-4xl p-4 bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-50 rounded-xl"}>
+                {TUTORIAL_STEPS[currentTutorialStep].icon}
+              </div>
+              <div class="flex-1">
+                <h3 class="text-2xl font-bold mb-1">{TUTORIAL_STEPS[currentTutorialStep].title}</h3>
+                {#if TUTORIAL_STEPS[currentTutorialStep].subtitle}
+                  <h4 class={"text-lg text-" + TUTORIAL_STEPS[currentTutorialStep].color + "-600 mb-2"}>{TUTORIAL_STEPS[currentTutorialStep].subtitle}</h4>
+                {/if}
+                <p class="text-gray-600">{TUTORIAL_STEPS[currentTutorialStep].description}</p>
+              </div>
+            </div>
+
+            {#if TUTORIAL_STEPS[currentTutorialStep].details}
+              <div class={"p-6 rounded-xl border bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-50 border-" + TUTORIAL_STEPS[currentTutorialStep].color + "-200"}>
+                <h5 class="font-semibold mb-4">Key Benefits</h5>
+                <ul class="space-y-3">
+                  {#each TUTORIAL_STEPS[currentTutorialStep].details as detail}
+                    <li class="flex items-center gap-3 text-sm text-gray-700">
+                      <span class={"flex-shrink-0 w-5 h-5 rounded-full bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-500 flex items-center justify-center text-white text-xs"}>✓</span>
+                      {detail}
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {:else if TUTORIAL_STEPS[currentTutorialStep].examples}
+              <div class="space-y-4">
+                <h5 class="font-semibold">Examples</h5>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {#each Object.values(TUTORIAL_STEPS[currentTutorialStep].examples)[0] as example}
+                    <div class={"p-4 rounded-xl bg-white border border-" + TUTORIAL_STEPS[currentTutorialStep].color + "-200 hover:shadow-md transition-shadow"}>
+                      <h6 class={"font-semibold text-" + TUTORIAL_STEPS[currentTutorialStep].color + "-700 mb-2"}>{example.title}</h6>
+                      <p class="text-sm text-gray-600 mb-3">{example.description}</p>
+                      <div class={"text-xs font-medium px-2 py-1 bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-50 text-" + TUTORIAL_STEPS[currentTutorialStep].color + "-700 rounded-full inline-block"}>
+                        {example.impact}
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <!-- Conclusion Step -->
+          <div class="space-y-8">
+            <div class="text-center">
+              <span class="text-4xl mb-4 block">{TUTORIAL_STEPS[currentTutorialStep].icon}</span>
+              <h3 class="text-2xl font-bold mb-2">{TUTORIAL_STEPS[currentTutorialStep].title}</h3>
+              <p class="text-gray-600 max-w-2xl mx-auto">{TUTORIAL_STEPS[currentTutorialStep].description}</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+              <button
+                class="px-6 py-4 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium flex items-center justify-center gap-2"
+                on:click={() => {
+                  isInTutorial = false;
+                  currentStep = 1;
+                }}
+              >
+                <span>Start Calculator</span>
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <button
+                class="px-6 py-4 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium flex items-center justify-center gap-2"
+                on:click={toggleQuizModal}
+              >
+                <span>Test Your Knowledge</span>
+                <span class="text-xl">🎯</span>
+              </button>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Tutorial Navigation -->
+        <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+          <button
+            class="text-gray-500 hover:text-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            disabled={currentTutorialStep === 0}
+            on:click={() => currentTutorialStep--}
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Previous
+          </button>
+
+          {#if currentTutorialStep < TUTORIAL_STEPS.length - 1}
+            <button
+              class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+              on:click={() => currentTutorialStep++}
+            >
+              Next
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          {/if}
+        </div>
+      </div>
+    </div>
+  {:else}
+    <!-- Calculator Content -->
   <div class="bg-white rounded-xl shadow-sm p-6">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-2xl font-bold">Feature Value Calculator</h2>
@@ -648,29 +966,112 @@
       </div>
       <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-secondary/10">
         <div
-          style="width: {(currentStep / (TOTAL_STEPS - 1)) * 100}%"
-          class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-secondary transition-all duration-500"
+            class="bg-secondary rounded-full h-2 transition-all duration-300"
+            style="width: {Math.round((currentStep / (TOTAL_STEPS - 1)) * 100)}%"
         ></div>
       </div>
     </div>
 
-    <!-- Introduction Step -->
+      <!-- Calculator Steps -->
+      <div class="calculator-steps">
     {#if currentStep === 0}
-      <div class="space-y-6 animate-fade-in">
-        <h3 class="text-xl font-semibold">Welcome to the Feature Value Calculator</h3>
-        <p class="text-gray-600">Let's start by gathering some basic information about your feature.</p>
+          <!-- Welcome Step -->
+      <div class="space-y-8 animate-fade-in">
+        <div class="text-center mb-8">
+          <span class="text-4xl mb-4 block">🎯</span>
+          <h3 class="text-2xl font-bold mb-2">Welcome to Feature Value Calculator</h3>
+          <p class="text-gray-600 max-w-2xl mx-auto">
+            Quantify and analyze the business value of your software features across four key dimensions: Generate, Protect, Reduce, and Avoid.
+          </p>
+        </div>
 
-        <div class="bg-gray-50 rounded-lg p-4">
+        <!-- Value Categories Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto mb-8">
+          <div class="p-6 rounded-lg border border-green-200 bg-green-50">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-2xl">📈</span>
+              <h4 class="font-semibold text-green-800">Generate Value</h4>
+            </div>
+            <p class="text-sm text-gray-600">Features that create new revenue streams through market expansion, partnerships, or premium offerings. These drive business growth and new opportunities.</p>
+          </div>
+
+          <div class="p-6 rounded-lg border border-blue-200 bg-blue-50">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-2xl">🔒</span>
+              <h4 class="font-semibold text-blue-800">Protect Value</h4>
+            </div>
+            <p class="text-sm text-gray-600">Features that maintain existing revenue by improving reliability, user experience, and competitive position. Essential for business continuity.</p>
+          </div>
+
+          <div class="p-6 rounded-lg border border-amber-200 bg-amber-50">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-2xl">✂️</span>
+              <h4 class="font-semibold text-amber-800">Reduce Costs</h4>
+            </div>
+            <p class="text-sm text-gray-600">Features that optimize operations and lower existing expenses through efficiency gains. Direct impact on bottom-line performance.</p>
+          </div>
+
+          <div class="p-6 rounded-lg border border-red-200 bg-red-50">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-2xl">🛡️</span>
+              <h4 class="font-semibold text-red-800">Avoid Costs</h4>
+            </div>
+            <p class="text-sm text-gray-600">Features that prevent future expenses and mitigate potential risks. Strategic investments in long-term sustainability.</p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <button
+            class="px-6 py-3 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium"
+            on:click={toggleQuizModal}
+          >
+            Test Your Knowledge
+          </button>
+
+          <button
+            class="px-6 py-3 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium"
+            on:click={() => {
+              isInTutorial = true;
+              currentTutorialStep = 0;
+              handleNext();
+            }}
+          >
+            Take the Tutorial
+          </button>
+
+          <button
+            class="px-6 py-3 rounded-lg border-2 border-secondary bg-secondary/5 hover:bg-secondary/10 transition-colors text-secondary font-medium"
+            on:click={() => {
+              isInTutorial = false;
+              handleNext();
+            }}
+          >
+            Start Calculator
+          </button>
+        </div>
+
+        <div class="mt-8 text-center">
+          <p class="text-sm text-gray-500">
+            You can always access the tutorial and quiz later through the help menu
+          </p>
+        </div>
+      </div>
+        {:else if currentStep === 1}
+          <!-- Project Name Step -->
+      <div class="space-y-6 animate-fade-in">
+        <div class="max-w-2xl mx-auto text-center">
+          <h3 class="text-2xl font-bold mb-2">Name Your Feature</h3>
+          <p class="text-gray-600">Give your feature a clear and descriptive name to help identify its purpose.</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-xl mx-auto">
           <div class="space-y-4">
             <div class="form-group">
-              <label class="text-sm font-medium text-gray-700" for="projectName">
-                Project Name
-                <span class="text-red-500">*</span>
-              </label>
               <input
                 id="projectName"
                 type="text"
-                class="w-full rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary"
+                class="w-full text-lg rounded-lg border-gray-300 focus:border-secondary focus:ring-secondary text-center"
                 placeholder="e.g., Customer Dashboard Redesign"
                 bind:value={projectName}
               />
@@ -678,276 +1079,15 @@
           </div>
         </div>
       </div>
-
-    <!-- Value Categories Overview Step -->
-    {:else if currentStep === 1}
-      <div class="space-y-6 animate-fade-in">
-        <h3 class="text-xl font-semibold">Understanding Value Categories</h3>
-        <p class="text-gray-600">Select the types of value your feature will deliver:</p>
-        
-        <!-- Add Test Your Knowledge button -->
-        <div class="flex justify-end mb-4">
-          <button
-            class="px-4 py-2 bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors flex items-center gap-2"
-            on:click={toggleQuizModal}
-          >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            Test Your Knowledge
-          </button>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="p-6 rounded-lg border border-green-200 bg-green-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">📈</span>
-              <h4 class="font-semibold text-green-800">Increase Revenue</h4>
-            </div>
-            <p class="text-sm text-gray-600 mb-6">New sales opportunities, revenue streams, and market expansion. Breakthrough features that excite customers or disrupt markets to grow your business footprint.</p>
-            <div class="space-y-3">
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
-                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Market Expansion</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
-                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Platform & Partnership Revenue</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
-                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Premium Features</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-green-200">
-                  <svg class="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Add-on Services</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="p-6 rounded-lg border border-blue-200 bg-blue-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">🔒</span>
-              <h4 class="font-semibold text-blue-800">Protect Revenue</h4>
-            </div>
-            <p class="text-sm text-gray-600 mb-6">Essential upkeep and competitive maintenance. The ongoing improvements needed to maintain your current market position and revenue streams.</p>
-            <div class="space-y-3">
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
-                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Core Product Experience</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
-                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Platform Reliability</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
-                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Customer Success</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
-                  <svg class="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Competitive Position</span>
-              </label>
-            </div>
-          </div>
-          
-          <div class="p-6 rounded-lg border border-amber-200 bg-amber-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">✂️</span>
-              <h4 class="font-semibold text-amber-800">Reduce Costs</h4>
-            </div>
-            <p class="text-sm text-gray-600 mb-6">Currently active expenses that can be lowered. Direct savings through efficiency gains and process improvements in today's operations.</p>
-            <div class="space-y-3">
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
-                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Operational Efficiency</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
-                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Infrastructure Optimization</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
-                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Support Load</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
-                  <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Development Velocity</span>
-              </label>
-            </div>
-          </div>
-          
-          <div class="p-6 rounded-lg border border-red-200 bg-red-50 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">🛡️</span>
-              <h4 class="font-semibold text-red-800">Avoid Costs</h4>
-            </div>
-            <p class="text-sm text-gray-600 mb-6">Future expenses and risks we can prevent today. Costs not yet on our books but likely to appear without preventive action.</p>
-            <div class="space-y-3">
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
-                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Risk Management</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
-                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Technical Sustainability</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
-                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Future-Proofing</span>
-              </label>
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-red-200">
-                  <svg class="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>Disaster Prevention</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-gray-50 rounded-lg p-4 mt-6">
-          <h4 class="font-semibold mb-2">What's Next:</h4>
-          <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
-            <li>We'll guide you through each value category</li>
-            <li>Select relevant impacts for your feature</li>
-            <li>Provide input values for calculations</li>
-            <li>Skip categories that don't apply</li>
-            <li>Review the total value analysis</li>
-          </ol>
-        </div>
-      </div>
-
-    <!-- Development & Maintenance Costs Step -->
-    {:else if currentStep === 6}
-      <div class="space-y-6 animate-fade-in">
-        <h3 class="text-xl font-semibold">Development & Maintenance Costs</h3>
-        <p class="text-gray-600">Let's estimate the costs associated with building and maintaining this feature.</p>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <!-- Development section -->
-          <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <h4 class="text-lg font-semibold">Development Cost</h4>
-            <div class="form-group">
-              <label class="text-sm text-gray-600">Hourly Rate ({currencySymbol})</label>
-              <div class="relative">
-                <input
-                  type="number"
-                  class="w-full rounded-lg border-gray-300"
-                  bind:value={developmentCost.hourlyRate}
-                />
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="text-sm text-gray-600">Estimated Hours</label>
-              <input
-                type="number"
-                class="w-full rounded-lg border-gray-300"
-                bind:value={developmentCost.hours}
-              />
-            </div>
-            {#if developmentCost.hourlyRate > 0 && developmentCost.hours > 0}
-              <div class="mt-4 pt-4 border-t border-gray-100">
-                <div class="text-sm font-medium text-gray-600">Total Development Cost</div>
-                <div class="text-lg font-semibold text-secondary">{formatMoney(developmentCost.hourlyRate * developmentCost.hours)}</div>
-              </div>
-            {/if}
-          </div>
-
-          <!-- Maintenance section -->
-          <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <h4 class="text-lg font-semibold">Maintenance Cost</h4>
-            <div class="form-group">
-              <label class="text-sm text-gray-600">Monthly Cost ({currencySymbol})</label>
-              <div class="relative">
-                <input
-                  type="number"
-                  class="w-full rounded-lg border-gray-300"
-                  bind:value={maintenanceCost.monthly}
-                />
-              </div>
-            </div>
-            {#if maintenanceCost.monthly > 0}
-              <div class="mt-4 pt-4 border-t border-gray-100">
-                <div class="text-sm font-medium text-gray-600">Annual Maintenance Cost</div>
-                <div class="text-lg font-semibold text-secondary">{formatMoney(maintenanceCost.monthly * 12)}</div>
-              </div>
-            {/if}
-          </div>
-        </div>
-      </div>
-
-    <!-- Increase Revenue Step -->
     {:else if currentStep === 2}
+          <!-- Increase Revenue Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
           <span class="text-3xl">📈</span>
           <div>
             <h3 class="text-xl font-semibold">Increase Revenue</h3>
             <p class="text-sm text-gray-600">Select impacts that will generate new value or revenue</p>
-        </div>
+          </div>
         </div>
 
         <div class="space-y-4">
@@ -1017,9 +1157,8 @@
           {/each}
                         </div>
                       </div>
-                      
-    <!-- Protect Value Step -->
     {:else if currentStep === 3}
+          <!-- Protect Value Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
           <span class="text-3xl">🔒</span>
@@ -1027,8 +1166,8 @@
             <h3 class="text-xl font-semibold">Protect Value</h3>
             <p class="text-sm text-gray-600">Select impacts that will protect existing value</p>
           </div>
-                      </div>
-                      
+        </div>
+        
         <!-- Similar structure as Increase Revenue step but with protect impacts -->
         <div class="space-y-4">
           {#each impactsByCategory.protect as impact}
@@ -1048,7 +1187,7 @@
                 >
                   {selectedImpacts.some(si => si.id === impact.id) ? 'Remove' : 'Add'}
                 </button>
-                      </div>
+              </div>
 
               <!-- Input fields when selected -->
               {#if selectedImpacts.some(si => si.id === impact.id)}
@@ -1083,23 +1222,22 @@
                         </div>
                       </div>
                       {/each}
-                      </div>
+                    </div>
                     <!-- Value preview -->
                     <div class="flex justify-end mt-4">
                       <span class="text-sm font-medium text-blue-600">
                         Annual Value: {formatMoney(selectedImpact.calculatedValue)}
                       </span>
                     </div>
-                      </div>
+                  </div>
                 {/if}
               {/if}
-                      </div>
+            </div>
           {/each}
-                      </div>
-                    </div>
-
-    <!-- Reduce Cost Step -->
+        </div>
+      </div>
     {:else if currentStep === 4}
+      <!-- Reduce Cost Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
           <span class="text-3xl">✂️</span>
@@ -1177,17 +1315,16 @@
           {/each}
         </div>
       </div>
-
-    <!-- Avoid Risk Step -->
     {:else if currentStep === 5}
+      <!-- Avoid Risk Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
           <span class="text-3xl">🛡️</span>
           <div>
             <h3 class="text-xl font-semibold">Avoid Risk</h3>
             <p class="text-sm text-gray-600">Select impacts that will help avoid risks or losses</p>
-                    </div>
-                  </div>
+          </div>
+        </div>
         
         <!-- Similar structure as previous steps -->
         <div class="space-y-4">
@@ -1240,7 +1377,7 @@
                                 %
                               </span>
                             {/if}
-              </div>
+                          </div>
                         </div>
                       {/each}
                     </div>
@@ -1257,12 +1394,88 @@
           {/each}
         </div>
       </div>
+    {:else if currentStep === 6}
+      <!-- Development & Maintenance Costs Step -->
+      <div class="space-y-6 animate-fade-in">
+        <h3 class="text-xl font-semibold">Development & Maintenance Costs</h3>
+        <p class="text-gray-600">Let's estimate the costs associated with building and maintaining this feature.</p>
 
-    <!-- Results Step -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Development section -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+            <h4 class="text-lg font-semibold">Development Cost</h4>
+            <div class="form-group">
+              <label class="text-sm text-gray-600">Hourly Rate ({currencySymbol})</label>
+              <div class="relative">
+                <input
+                  type="number"
+                  class="w-full rounded-lg border-gray-300"
+                  bind:value={developmentCost.hourlyRate}
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="text-sm text-gray-600">Estimated Hours</label>
+              <input
+                type="number"
+                class="w-full rounded-lg border-gray-300"
+                bind:value={developmentCost.hours}
+              />
+            </div>
+            {#if developmentCost.hourlyRate > 0 && developmentCost.hours > 0}
+              <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="text-sm font-medium text-gray-600">Total Development Cost</div>
+                <div class="text-lg font-semibold text-secondary">{formatMoney(developmentCost.hourlyRate * developmentCost.hours)}</div>
+              </div>
+            {/if}
+          </div>
+
+          <!-- Maintenance section -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+            <h4 class="text-lg font-semibold">Maintenance Cost</h4>
+            <div class="form-group">
+              <label class="text-sm text-gray-600">Monthly Cost ({currencySymbol})</label>
+              <div class="relative">
+                <input
+                  type="number"
+                  class="w-full rounded-lg border-gray-300"
+                  bind:value={maintenanceCost.monthly}
+                />
+              </div>
+            </div>
+            {#if maintenanceCost.monthly > 0}
+              <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="text-sm font-medium text-gray-600">Annual Maintenance Cost</div>
+                <div class="text-lg font-semibold text-secondary">{formatMoney(maintenanceCost.monthly * 12)}</div>
+              </div>
+            {/if}
+          </div>
+        </div>
+      </div>
     {:else if currentStep === 7}
+          <!-- Results Step -->
       <div class="space-y-8 animate-fade-in">
         <div class="bg-white rounded-xl p-6 border border-gray-200">
-          <h3 class="text-xl font-semibold mb-4">Results Summary for {projectName}</h3>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">Results Summary for {projectName}</h3>
+            <button
+              class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+              on:click={() => {
+                currentStep = 0;
+                projectName = '';
+                selectedImpacts = [];
+                developmentCost = { hourlyRate: 0, hours: 0 };
+                maintenanceCost = { monthly: 0 };
+                errors = [];
+                touched = {};
+              }}
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Start Over
+            </button>
+          </div>
 
           <!-- Selected Impacts Summary -->
           <div class="space-y-4 mb-8">
@@ -1347,6 +1560,7 @@
         </div>
       </div>
     {/if}
+      </div>
 
     <!-- Navigation -->
     <div class="flex justify-between items-center mt-8">
@@ -1365,15 +1579,6 @@
         {#if errors.length > 0}
           <p class="text-sm text-red-500">{errors[0].message}</p>
         {/if}
-        
-        {#if showSkip}
-          <button
-            class="px-4 py-2 text-gray-600 hover:text-gray-800"
-            on:click={handleSkip}
-          >
-            Skip this category
-          </button>
-        {/if}
 
         {#if showNext}
           <button
@@ -1389,6 +1594,7 @@
       </div>
     </div>
   </div>
+  {/if}
 </div>
 
 <style>

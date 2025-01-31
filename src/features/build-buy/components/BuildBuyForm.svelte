@@ -63,6 +63,8 @@
     alternativeFitness: string;
     buildRisks: string[];
     buyRisks: string[];
+    hasMaintenanceTeam: boolean;
+    maintenanceTeamSize: number;
   }
 
   // Update the initial form state
@@ -78,8 +80,8 @@
     usageDuration: '',
     
     // Section 3
-    solutionsCount: 0,
-    alternativeSolutions: '',
+    solutionsCount: 4, // Initialize with a default value
+    alternativeSolutions: '4-10', // Initialize with a default value
     marketEvolution: '',
     landscapeEvolution: '',
     marketStandardization: '',
@@ -108,7 +110,9 @@
     strategicAlignment: '',
     alternativeFitness: '',
     buildRisks: [],
-    buyRisks: []
+    buyRisks: [],
+    hasMaintenanceTeam: false,
+    maintenanceTeamSize: 0
   };
 
   const formState = writable<FormState>(initialFormState);
@@ -1765,6 +1769,8 @@
                             } else {
                               $formState.implementationTime = '12-24';
                             }
+                            // Update build cost based on time
+                            $formState.buildCost = $formState.buildFTEs * $formState.buildHourlyRate * (buildTimeMonths * 160); // 160 hours per month
                           }}
                         />
                         <div class="flex justify-between mt-2">
@@ -1776,12 +1782,72 @@
                         </div>
                       </div>
                     </div>
-                    <!-- Yearly Cost Preview -->
-                    <div class="mt-4 p-4 bg-secondary/5 rounded-lg">
+
+                    <!-- Maintenance Team Configuration -->
+                    <div class="p-6 rounded-xl border-2 border-gray-200">
+                      <div class="flex items-center justify-between mb-4">
+                        <div>
+                          <label class="block text-base font-medium text-gray-900 mb-1">Maintenance Team Configuration</label>
+                          <p class="text-sm text-gray-600">Configure the team size after build completion</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            class="sr-only peer"
+                            bind:checked={$formState.hasMaintenanceTeam}
+                          />
+                          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+                        </label>
+                      </div>
+
+                      {#if $formState.hasMaintenanceTeam}
+                        <div class="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
+                          <div>
+                            <label class="block text-sm font-medium text-gray-900 mb-2">Maintenance Team Size</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.5"
+                              bind:value={$formState.maintenanceTeamSize}
+                              class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary"
+                              placeholder="0.0"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Number of FTEs needed for maintenance</p>
+                          </div>
+                        </div>
+                      {/if}
+                    </div>
+
+                    <!-- Cost Preview -->
+                    <div class="mt-4 p-4 bg-secondary/5 rounded-lg space-y-3">
+                      <!-- Build Cost -->
                       <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-600">Estimated Yearly Cost:</span>
+                        <span class="text-sm font-medium text-gray-600">Build Cost ({buildTimeMonths} months):</span>
                         <span class="text-lg font-semibold text-secondary">
-                          {formatCurrency($formState.buildFTEs * $formState.buildHourlyRate * 2080)}
+                          {formatCurrency($formState.buildCost)}
+                        </span>
+                      </div>
+
+                      <!-- Yearly Maintenance Cost -->
+                      {#if $formState.hasMaintenanceTeam}
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                          <span class="text-sm font-medium text-gray-600">Yearly Maintenance Cost:</span>
+                          <span class="text-lg font-semibold text-secondary">
+                            {formatCurrency($formState.maintenanceTeamSize * $formState.buildHourlyRate * 2080)}
+                          </span>
+                        </div>
+                      {/if}
+
+                      <!-- Total First Year Cost -->
+                      <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                        <span class="text-sm font-medium text-gray-600">Total First Year Cost:</span>
+                        <span class="text-lg font-semibold text-secondary">
+                          {formatCurrency(
+                            Math.min($formState.buildCost, ($formState.buildCost * 12 / buildTimeMonths)) +
+                            ($formState.hasMaintenanceTeam && buildTimeMonths <= 12 
+                              ? ($formState.maintenanceTeamSize * $formState.buildHourlyRate * 2080 * (12 - buildTimeMonths) / 12) 
+                              : 0)
+                          )}
                         </span>
                       </div>
                     </div>

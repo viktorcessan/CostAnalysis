@@ -14,6 +14,23 @@
     calculatedValue: number;
   }
 
+  interface TutorialCategory {
+    title: string;
+    description: string;
+    examples: string[];
+    metrics: string[];
+  }
+
+  interface TutorialStep {
+    title: string;
+    subtitle: string;
+    description: string;
+    color: string;
+    icon: string;
+    examples?: TutorialCategory[];
+    isConclusion?: boolean;
+  }
+
   // Wizard state
   let currentStep = 0;
   const TOTAL_STEPS = 8; // Reduced by 1 since we removed a step
@@ -22,174 +39,342 @@
   // Tutorial state
   let isInTutorial = false;
   let currentTutorialStep = 0;
-  const TUTORIAL_STEPS = [
+  const TUTORIAL_STEPS: TutorialStep[] = [
     {
-      title: 'Increase Value',
+      title: 'Increase Revenue',
       subtitle: 'Strategic Growth & Innovation',
-      description: 'Features that expand your market reach and create new revenue streams. These are strategic investments that drive business growth through customer delight and market expansion.',
+      description: 'Every investment we make - whether projects, features, or initiatives - that grows revenue is an example of \'Increase Revenue\'. This could be adding localizations to enter new markets, implementing payment providers to reach more customers, or building premium features that attract larger market segments.\n\nWhen evaluating features that increase revenue, consider three key dimensions:\n● Market reach and expansion that grows total addressable market\n● Product monetization that enhances revenue per customer\n● Business model innovation that creates new revenue streams\n\nThese focus on different ways to grow: expanding who you can reach, getting more value from existing customers, and finding entirely new ways to generate revenue.',
       color: 'green',
       icon: '📈',
-      details: [
-        'Create premium features customers value enough to pay for',
-        'Enable new business models and revenue streams',
-        'Expand into untapped market segments',
-        'Build strategic partnerships and integrations',
-        'Drive disruptive innovation in your market'
+      examples: [
+        {
+          title: 'Market Expansion',
+          description: 'Any investment that allows you to expand into new territories or customer segments.',
+          examples: [
+            'Localization support for a new markets',
+            'White-labeling',
+            'Revenue sharing',
+            'Missing features',
+            'New distribution channels'
+          ],
+          metrics: [
+            'Total Addressable Market',
+            'Market Share',
+            'Customer Purchase Frequency',
+            'Market Penetration Rate',
+            'Average Lifetime Value',
+            'Free-to-Paid conversion',
+            'Revenue Per User'
+          ]
+        } as TutorialCategory,
+        {
+          title: 'Premium Features',
+          description: 'Investments in new capabilities that customers value enough to pay extra for.',
+          examples: [
+            'Enterprise-grade security features',
+            'Advanced analytics and reporting',
+            'API access and integrations',
+            'Automation capabilities',
+            'Professional services features'
+          ],
+          metrics: [
+            'Premium Tier Adoption',
+            'Cross-sell/Upsell Success',
+            'Customer Purchase Frequency',
+            'Free-to-Paid Conversion Rate',
+            'Revenue Per User (ARPU)'
+          ]
+        },
+        {
+          title: 'Channel Development',
+          description: 'Building new ways to reach and monetize customers.',
+          examples: [
+            'Mobile app with in-app purchases',
+            'API marketplace',
+            'Partner integrations',
+            'Reseller programs',
+            'Self-service platforms'
+          ],
+          metrics: [
+            'Market Share',
+            'Market Penetration Rate',
+            'Average Lifetime Value (ALTV)',
+            'User Activation Rate',
+            'Revenue Per User (ARPU)'
+          ]
+        },
+        {
+          title: 'Business Model Innovation',
+          description: 'Creating new revenue streams through innovative pricing and delivery models',
+          examples: [
+            'Usage-based pricing',
+            'Subscription tiers',
+            'Marketplace fees',
+            'Data monetization',
+            'Platform economics'
+          ],
+          metrics: [
+            'Free-to-Paid Conversion Rate',
+            'Premium Tier Adoption',
+            'Cross-sell/Upsell Success',
+            'Average Lifetime Value (ALTV)',
+            'Revenue Per User (ARPU)'
+          ]
+        }
       ]
     },
     {
-      title: 'Increase Value',
-      subtitle: 'Examples in Practice',
-      description: 'Discover how features can create new value streams and expand market opportunities.',
-      color: 'green',
-      icon: '💡',
-      examples: {
-        generate: [
-          {
-            title: 'Total Addressable Market',
-            description: 'Expand into new segments or territories',
-            impact: 'Market expansion'
-          },
-          {
-            title: 'Lifetime Value',
-            description: 'Improve revenue per customer over time',
-            impact: 'Revenue growth'
-          },
-          {
-            title: 'Premium Adoption',
-            description: 'Increase users on premium tiers',
-            impact: 'Revenue per user'
-          }
-        ]
-      }
-    },
-    {
-      title: 'Protect Value',
+      title: 'Protect Revenue',
       subtitle: 'Sustaining Your Core Business',
-      description: 'Features that defend existing revenue by maintaining competitive position and customer satisfaction. Essential for building a moat around your core business.',
+      description: 'Defending existing revenue is as crucial as pursuing growth. \'Protect Revenue\' focuses on investments that safeguard your revenue streams and customer base. This could be improving system reliability to prevent outages, enhancing support tools to reduce churn, or adding features and user-friendliness to maintain competitive parity.\n\nWhen evaluating features that protect revenue, consider three key dimensions:\n● System reliability and performance that prevent revenue loss\n● Customer retention and satisfaction that maintain revenue\n● Competitive position that defends market share\n\nThese focus on different ways to protect: ensuring technical stability, keeping customers happy, and staying competitive in your market.',
       color: 'blue',
       icon: '🔒',
-      details: [
-        'Keep pace with competitor offerings',
-        'Remove friction points causing churn',
-        'Enhance core product reliability',
-        'Improve essential user experiences',
-        'Strengthen your market position'
+      examples: [
+        {
+          title: 'System Performance',
+          description: 'Features that minimize revenue loss through reliable technical operations',
+          examples: [
+            'Infrastructure redundancy',
+            'Performance monitoring',
+            'Automated failover',
+            'Error detection',
+            'Load balancing'
+          ],
+          metrics: [
+            'System Downtime',
+            'Recovery Times',
+            'System Reliability',
+            'API Reliability',
+            'Feature Adoption'
+          ]
+        },
+        {
+          title: 'Customer Defense',
+          description: 'Features that prevent customer churn and maintain satisfaction',
+          examples: [
+            'Support automation',
+            'User experience improvements',
+            'Self-service capabilities',
+            'Engagement tools',
+            'Success metrics'
+          ],
+          metrics: [
+            'Customer Churn Rate',
+            'Net Revenue Retention',
+            'Support-Driven Churn',
+            'Time-to-Value',
+            'Customer Complaints'
+          ]
+        },
+        {
+          title: 'Competitive Parity',
+          description: 'Features that maintain competitive position and prevent customer switching',
+          examples: [
+            'Feature matching',
+            'Integration parity',
+            'Performance improvements',
+            'Industry standards',
+            'Market benchmarks'
+          ],
+          metrics: [
+            'Competitive Losses',
+            'Product Downgrades',
+            'Feature Adoption',
+            'Customer Churn Rate',
+            'Net Revenue Retention'
+          ]
+        },
+        {
+          title: 'Service Quality',
+          description: 'Features that ensure consistent service delivery and customer satisfaction',
+          examples: [
+            'Monitoring tools',
+            'SLA management',
+            'Quality assurance',
+            'Support systems',
+            'Incident response'
+          ],
+          metrics: [
+            'Recovery Times',
+            'System Reliability',
+            'API Reliability',
+            'Customer Complaints',
+            'Support-Driven Churn'
+          ]
+        }
       ]
-    },
-    {
-      title: 'Protect Value',
-      subtitle: 'Examples in Practice',
-      description: 'Learn how features can protect and enhance your existing business value.',
-      color: 'blue',
-      icon: '🛡️',
-      examples: {
-        protect: [
-          {
-            title: 'System Reliability',
-            description: 'Minimize revenue loss from outages',
-            impact: 'Business continuity'
-          },
-          {
-            title: 'Incident Recovery',
-            description: 'Reduce impact through faster recovery',
-            impact: 'Service resilience'
-          },
-          {
-            title: 'Customer Retention',
-            description: 'Maintain competitive features',
-            impact: 'Revenue protection'
-          }
-        ]
-      }
     },
     {
       title: 'Reduce Costs',
       subtitle: 'Operational Excellence',
-      description: 'Features that optimize operations while maintaining or improving customer experience. Focus on eliminating waste without compromising value.',
+      description: 'Cost reduction focuses on optimizing operations without compromising value delivery. These investments automate repetitive work, streamline processes, and eliminate waste while maintaining or improving customer experience.\n\nWhen evaluating features that reduce costs, consider three key dimensions:\n● Process automation that eliminates manual work\n● Resource optimization that improves efficiency\n● Infrastructure optimization that reduces operational costs\n\nThese focus on different ways to reduce: automating repetitive tasks, optimizing resource usage, and improving infrastructure efficiency.',
       color: 'amber',
       icon: '✂️',
-      details: [
-        'Streamline internal processes',
-        'Automate repetitive tasks',
-        'Optimize resource allocation',
-        'Reduce operational friction',
-        'Improve team productivity'
+      examples: [
+        {
+          title: 'Process Automation',
+          description: 'Features that reduce costs by simplifying and eliminating manual work.',
+          examples: [
+            'Automated testing',
+            'Process automation',
+            'Self-service tools',
+            'Workflow automation',
+            'Validation checks',
+            'Deployment automation'
+          ],
+          metrics: [
+            'Manual Work',
+            'Operational Costs (Time-Based)',
+            'Operational Costs (Transaction-Based)',
+            'Error Costs',
+            'Testing Costs'
+          ]
+        },
+        {
+          title: 'Resource Optimization',
+          description: 'Features that improve resource allocation and efficiency',
+          examples: [
+            'Team coordination tools',
+            'Capacity planning',
+            'Resource scheduling',
+            'Usage monitoring',
+            'Performance optimization'
+          ],
+          metrics: [
+            'Coordination Overhead',
+            'Support Costs',
+            'Compliance Process Costs',
+            'Error Costs',
+            'Testing Costs'
+          ]
+        },
+        {
+          title: 'Infrastructure Efficiency',
+          description: 'Features that optimize infrastructure costs and usage',
+          examples: [
+            'Usage-based scaling',
+            'Storage optimization',
+            'Load balancing',
+            'Resource pooling',
+            'Capacity planning'
+          ],
+          metrics: [
+            'Fixed Infrastructure Costs',
+            'Usage-Based Infrastructure',
+            'Data Storage & Processing',
+            'Downtime & Recovery',
+            'Deployment Costs'
+          ]
+        },
+        {
+          title: 'Quality Automation',
+          description: 'Features that reduce costs through automated quality assurance',
+          examples: [
+            'Automated testing',
+            'Error prevention',
+            'Monitoring tools',
+            'Compliance automation',
+            'Recovery automation'
+          ],
+          metrics: [
+            'Error Costs',
+            'Testing Costs',
+            'Deployment Costs',
+            'Downtime & Recovery',
+            'Compliance Process Costs'
+          ]
+        }
       ]
-    },
-    {
-      title: 'Reduce Costs',
-      subtitle: 'Examples in Practice',
-      description: 'Explore how optimization can reduce costs while maintaining service quality.',
-      color: 'amber',
-      icon: '⚡',
-      examples: {
-        reduce: [
-          {
-            title: 'Coordination Efficiency',
-            description: 'Reduce team coordination overhead',
-            impact: 'Time savings'
-          },
-          {
-            title: 'Process Automation',
-            description: 'Automate repetitive tasks',
-            impact: 'Resource optimization'
-          },
-          {
-            title: 'Workflow Improvement',
-            description: 'Streamline operational processes',
-            impact: 'Productivity gain'
-          }
-        ]
-      }
     },
     {
       title: 'Avoid Costs',
       subtitle: 'Strategic Risk Management',
-      description: 'Features that prevent future expenses and mitigate strategic risks. Invest in long-term sustainability and resilience.',
+      description: 'Prevent future costs by investing proactively in risk mitigation and long-term sustainability. These investments protect against technical debt, compliance issues, and scalability problems before they materialize into actual costs.\n\nWhen evaluating features that avoid costs, consider three key dimensions:\n● Technical sustainability that prevents future rework\n● Risk management that reduces potential losses\n● Strategic planning that avoids future constraints\n\nThese focus on different ways to avoid costs: addressing technical debt early, managing risks proactively, and planning for sustainable growth.',
       color: 'red',
       icon: '🛡️',
-      details: [
-        'Address technical debt proactively',
-        'Mitigate compliance risks',
-        'Future-proof architecture',
-        'Prevent scalability issues',
-        'Protect brand reputation'
+      examples: [
+        {
+          title: 'Technical Sustainability',
+          description: 'Features that prevent future technical costs and rework.',
+          examples: [
+            'Architecture improvements',
+            'Technical debt reduction',
+            'Scalability planning',
+            'Performance optimization',
+            'Infrastructure modernization'
+          ],
+          metrics: [
+            'Future-Proof Architecture & Scalability',
+            'Technical Debt',
+            'Infrastructure Scaling',
+            'Production Recovery',
+            'Business Continuity'
+          ]
+        },
+        {
+          title: 'Prevention of Cost Associated Risks',
+          description: 'Features that reduce likelihood of costly incidents.',
+          examples: [
+            'Security improvements',
+            'Compliance automation',
+            'Disaster recovery',
+            'Monitoring systems',
+            'Incident prevention',
+            'Legal requirements'
+          ],
+          metrics: [
+            'Legal Liability Risk',
+            'Compliance & Regulatory Risks',
+            'Incident Probability & Recovery',
+            'Litigation & IP Risks',
+            'Brand Reputation & Goodwill'
+          ]
+        },
+        {
+          title: 'Proactive Removal of Projected Constraints',
+          description: 'Features that prevent future operational constraints.',
+          examples: [
+            'Vendor diversification',
+            'Integration flexibility',
+            'Resource planning',
+            'Growth preparation',
+            'Platform scalability'
+          ],
+          metrics: [
+            'Vendor Lock-in Risks',
+            'Additional Hiring Costs',
+            'Scalability Issues Before Growth',
+            'Business Continuity',
+            'Infrastructure Scaling'
+          ]
+        },
+        {
+          title: 'Compliance Management',
+          description: 'Features that prevent regulatory and legal issues',
+          examples: [
+            'Compliance automation',
+            'Legal risk management',
+            'Data protection',
+            'Audit preparation',
+            'Policy enforcement'
+          ],
+          metrics: [
+            'Legal Liability Risk',
+            'Compliance & Regulatory Risks',
+            'Litigation & IP Risks',
+            'Brand Reputation',
+            'Business Continuity'
+          ]
+        }
       ]
     },
     {
-      title: 'Avoid Costs',
-      subtitle: 'Examples in Practice',
-      description: 'See how features can protect against future risks and costs.',
-      color: 'red',
-      icon: '🎯',
-      examples: {
-        avoid: [
-          {
-            title: 'Infrastructure Scaling',
-            description: 'Prevent additional infrastructure costs',
-            impact: 'Cost prevention'
-          },
-          {
-            title: 'Legal Compliance',
-            description: 'Minimize compliance issues',
-            impact: 'Risk reduction'
-          },
-          {
-            title: 'Incident Prevention',
-            description: 'Reduce production incidents',
-            impact: 'Cost avoidance'
-          }
-        ]
-      }
-    },
-    {
-      title: 'Balancing Value',
-      subtitle: 'Making Strategic Choices',
-      description: 'Success lies in balancing customer delight with economic sustainability. Use this framework to make informed trade-offs and prioritize your scarce resources effectively.',
+      title: 'Ready to Start?',
+      subtitle: 'Apply Your Knowledge',
+      description: 'Now that you understand the different types of value your features can deliver, you can start calculating the value of your own features or test your knowledge with a quick quiz.',
       color: 'secondary',
       icon: '🎯',
-      isConclusionStep: true
+      isConclusion: true
     }
   ];
 
@@ -604,7 +789,7 @@
   $: if (currentStep !== undefined) {
     setTimeout(() => {
       const calculator = document.querySelector('.calculator-steps');
-      if (calculator) {
+      if (calculator && currentStep > 0) { // Only scroll if not on first step
         const navHeight = 64; // Height of the navigation menu
         const marginTop = 120; // Increased margin for better visibility
         const elementRect = calculator.getBoundingClientRect();
@@ -725,6 +910,36 @@
       }, 100);
     }
   });
+
+  // Replace the scrollToTop function with this new one
+  function scrollToContainer() {
+    if (!isInTutorial) return; // Only scroll if in tutorial mode
+    
+    const container = document.querySelector('.tutorial-container');
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      const scrollTarget = window.pageYOffset + containerRect.top - 20; // Small offset from top
+      window.scrollTo({
+        top: scrollTarget,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+  // Update the tutorial navigation handlers to use the new function name
+  function handleTutorialNext() {
+    if (currentTutorialStep < TUTORIAL_STEPS.length - 1) {
+      currentTutorialStep++;
+      scrollToContainer();
+    }
+  }
+
+  function handleTutorialPrevious() {
+    if (currentTutorialStep > 0) {
+      currentTutorialStep--;
+      scrollToContainer();
+    }
+  }
 </script>
 
 <!-- Tooltip Component -->
@@ -741,10 +956,10 @@
 
 <!-- Quiz Modal Component -->
 {#if showQuizModal}
-  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col relative">
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full h-full sm:h-auto sm:rounded-xl sm:max-w-4xl sm:max-h-[90vh] flex flex-col relative">
       <!-- Header -->
-      <div class="p-6 border-b border-gray-200">
+      <div class="p-4 sm:p-6 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="text-2xl">🎯</span>
@@ -764,16 +979,16 @@
       </div>
       
       <!-- Quiz Content -->
-      <div class="flex-1 overflow-y-auto p-6">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6">
         <div class="quiz-container bg-gray-50 rounded-lg p-4">
           <a data-quiz="Q12UOG7P5" data-type="4" href="https://take.quiz-maker.com/Q12UOG7P5">Loading Quiz...</a>
         </div>
       </div>
       
       <!-- Footer -->
-      <div class="p-6 border-t border-gray-200 bg-gray-50">
+      <div class="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
         <div class="flex items-center justify-between">
-          <p class="text-sm text-gray-600">You can retake the quiz as many times as you want</p>
+          <p class="hidden sm:block text-sm text-gray-600">You can retake the quiz as many times as you want</p>
           <div class="flex gap-3">
             <button
               class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
@@ -788,7 +1003,8 @@
                 if (currentStep === 1) handleNext();
               }}
             >
-              Continue to Selection
+              <span class="hidden sm:inline">Continue to Selection</span>
+              <span class="sm:hidden">Continue</span>
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -804,8 +1020,8 @@
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-8">
   {#if isInTutorial}
     <!-- Tutorial Content -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <div class="flex items-center justify-between mb-6">
+    <div class="space-y-6 animate-fade-in tutorial-container">
+      <div class="flex items-start justify-between mb-6">
         <div class="flex items-center gap-4">
           <h2 class="text-2xl font-bold">Feature Value Tutorial</h2>
           <span class="px-3 py-1 text-xs font-semibold bg-secondary/10 text-secondary rounded-full">
@@ -836,49 +1052,71 @@
         </div>
       </div>
 
-      <div class="space-y-8 animate-fade-in">
-        {#if currentTutorialStep < TUTORIAL_STEPS.length - 1}
-          <!-- Regular Tutorial Steps -->
-          <div class="space-y-6">
-            <div class="flex items-start gap-6 mb-8">
-              <div class={"text-4xl p-4 bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-50 rounded-xl"}>
-                {TUTORIAL_STEPS[currentTutorialStep].icon}
+      <div class="space-y-8">
+        {#if !TUTORIAL_STEPS[currentTutorialStep].isConclusion}
+          <div class="space-y-8">
+            <!-- Header Section -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-4xl leading-none">{TUTORIAL_STEPS[currentTutorialStep].icon}</span>
+                <div>
+                  <h3 class="text-2xl font-bold">{TUTORIAL_STEPS[currentTutorialStep].title}</h3>
+                  <h4 class="text-lg text-gray-600">{TUTORIAL_STEPS[currentTutorialStep].subtitle}</h4>
+                </div>
               </div>
-              <div class="flex-1">
-                <h3 class="text-2xl font-bold mb-1">{TUTORIAL_STEPS[currentTutorialStep].title}</h3>
-                {#if TUTORIAL_STEPS[currentTutorialStep].subtitle}
-                  <h4 class={"text-lg text-" + TUTORIAL_STEPS[currentTutorialStep].color + "-600 mb-2"}>{TUTORIAL_STEPS[currentTutorialStep].subtitle}</h4>
-                {/if}
-                <p class="text-gray-600">{TUTORIAL_STEPS[currentTutorialStep].description}</p>
+              
+              <div class="prose prose-gray max-w-none">
+                <p class="text-gray-600 whitespace-pre-line leading-relaxed">{TUTORIAL_STEPS[currentTutorialStep].description}</p>
               </div>
             </div>
 
-            {#if TUTORIAL_STEPS[currentTutorialStep].details}
-              <div class={"p-6 rounded-xl border bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-50 border-" + TUTORIAL_STEPS[currentTutorialStep].color + "-200"}>
-                <h5 class="font-semibold mb-4">Key Benefits</h5>
-                <ul class="space-y-3">
-                  {#each TUTORIAL_STEPS[currentTutorialStep].details as detail}
-                    <li class="flex items-center gap-3 text-sm text-gray-700">
-                      <span class={"flex-shrink-0 w-5 h-5 rounded-full bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-500 flex items-center justify-center text-white text-xs"}>✓</span>
-                      {detail}
-                    </li>
-                  {/each}
-                </ul>
-              </div>
-            {:else if TUTORIAL_STEPS[currentTutorialStep].examples}
-              <div class="space-y-4">
-                <h5 class="font-semibold">Examples</h5>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {#each Object.values(TUTORIAL_STEPS[currentTutorialStep].examples)[0] as example}
-                    <div class={"p-4 rounded-xl bg-white border border-" + TUTORIAL_STEPS[currentTutorialStep].color + "-200 hover:shadow-md transition-shadow"}>
-                      <h6 class={"font-semibold text-" + TUTORIAL_STEPS[currentTutorialStep].color + "-700 mb-2"}>{example.title}</h6>
-                      <p class="text-sm text-gray-600 mb-3">{example.description}</p>
-                      <div class={"text-xs font-medium px-2 py-1 bg-" + TUTORIAL_STEPS[currentTutorialStep].color + "-50 text-" + TUTORIAL_STEPS[currentTutorialStep].color + "-700 rounded-full inline-block"}>
-                        {example.impact}
+            {#if TUTORIAL_STEPS[currentTutorialStep].examples}
+              <!-- Examples Grid -->
+              <div class="grid grid-cols-1 gap-6">
+                {#each TUTORIAL_STEPS[currentTutorialStep].examples as category}
+                  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <!-- Category Header -->
+                    <div class="p-6 border-b border-gray-100">
+                      <h5 class="text-xl font-semibold mb-2">{category.title}</h5>
+                      <p class="text-gray-600">{category.description}</p>
+                    </div>
+                    
+                    <!-- Examples and Metrics -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                      <!-- Examples Column -->
+                      <div class="p-6">
+                        <h6 class="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                          Examples
+                        </h6>
+                        <ul class="space-y-3">
+                          {#each category.examples as example}
+                            <li class="flex items-start gap-3 text-sm text-gray-700">
+                              <span class="w-1 h-1 rounded-full bg-gray-400 mt-2"></span>
+                              <span class="flex-1">{example}</span>
+                            </li>
+                          {/each}
+                        </ul>
+                      </div>
+                      
+                      <!-- Metrics Column -->
+                      <div class="p-6 bg-gray-50">
+                        <h6 class="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                          <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                          Key Metrics
+                        </h6>
+                        <ul class="space-y-3">
+                          {#each category.metrics as metric}
+                            <li class="flex items-start gap-3 text-sm text-gray-700">
+                              <span class="w-1 h-1 rounded-full bg-gray-400 mt-2"></span>
+                              <span class="flex-1">{metric}</span>
+                            </li>
+                          {/each}
+                        </ul>
                       </div>
                     </div>
-                  {/each}
-                </div>
+                  </div>
+                {/each}
               </div>
             {/if}
           </div>
@@ -888,6 +1126,7 @@
             <div class="text-center">
               <span class="text-4xl mb-4 block">{TUTORIAL_STEPS[currentTutorialStep].icon}</span>
               <h3 class="text-2xl font-bold mb-2">{TUTORIAL_STEPS[currentTutorialStep].title}</h3>
+              <h4 class="text-lg text-gray-600 mb-4">{TUTORIAL_STEPS[currentTutorialStep].subtitle}</h4>
               <p class="text-gray-600 max-w-2xl mx-auto">{TUTORIAL_STEPS[currentTutorialStep].description}</p>
             </div>
 
@@ -915,42 +1154,46 @@
             </div>
           </div>
         {/if}
+      </div>
 
-        <!-- Tutorial Navigation -->
-        <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+      <!-- Tutorial Navigation -->
+      <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+        <button
+          class="text-gray-500 hover:text-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          disabled={currentTutorialStep === 0}
+          on:click={handleTutorialPrevious}
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Previous
+        </button>
+
+        {#if currentTutorialStep < TUTORIAL_STEPS.length - 1}
           <button
-            class="text-gray-500 hover:text-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            disabled={currentTutorialStep === 0}
-            on:click={() => currentTutorialStep--}
+            class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
+            on:click={handleTutorialNext}
           >
+            Next
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
-            Previous
           </button>
-
-          {#if currentTutorialStep < TUTORIAL_STEPS.length - 1}
-            <button
-              class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
-              on:click={() => currentTutorialStep++}
-            >
-              Next
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          {/if}
-        </div>
+        {/if}
       </div>
     </div>
   {:else}
     <!-- Calculator Content -->
   <div class="bg-white rounded-xl shadow-sm p-6">
     <div class="flex items-center justify-between mb-4">
-      <div class="w-full text-center">
-        <h2 class="text-2xl font-bold">Calculate Feature Value</h2>
+      <div class="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
+        <div class="w-full sm:w-auto text-center sm:text-left">
+          <h2 class="text-2xl font-bold">Calculate Feature Value</h2>
+        </div>
+        <div class="w-full sm:w-auto">
+          <CurrencySelector />
+        </div>
       </div>
-      <CurrencySelector />
     </div>
     
     <div class="relative pt-1">
@@ -1729,7 +1972,7 @@
   /* Quiz modal styles */
   .quiz-container {
     width: 100%;
-    min-height: 500px;
+    min-height: calc(100vh - 250px);
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
@@ -1738,7 +1981,8 @@
   /* Ensure modal scrolls properly on mobile */
   @media (max-width: 640px) {
     .quiz-container {
-      min-height: 400px;
+      min-height: calc(100vh - 200px);
+      border-radius: 0;
     }
   }
 

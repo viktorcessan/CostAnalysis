@@ -208,15 +208,18 @@
               data-analysis={feature.title === 'Build a Business Case' ? 'breakeven' : 
                            feature.title === 'Find Platform Budget' ? 'target' : 
                            feature.title === 'Build vs Buy Analysis' ? 'build-buy' :
-                           feature.title === 'Calculate Feature Value' ? 'feature-value' : 'team-analysis'}
+                           feature.title === 'Calculate Feature Value' ? 'feature-calculator' : 'team-analysis'}
               on:click|preventDefault={(e) => {
                 const analysis = e.currentTarget.getAttribute('data-analysis');
                 if (analysis === 'build-buy') {
                   goto(`${base}/calculator/build_buy`);
-                } else if (analysis === 'feature-value') {
-                  goto(`${base}/calculator/feature_value`);
+                  window.scrollTo({ top: 0, behavior: 'instant' });
+                } else if (analysis === 'feature-calculator') {
+                  goto(`${base}/calculator/feature_calculator`);
+                  window.scrollTo({ top: 0, behavior: 'instant' });
                 } else {
                   goto(`${base}/calculator?goal=${analysis}`);
+                  window.scrollTo({ top: 0, behavior: 'instant' });
                 }
               }}
             >

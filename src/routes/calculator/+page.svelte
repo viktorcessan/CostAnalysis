@@ -79,7 +79,7 @@
       ],
       mode: 'solutions',
       requiresModel: false,
-      path: 'feature_value',
+      path: 'feature_calculator',
       icon: `<svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
             </svg>`
@@ -151,12 +151,16 @@
           activeModel = 'team';
           calculatorStore.updateModel(activeModel);
           goto(`${base}/calculator/team_analysis/team_model`);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         } else if (goal.id === 'build-buy') {
           goto(`${base}/calculator/build_buy`);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         } else if (goal.id === 'feature-value') {
-          goto(`${base}/calculator/feature_value`);
+          goto(`${base}/calculator/feature_calculator`);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         } else {
           showModelSelection = true;
+          window.scrollTo({ top: 0, behavior: 'instant' });
         }
       }
     }
@@ -173,12 +177,16 @@
           activeModel = 'team';
           calculatorStore.updateModel(activeModel);
           goto(`${base}/calculator/team_analysis/team_model`);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         } else if (goal.id === 'build-buy') {
           goto(`${base}/calculator/build_buy`);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         } else if (goal.id === 'feature-value') {
-          goto(`${base}/calculator/feature_value`);
+          goto(`${base}/calculator/feature_calculator`);
+          window.scrollTo({ top: 0, behavior: 'instant' });
         } else {
           showModelSelection = true;
+          window.scrollTo({ top: 0, behavior: 'instant' });
         }
       }
     }
@@ -206,7 +214,7 @@
     } else if (goal.id === 'build-buy') {
       goto(`${base}/calculator/build_buy`);
     } else if (goal.id === 'feature-value') {
-      goto(`${base}/calculator/feature_value`);
+      goto(`${base}/calculator/feature_calculator`);
     } else {
       showModelSelection = true;
       // Update URL with goal parameter

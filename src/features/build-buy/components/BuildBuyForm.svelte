@@ -1,12 +1,14 @@
 <!-- Build vs Buy Analysis Form -->
 <script lang="ts">
   import { writable, derived } from 'svelte/store';
-  import { onMount, onDestroy, tick } from 'svelte';
+  import { onMount, onDestroy, tick, createEventDispatcher } from 'svelte';
   import { Chart, type ChartConfiguration } from 'chart.js/auto';
   import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
   import { currencyStore, type Currency } from '$lib/stores/currencyStore';
   import { calculatorStore } from '$lib/stores/calculatorStore';
   import { calculateRiskMatrix, type RiskFormState, type RiskMatrix, type RiskAssessment, type RiskProbability, type RiskSeverity } from '$lib/utils/riskMatrixCalculator';
+
+  const dispatch = createEventDispatcher();
 
   // Add state for onboarding and restart
   let showOnboarding = true;
@@ -413,6 +415,15 @@
       scrollToElement(resultsContainer, navHeight);
     }
     updateRadarChart();
+
+    // Dispatch results event with the analysis data
+    dispatch('results', {
+      formState: $formState,
+      scores,
+      riskMatrix,
+      recommendation,
+      confidence
+    });
   }
 
   function calculateScores() {
@@ -2792,15 +2803,6 @@
             on:click={restartAnalysis}
           >
             Start New Analysis
-          </button>
-          <button
-            type="button"
-            class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 font-medium transition-colors text-sm sm:text-base"
-            on:click={() => {
-              // Add export functionality
-            }}
-          >
-            Export Results
           </button>
         </div>
       </div>

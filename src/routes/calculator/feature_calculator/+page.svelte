@@ -4,13 +4,94 @@
   import { currencyStore } from '$lib/stores/currencyStore';
   import ExpertConsultationCard from '$lib/components/ui/ExpertConsultationCard.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
+  import FeatureValueLLMTemplateModal from '$lib/components/ui/FeatureValueLLMTemplateModal.svelte';
+  import ShareModal from '$lib/components/ui/ShareModal.svelte';
   import { goto } from '$app/navigation';
   import FeatureCalculator from '../../../features/internal-analysis/components/FeatureCalculator.svelte';
+  import { exportToExcel } from '$lib/utils/exportUtils';
+  import html2canvas from 'html2canvas';
 
   let showExpertModal = false;
+  let showLLMTemplate = false;
+  let showShareModal = false;
+  let hasResults = false;
+  let analysisResults: any = null;
 
   function handleBack() {
     goto(`${base}/calculator`);
+  }
+
+  // Handle results from FeatureCalculator
+  function handleResults(event: CustomEvent<any>) {
+    hasResults = true;
+    analysisResults = event.detail;
+  }
+
+  // Export functions
+  async function handleExportExcel() {
+    if (!hasResults) return;
+    
+    await exportToExcel({
+      results: {
+        model: 'feature',
+        solution: 'value',
+        totalCost: analysisResults.totalCost,
+        annualCost: analysisResults.totalValue,
+        monthlySavings: analysisResults.totalValue / 12,
+        breakEvenMonths: analysisResults.breakEvenMonths,
+        monthlyData: [{
+          month: 1,
+          baseline: analysisResults.totalCost,
+          solution: analysisResults.totalValue,
+          savings: analysisResults.totalValue - analysisResults.totalCost
+        }],
+        costPerTicket: 0,
+        efficiency: analysisResults.confidenceScore,
+        recommendedTeamSize: 0,
+        isViable: true
+      },
+      baseInputs: {
+        developmentCost: analysisResults.developmentCost,
+        maintenanceCost: analysisResults.maintenanceCost,
+        projectName: analysisResults.projectName
+      },
+      solutionInputs: {
+        type: 'value',
+        value: {
+          totalValue: analysisResults.totalValue,
+          selectedImpacts: analysisResults.selectedImpacts
+        }
+      }
+    });
+  }
+
+  async function handleExportPNG() {
+    if (!hasResults) return;
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const element = document.querySelector('#app') || document.querySelector('main');
+      if (!element || !(element instanceof HTMLElement)) {
+        throw new Error('Could not find main content container');
+      }
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      const link = document.createElement('a');
+      link.download = `feature-value-analysis-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+    } catch (error) {
+      console.error('PNG Export Error:', error);
+      alert('There was an error generating the PNG. Please try again.');
+    }
   }
 </script>
 
@@ -98,16 +179,95 @@
       </div>
 
       <!-- Feature Calculator Component -->
-      <FeatureCalculator />
+      <FeatureCalculator on:results={handleResults} />
 
       <!-- Expert Consultation Section -->
       <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <ExpertConsultationCard {base} bind:showExpertModal />
+          <!-- Expert Consultation Card -->
+          <div class="lg:col-span-2">
+            <ExpertConsultationCard {base} bind:showExpertModal />
+          </div>
+
+          <!-- Analysis Options Card -->
+          <div class="space-y-4">
+            <!-- ChatGPT Analysis -->
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</h3>
+              <p class="text-gray-600 mb-4">Generate a customized prompt to explore your results using AI tools for deeper analysis and actionable recommendations.</p>
+              <button
+                on:click={() => showLLMTemplate = true}
+                disabled={!hasResults}
+                class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div class="flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                  </svg>
+                  Generate AI Insights
+                </div>
+              </button>
+            </div>
+
+            <!-- Export Options -->
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">Export Analysis</h3>
+              <p class="text-gray-600 mb-4">Download your analysis for offline review or sharing.</p>
+              <div class="flex flex-col gap-3">
+                <button
+                  on:click={() => showShareModal = true}
+                  disabled={!hasResults}
+                  class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                    Share Analysis
+                  </div>
+                </button>
+                <button
+                  on:click={handleExportExcel}
+                  disabled={!hasResults}
+                  class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export to Excel
+                  </div>
+                </button>
+                <button
+                  on:click={handleExportPNG}
+                  disabled={!hasResults}
+                  class="w-full px-4 py-3 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Export as PNG
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<ExpertModal bind:show={showExpertModal} /> 
+<ExpertModal bind:show={showExpertModal} />
+<FeatureValueLLMTemplateModal 
+  bind:show={showLLMTemplate}
+  results={analysisResults}
+/>
+<ShareModal 
+  bind:show={showShareModal}
+  params={{
+    type: 'feature-value',
+    data: analysisResults
+  }}
+/> 

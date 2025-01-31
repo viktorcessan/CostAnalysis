@@ -1,10 +1,12 @@
 <!-- Feature Value Calculator Component -->
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import Chart from 'chart.js/auto';
   import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
   import { currencyStore } from '$lib/stores/currencyStore';
   import { valueImpactStore, type ValueImpact } from '$lib/stores/valueImpactStore';
+
+  const dispatch = createEventDispatcher();
 
   // Types
   interface SelectedImpact {
@@ -939,6 +941,22 @@
       currentTutorialStep--;
       scrollToContainer();
     }
+  }
+
+  // Add dispatch in the calculation logic
+  $: if (currentStep === 7 && !hasCalculated) {
+    hasCalculated = true;
+    dispatch('results', {
+      projectName,
+      selectedImpacts,
+      totalValue,
+      totalCost,
+      developmentCost,
+      maintenanceCost,
+      roi,
+      breakEvenMonths,
+      confidenceScore: calculateConfidenceScore()
+    });
   }
 </script>
 

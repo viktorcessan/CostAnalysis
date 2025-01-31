@@ -1124,14 +1124,13 @@
                           <input
                             type="number"
                               class="w-full rounded-lg border-gray-300"
-                              class:pl-8={input.type === 'currency'}
-                              class:pr-8={input.type === 'percentage'}
+                              class:pr-8={input.type === 'percentage' || input.type === 'currency'}
                               placeholder="0"
                               value={selectedImpact.inputValues[input.name]}
                               on:input={(e) => updateImpactInput(selectedImpact.id, input.name, +e.currentTarget.value)}
                             />
                             {#if input.type === 'currency'}
-                              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                                 {currencySymbol}
                               </span>
                             {/if}
@@ -1140,8 +1139,8 @@
                                 %
                               </span>
                             {/if}
-                          </div>
                         </div>
+                      </div>
                       {/each}
                     </div>
                     <!-- Value preview -->
@@ -1203,14 +1202,13 @@
                           <input
                             type="number"
                               class="w-full rounded-lg border-gray-300"
-                              class:pl-8={input.type === 'currency'}
-                              class:pr-8={input.type === 'percentage'}
+                              class:pr-8={input.type === 'percentage' || input.type === 'currency'}
                               placeholder="0"
                               value={selectedImpact.inputValues[input.name]}
                               on:input={(e) => updateImpactInput(selectedImpact.id, input.name, +e.currentTarget.value)}
                             />
                             {#if input.type === 'currency'}
-                              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                                 {currencySymbol}
                               </span>
                             {/if}
@@ -1282,14 +1280,13 @@
                           <input
                             type="number"
                               class="w-full rounded-lg border-gray-300"
-                              class:pl-8={input.type === 'currency'}
-                              class:pr-8={input.type === 'percentage'}
+                              class:pr-8={input.type === 'percentage' || input.type === 'currency'}
                               placeholder="0"
                               value={selectedImpact.inputValues[input.name]}
                               on:input={(e) => updateImpactInput(selectedImpact.id, input.name, +e.currentTarget.value)}
                             />
                             {#if input.type === 'currency'}
-                              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                                 {currencySymbol}
                               </span>
                             {/if}
@@ -1361,14 +1358,13 @@
                             <input
                               type="number"
                               class="w-full rounded-lg border-gray-300"
-                              class:pl-8={input.type === 'currency'}
-                              class:pr-8={input.type === 'percentage'}
+                              class:pr-8={input.type === 'percentage' || input.type === 'currency'}
                               placeholder="0"
                               value={selectedImpact.inputValues[input.name]}
                               on:input={(e) => updateImpactInput(selectedImpact.id, input.name, +e.currentTarget.value)}
                             />
                             {#if input.type === 'currency'}
-                              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                                 {currencySymbol}
                               </span>
                             {/if}

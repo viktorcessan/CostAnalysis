@@ -6,19 +6,27 @@
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
   import BuildBuyLLMTemplateModal from '$lib/components/ui/BuildBuyLLMTemplateModal.svelte';
   import BuildBuyShareModal from '$lib/components/ui/BuildBuyShareModal.svelte';
+  import BuildBuyLoadingModal from '$lib/components/ui/BuildBuyLoadingModal.svelte';
   import BuildBuyForm from '../../../features/build-buy/components/BuildBuyForm.svelte';
   import { goto } from '$app/navigation';
   import html2canvas from 'html2canvas';
   import { exportToExcel } from '$lib/utils/exportUtils';
+  import { page } from '$app/stores';
+  import { parseShareLink } from '$lib/utils/buildBuyShare';
+  import type { BuildBuyResults } from '$lib/types/calculator';
+  import { onMount } from 'svelte';
 
   let showExpertModal = false;
   let showLLMTemplate = false;
   let showShareModal = false;
+  let showLoadingModal = false;
   let hasResults = false; // Track if we have analysis results
-  let analysisResults: any = null; // Store analysis results
+  let analysisResults: BuildBuyResults | null = null; // Store analysis results
+  let sharedResults: BuildBuyResults | null = null;
+  let formComponent: BuildBuyForm;
 
   // Function to handle form completion and results
-  function handleFormResults(event: CustomEvent<any>) {
+  function handleResults(event: CustomEvent<any>) {
     hasResults = true;
     analysisResults = event.detail; // Store the results
   }
@@ -29,10 +37,44 @@
 
   // Export functions
   async function handleExportExcel() {
-    if (!hasResults) return;
+    if (!hasResults || !analysisResults) return;
     
     await exportToExcel({
-      // Add your build/buy analysis data here when available
+      results: {
+        model: 'team' as const,
+        solution: 'platform' as const,
+        totalCost: analysisResults.formState.buildCost,
+        annualCost: analysisResults.formState.buyCost,
+        monthlySavings: (analysisResults.formState.buildCost - analysisResults.formState.buyCost) / 12,
+        breakEvenMonths: 12, // Placeholder
+        monthlyData: [{
+          month: 1,
+          baseline: analysisResults.formState.buildCost,
+          solution: analysisResults.formState.buyCost,
+          savings: analysisResults.formState.buildCost - analysisResults.formState.buyCost
+        }],
+        costPerTicket: 0,
+        efficiency: analysisResults.confidence,
+        recommendedTeamSize: analysisResults.formState.buildFTEs,
+        isViable: true
+      },
+      baseInputs: {
+        teamSize: analysisResults.formState.buildFTEs,
+        hourlyRate: analysisResults.formState.buildHourlyRate,
+        serviceEfficiency: 1,
+        operationalOverhead: 0
+      },
+      solutionInputs: {
+        type: 'platform' as const,
+        platform: {
+          platformCost: analysisResults.formState.buyCost,
+          platformMaintenance: analysisResults.formState.buyMaintenanceCost,
+          timeToBuild: 1,
+          teamReduction: 0,
+          processEfficiency: analysisResults.confidence / 100,
+          baselineCost: analysisResults.formState.buildCost
+        }
+      }
     });
   }
 
@@ -63,6 +105,39 @@
       console.error('PNG Export Error:', error);
       alert('There was an error generating the PNG. Please try again.');
     }
+  }
+
+  // Handle loading shared configuration
+  onMount(() => {
+    const searchParams = new URLSearchParams($page.url.search);
+    if (searchParams.size > 0) {
+      const parsedResults = parseShareLink(searchParams);
+      if (parsedResults) {
+        sharedResults = parsedResults;
+        showLoadingModal = true;
+      }
+    }
+  });
+
+  function handleLoadConfig() {
+    if (sharedResults && formComponent) {
+      formComponent.loadSharedConfig(sharedResults, true);
+      showLoadingModal = false;
+    }
+  }
+
+  function handleStartFromBeginning() {
+    if (sharedResults && formComponent) {
+      formComponent.loadSharedConfig(sharedResults, false);
+      showLoadingModal = false;
+    }
+  }
+
+  function handleCancelLoad() {
+    showLoadingModal = false;
+    sharedResults = null;
+    // Clear URL parameters
+    goto($page.url.pathname, { replaceState: true });
   }
 </script>
 
@@ -146,7 +221,7 @@
       </div>
 
       <!-- Build Buy Form -->
-      <BuildBuyForm on:results={handleFormResults} />
+      <BuildBuyForm on:results={handleResults} bind:this={formComponent} />
 
       <!-- Expert Consultation Section -->
       <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-8">
@@ -188,7 +263,7 @@
                 >
                   <div class="flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632 3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                     </svg>
                     Share Analysis
                   </div>
@@ -200,7 +275,7 @@
                 >
                   <div class="flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 00-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Export to Excel
                   </div>
@@ -231,7 +306,16 @@
   bind:show={showLLMTemplate}
   results={analysisResults}
 />
-<BuildBuyShareModal bind:show={showShareModal} />
+<BuildBuyShareModal 
+  bind:show={showShareModal}
+  results={analysisResults}
+/>
+<BuildBuyLoadingModal
+  bind:show={showLoadingModal}
+  results={sharedResults}
+  onConfirm={(goToResults) => goToResults ? handleLoadConfig() : handleStartFromBeginning()}
+  onCancel={handleCancelLoad}
+/>
 
 <style>
   /* Add any specific styles here */

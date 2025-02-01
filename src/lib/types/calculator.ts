@@ -208,4 +208,85 @@ export interface TargetBasedPlanningResults {
   isViable: boolean;
 }
 
+export interface BuildBuyResults {
+  formState: {
+    solutionType: string;
+    businessRole: string;
+    timelineNeeded: string;
+    usageDuration: string;
+    alternativeSolutions: string;
+    marketEvolution: string;
+    marketStandardization: string;
+    alternativeTypes: string[];
+    controlNeeded: string;
+    inHouseCompetency: string;
+    buildFTEs: number;
+    buildHourlyRate: number;
+    buildCost: number;
+    buyCost: number;
+    userCount: number;
+    costPerUser: number;
+    buyCustomizationCost: number;
+    buyMaintenanceCost: number;
+    implementationTime: string;
+    strategicAlignment: string;
+    buildRisks: string[];
+    buyRisks: string[];
+  };
+  scores: {
+    build: {
+      businessCriticality: number;
+      timeToImplement: number;
+      cost: number;
+      control: number;
+      competency: number;
+      marketFit: number;
+    };
+    buy: {
+      businessCriticality: number;
+      timeToImplement: number;
+      cost: number;
+      control: number;
+      competency: number;
+      marketFit: number;
+    };
+  };
+  riskMatrix: {
+    buildRisks: Array<{
+      id: string;
+      label: string;
+      probability: number;
+      severity: number;
+      description: string;
+      details: {
+        reasoning: string[];
+        probabilityFactors: string[];
+        severityFactors: string[];
+        calculation: {
+          probability: string[];
+          severity: string[];
+        };
+      };
+    }>;
+    buyRisks: Array<{
+      id: string;
+      label: string;
+      probability: number;
+      severity: number;
+      description: string;
+      details: {
+        reasoning: string[];
+        probabilityFactors: string[];
+        severityFactors: string[];
+        calculation: {
+          probability: string[];
+          severity: string[];
+        };
+      };
+    }>;
+  };
+  recommendation: string;
+  confidence: number;
+}
+
 // Other calculator types can be added here 

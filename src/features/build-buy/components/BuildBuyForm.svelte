@@ -21,6 +21,9 @@
   let capabilityBuildMonths = 0;
   let buildTimeMonths = 0;
 
+  // Add state for completed steps
+  let completedSteps = new Set<number>();
+
   // Form state
   interface FormState {
     // Section 1: Define your Need
@@ -82,11 +85,11 @@
     usageDuration: '',
     
     // Section 3
-    solutionsCount: 4, // Initialize with a default value
-    alternativeSolutions: '4-10', // Initialize with a default value
-    marketEvolution: '',
-    landscapeEvolution: '',
-    marketStandardization: '',
+    solutionsCount: 4,
+    alternativeSolutions: '4-10',
+    marketEvolution: 'moderate', // Set default value
+    landscapeEvolution: 'moderate', // Set default value
+    marketStandardization: 'moderate', // Set default value
     alternativeTypes: [],
     
     // Section 4
@@ -898,6 +901,174 @@
       case 'integration': return 'Proof of concept testing before full implementation';
       case 'support': return 'Multiple support channels and internal expertise building';
       default: return 'Develop specific mitigation plan';
+    }
+  }
+
+  // Add this method to load shared configuration
+  export function loadSharedConfig(results: BuildBuyResults, goToResults = false) {
+    // First, update all the slider values since they affect other fields
+    // Convert timeline string back to index
+    timelineIndex = getIndexFromTimeline(results.formState.timelineNeeded || '6-12');
+    usageDurationIndex = getIndexFromUsageDuration(results.formState.usageDuration || '1-3');
+    solutionsCount = getCountFromAlternativeSolutions(results.formState.alternativeSolutions || '4-10');
+    capabilityBuildMonths = getMonthsFromCompetencyTime(results.formState.competencyAcquisitionTime || '6-12');
+    buildTimeMonths = calculateBuildTimeMonths(results.formState.implementationTime || '6-12');
+
+    // Set form state with all fields
+    formState.set({
+      // Section 1: Define your Need
+      solutionType: results.formState.solutionType,
+      
+      // Section 2: Business Impact & Timeline
+      businessRole: results.formState.businessRole,
+      timelineIndex: timelineIndex,
+      timelineNeeded: results.formState.timelineNeeded || getTimelineFromIndex(timelineIndex),
+      usageDurationIndex: usageDurationIndex,
+      usageDuration: results.formState.usageDuration || getUsageDurationFromIndex(usageDurationIndex),
+      
+      // Section 3: Market Maturity
+      solutionsCount: solutionsCount,
+      alternativeSolutions: results.formState.alternativeSolutions || getAlternativeSolutionsFromCount(solutionsCount),
+      marketEvolution: results.formState.marketEvolution || 'moderate',
+      landscapeEvolution: results.formState.landscapeEvolution || 'moderate',
+      marketStandardization: results.formState.marketStandardization || 'moderate',
+      alternativeTypes: results.formState.alternativeTypes || [],
+      
+      // Section 4: Build Capability
+      teamCapability: results.formState.teamCapability || 'partial',
+      controlNeeded: results.formState.controlNeeded || 'partial',
+      inHouseCompetency: results.formState.inHouseCompetency || 'partial',
+      capabilityBuildMonths: capabilityBuildMonths,
+      competencyAcquisitionTime: results.formState.competencyAcquisitionTime || getCompetencyTimeFromMonths(capabilityBuildMonths),
+      
+      // Section 5: Costs Analysis
+      buildFTEs: results.formState.buildFTEs || 0,
+      buildHourlyRate: results.formState.buildHourlyRate || 0,
+      buildCost: results.formState.buildCost || 0,
+      buyCost: results.formState.buyCost || 0,
+      userCount: results.formState.userCount || 0,
+      costPerUser: results.formState.costPerUser || 0,
+      buyCustomizationCost: results.formState.buyCustomizationCost || 0,
+      buyMaintenanceCost: results.formState.buyMaintenanceCost || 0,
+      implementationTime: results.formState.implementationTime || getImplementationTimeFromMonths(buildTimeMonths),
+      
+      // Section 6: Strategic Assessment
+      strategicValue: results.formState.strategicValue || 'necessary',
+      strategicAlignment: results.formState.strategicAlignment || 'necessary',
+      alternativeFitness: results.formState.alternativeFitness || 'moderate',
+      buildRisks: results.formState.buildRisks || [],
+      buyRisks: results.formState.buyRisks || [],
+      hasMaintenanceTeam: results.formState.hasMaintenanceTeam ?? false,
+      maintenanceTeamSize: results.formState.maintenanceTeamSize || 0
+    });
+    
+    if (goToResults) {
+      // Go directly to results
+      activeSection = 6;
+      showOnboarding = false;
+      showResults = true;
+      completedSteps = new Set([1, 2, 3, 4, 5, 6]);
+      
+      // Set scores and results
+      scores = results.scores;
+      riskMatrix = results.riskMatrix;
+      recommendation = results.recommendation;
+      confidence = results.confidence;
+      
+      // Update charts after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        updateRadarChart();
+      }, 100);
+    } else {
+      // Start from the first step
+      activeSection = 1;
+      showOnboarding = false;
+      showResults = false;
+      completedSteps = new Set<number>();
+    }
+  }
+
+  // Helper functions for converting between slider values and text
+  function getTimelineFromIndex(index: number): string {
+    if (index <= 1) return '0-3';
+    if (index <= 2) return '3-6';
+    if (index <= 3) return '6-12';
+    return '12-24';
+  }
+
+  function getIndexFromTimeline(timeline: string): number {
+    switch (timeline) {
+      case '0-3': return 1;
+      case '3-6': return 2;
+      case '6-12': return 3;
+      case '12-24': return 4;
+      default: return 3;
+    }
+  }
+
+  function getUsageDurationFromIndex(index: number): string {
+    if (index <= 1) return '0-1';
+    if (index <= 2) return '1-3';
+    if (index <= 3) return '3-5';
+    return '5+';
+  }
+
+  function getIndexFromUsageDuration(duration: string): number {
+    switch (duration) {
+      case '0-1': return 1;
+      case '1-3': return 2;
+      case '3-5': return 3;
+      case '5+': return 4;
+      default: return 2;
+    }
+  }
+
+  function getAlternativeSolutionsFromCount(count: number): string {
+    if (count <= 2) return '0-3';
+    if (count <= 5) return '4-10';
+    return '10+';
+  }
+
+  function getCountFromAlternativeSolutions(solutions: string): number {
+    switch (solutions) {
+      case '0-3': return 2;
+      case '4-10': return 5;
+      case '10+': return 8;
+      default: return 5;
+    }
+  }
+
+  function getCompetencyTimeFromMonths(months: number): string {
+    if (months <= 3) return '0-3';
+    if (months <= 6) return '3-6';
+    if (months <= 12) return '6-12';
+    return '12-24';
+  }
+
+  function getMonthsFromCompetencyTime(time: string): number {
+    switch (time) {
+      case '0-3': return 3;
+      case '3-6': return 6;
+      case '6-12': return 12;
+      case '12-24': return 24;
+      default: return 12;
+    }
+  }
+
+  function getImplementationTimeFromMonths(months: number): string {
+    if (months <= 3) return '0-3';
+    if (months <= 6) return '3-6';
+    if (months <= 12) return '6-12';
+    return '12-24';
+  }
+
+  function calculateBuildTimeMonths(timeRange: string): number {
+    switch (timeRange) {
+      case '0-3': return 3;
+      case '3-6': return 6;
+      case '6-12': return 12;
+      case '12-24': return 24;
+      default: return 12;
     }
   }
 </script>
@@ -1795,38 +1966,40 @@
                     </div>
 
                     <!-- Maintenance Team Configuration -->
-                    <div class="p-6 rounded-xl border-2 border-gray-200">
-                      <div class="flex items-center justify-between mb-4">
-                        <div>
-                          <label class="block text-base font-medium text-gray-900 mb-1">Maintenance Team Configuration</label>
-                          <p class="text-sm text-gray-600">Configure the team size after build completion</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            class="sr-only peer"
-                            bind:checked={$formState.hasMaintenanceTeam}
-                          />
-                          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
-                        </label>
+                    <div class="space-y-4">
+                      <div class="mb-4">
+                        <h3 class="text-base font-medium text-gray-900">Maintenance Team Configuration</h3>
+                        <p class="text-sm text-gray-600 mt-1">Configure your maintenance team setup</p>
                       </div>
-
-                      {#if $formState.hasMaintenanceTeam}
-                        <div class="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
-                          <div>
-                            <label class="block text-sm font-medium text-gray-900 mb-2">Maintenance Team Size</label>
+                      <div class="grid grid-cols-1 gap-4">
+                        <label class="block">
+                          <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.hasMaintenanceTeam ? 'border-secondary bg-secondary/5' : ''}">
+                            <input
+                              type="checkbox"
+                              bind:checked={$formState.hasMaintenanceTeam}
+                              class="mt-1 text-secondary focus:ring-secondary"
+                            />
+                            <div class="ml-3 flex-1">
+                              <span class="block text-lg font-medium text-gray-900">Dedicated Maintenance Team</span>
+                              <span class="block text-sm text-gray-500 mt-2">We will have a dedicated team for maintenance and support</span>
+                            </div>
+                          </div>
+                        </label>
+                        {#if $formState.hasMaintenanceTeam}
+                          <div class="p-6 rounded-xl border-2 border-gray-200">
+                            <label class="block text-base font-medium text-gray-900 mb-2">Team Size (FTEs)</label>
+                            <p class="text-sm text-gray-600 mb-4">Number of full-time employees for maintenance</p>
                             <input
                               type="number"
                               min="0"
                               step="0.5"
                               bind:value={$formState.maintenanceTeamSize}
-                              class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary"
-                              placeholder="0.0"
+                              class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg"
+                              placeholder="0"
                             />
-                            <p class="text-xs text-gray-500 mt-1">Number of FTEs needed for maintenance</p>
                           </div>
-                        </div>
-                      {/if}
+                        {/if}
+                      </div>
                     </div>
 
                     <!-- Cost Preview -->

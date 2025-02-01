@@ -1,42 +1,13 @@
-<!-- Build Buy Share Modal -->
+<!-- BuildBuyLoadingModal.svelte -->
 <script lang="ts">
-  import { generateShareLink } from '$lib/utils/buildBuyShare';
-  import type { BuildBuyResults } from '$lib/types/calculator';
-  import { clickOutside } from '$lib/actions/clickOutside';
   import { fade } from 'svelte/transition';
-  import { browser } from '$app/environment';
-  import { base } from '$app/paths';
-  import { page } from '$app/stores';
+  import { clickOutside } from '$lib/actions/clickOutside';
+  import type { BuildBuyResults } from '$lib/types/calculator';
 
   export let show = false;
   export let results: BuildBuyResults | null = null;
-
-  let copied = false;
-  let shareLink = '';
-
-  $: if (show && browser && results) {
-    const queryString = generateShareLink(results);
-    const origin = $page.url.origin;
-    const path = `${base}/calculator/build_buy`;
-    shareLink = `${origin}${path}?${queryString}`;
-  }
-
-  function handleClose() {
-    show = false;
-    copied = false;
-  }
-
-  async function copyToClipboard() {
-    try {
-      await navigator.clipboard.writeText(shareLink);
-      copied = true;
-      setTimeout(() => {
-        copied = false;
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  }
+  export let onConfirm: (goToResults: boolean) => void;
+  export let onCancel: () => void;
 
   function formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-US', {
@@ -55,35 +26,19 @@
   >
     <div
       class="bg-white/95 backdrop-blur rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-gray-100"
-      use:clickOutside={{ enabled: show, callback: handleClose }}
+      use:clickOutside={{ enabled: show, callback: onCancel }}
       on:click|stopPropagation
     >
       <!-- Header -->
       <div class="px-8 py-5 border-b border-gray-100">
-        <h3 class="text-xl font-semibold text-gray-800">Share Configuration</h3>
+        <h3 class="text-xl font-semibold text-gray-800">Load Shared Configuration</h3>
+        <p class="mt-2 text-sm text-gray-600">
+          Review the shared configuration before loading it. This will replace your current configuration.
+        </p>
       </div>
       
       <!-- Content -->
       <div class="px-8 py-6 space-y-6 max-h-[60vh] overflow-y-auto">
-        <!-- Share Link -->
-        <div class="space-y-3">
-          <label class="block text-sm font-medium text-gray-600">Share Link</label>
-          <div class="flex gap-2">
-            <input
-              type="text"
-              readonly
-              value={shareLink}
-              class="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50/50 focus:ring-2 focus:ring-secondary/20 focus:border-secondary/30 transition-all"
-            />
-            <button
-              class="px-5 py-2.5 text-sm font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md active:shadow-sm"
-              on:click={copyToClipboard}
-            >
-              {copied ? '✓ Copied!' : 'Copy Link'}
-            </button>
-          </div>
-        </div>
-        
         <!-- Configuration Summary -->
         <div class="space-y-3">
           <h4 class="text-sm font-medium text-gray-600">Configuration Summary</h4>
@@ -146,10 +101,6 @@
                 <span class="text-sm text-gray-600">In-House Competency</span>
                 <span class="text-sm font-medium text-gray-900">{results.formState.inHouseCompetency}</span>
               </div>
-              <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-                <span class="text-sm text-gray-600">Build Capability Time</span>
-                <span class="text-sm font-medium text-gray-900">{results.formState.competencyAcquisitionTime} months</span>
-              </div>
             </div>
           </div>
           
@@ -191,33 +142,43 @@
               </div>
             </div>
           </div>
-
-          <!-- Maintenance Team -->
+          
+          <!-- Risk Assessment -->
           <div class="bg-gray-50/50 backdrop-blur-sm rounded-xl p-5 border border-gray-100">
-            <div class="text-sm font-medium text-gray-700 mb-2">Maintenance Team</div>
+            <div class="text-sm font-medium text-gray-700 mb-2">Risk Assessment</div>
             <div class="grid grid-cols-1 gap-3">
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-                <span class="text-sm text-gray-600">Dedicated Team</span>
-                <span class="text-sm font-medium text-gray-900">{results.formState.hasMaintenanceTeam ? 'Yes' : 'No'}</span>
+                <span class="text-sm text-gray-600">Build Risks</span>
+                <span class="text-sm font-medium text-gray-900">{results.formState.buildRisks.join(', ')}</span>
               </div>
-              {#if results.formState.hasMaintenanceTeam}
-                <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-                  <span class="text-sm text-gray-600">Team Size (FTEs)</span>
-                  <span class="text-sm font-medium text-gray-900">{results.formState.maintenanceTeamSize}</span>
-                </div>
-              {/if}
+              <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Buy Risks</span>
+                <span class="text-sm font-medium text-gray-900">{results.formState.buyRisks.join(', ')}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
       
       <!-- Footer -->
-      <div class="px-8 py-5 bg-gray-50/50 backdrop-blur-sm flex justify-end border-t border-gray-100">
+      <div class="px-8 py-5 bg-gray-50/50 backdrop-blur-sm flex justify-end gap-3 border-t border-gray-100">
         <button
           class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 transition-all shadow-sm hover:shadow-md active:shadow-sm"
-          on:click={handleClose}
+          on:click={onCancel}
         >
-          Close
+          Cancel
+        </button>
+        <button
+          class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm hover:shadow-md active:shadow-sm"
+          on:click={() => onConfirm(false)}
+        >
+          Start from Beginning
+        </button>
+        <button
+          class="px-5 py-2.5 text-sm font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 transition-all shadow-sm hover:shadow-md active:shadow-sm"
+          on:click={() => onConfirm(true)}
+        >
+          Go to Results
         </button>
       </div>
     </div>

@@ -5,6 +5,7 @@
   import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
   import { currencyStore } from '$lib/stores/currencyStore';
   import { valueImpactStore, type ValueImpact } from '$lib/stores/valueImpactStore';
+  import type { FeatureValueResults } from '$lib/stores/featureValueTemplateStore';
 
   const dispatch = createEventDispatcher();
 
@@ -958,6 +959,32 @@
       confidenceScore: calculateConfidenceScore()
     });
   }
+
+  // Add this method to load shared configuration
+  export function loadSharedConfig(results: FeatureValueResults) {
+    // Set project name
+    projectName = results.projectName;
+    
+    // Set selected impacts
+    selectedImpacts = results.selectedImpacts;
+    
+    // Set development costs
+    developmentCost = results.developmentCost;
+    
+    // Set maintenance costs
+    maintenanceCost = results.maintenanceCost;
+    
+    // Mark all steps as completed
+    completedSteps = new Set([0, 1, 2, 3, 4, 5, 6]);
+    
+    // Go to results step
+    currentStep = 7;
+    
+    // Force update of charts
+    setTimeout(() => {
+      updateCharts();
+    }, 100);
+  }
 </script>
 
 <!-- Tooltip Component -->
@@ -1091,12 +1118,12 @@
             {#if TUTORIAL_STEPS[currentTutorialStep].examples}
               <!-- Examples Grid -->
               <div class="grid grid-cols-1 gap-6">
-                {#each TUTORIAL_STEPS[currentTutorialStep].examples as category}
+                {#each TUTORIAL_STEPS[currentTutorialStep].examples || [] as category}
                   <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <!-- Category Header -->
                     <div class="p-6 border-b border-gray-100">
-                      <h5 class="text-xl font-semibold mb-2">{category.title}</h5>
-                      <p class="text-gray-600">{category.description}</p>
+                      <h5 class="text-xl font-semibold mb-2">{(category as TutorialCategory).title}</h5>
+                      <p class="text-gray-600">{(category as TutorialCategory).description}</p>
                     </div>
                     
                     <!-- Examples and Metrics -->
@@ -1108,7 +1135,7 @@
                           Examples
                         </h6>
                         <ul class="space-y-3">
-                          {#each category.examples as example}
+                          {#each (category as TutorialCategory).examples as example}
                             <li class="flex items-start gap-3 text-sm text-gray-700">
                               <span class="w-1 h-1 rounded-full bg-gray-400 mt-2"></span>
                               <span class="flex-1">{example}</span>
@@ -1124,7 +1151,7 @@
                           Key Metrics
                         </h6>
                         <ul class="space-y-3">
-                          {#each category.metrics as metric}
+                          {#each (category as TutorialCategory).metrics as metric}
                             <li class="flex items-start gap-3 text-sm text-gray-700">
                               <span class="w-1 h-1 rounded-full bg-gray-400 mt-2"></span>
                               <span class="flex-1">{metric}</span>

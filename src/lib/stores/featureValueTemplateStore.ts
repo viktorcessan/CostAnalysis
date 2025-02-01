@@ -2,7 +2,7 @@ import { derived } from 'svelte/store';
 import { calculatorStore } from './calculatorStore';
 import type { CalculatorModel, SolutionType, CalculationResults } from '$lib/types/calculator';
 
-interface FeatureValueResults {
+export interface FeatureValueResults {
   projectName: string;
   selectedImpacts: Array<{
     id: string;

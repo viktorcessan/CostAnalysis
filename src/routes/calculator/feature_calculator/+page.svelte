@@ -5,17 +5,25 @@
   import ExpertConsultationCard from '$lib/components/ui/ExpertConsultationCard.svelte';
   import ExpertModal from '$lib/components/ui/ExpertModal.svelte';
   import FeatureValueLLMTemplateModal from '$lib/components/ui/FeatureValueLLMTemplateModal.svelte';
-  import ShareModal from '$lib/components/ui/ShareModal.svelte';
+  import FeatureValueShareModal from '$lib/components/ui/FeatureValueShareModal.svelte';
+  import FeatureValueLoadingModal from '$lib/components/ui/FeatureValueLoadingModal.svelte';
   import { goto } from '$app/navigation';
   import FeatureCalculator from '../../../features/internal-analysis/components/FeatureCalculator.svelte';
   import { exportToExcel } from '$lib/utils/exportUtils';
   import html2canvas from 'html2canvas';
+  import { page } from '$app/stores';
+  import { parseShareLink } from '$lib/utils/featureValueShare';
+  import type { FeatureValueResults } from '$lib/stores/featureValueTemplateStore';
+  import { onMount } from 'svelte';
 
   let showExpertModal = false;
   let showLLMTemplate = false;
   let showShareModal = false;
+  let showLoadingModal = false;
   let hasResults = false;
-  let analysisResults: any = null;
+  let analysisResults: FeatureValueResults | null = null;
+  let sharedResults: FeatureValueResults | null = null;
+  let calculatorComponent: FeatureCalculator;
 
   function handleBack() {
     goto(`${base}/calculator`);
@@ -29,12 +37,12 @@
 
   // Export functions
   async function handleExportExcel() {
-    if (!hasResults) return;
+    if (!hasResults || !analysisResults) return;
     
     await exportToExcel({
       results: {
-        model: 'feature',
-        solution: 'value',
+        model: 'team' as const,
+        solution: 'platform' as const,
         totalCost: analysisResults.totalCost,
         annualCost: analysisResults.totalValue,
         monthlySavings: analysisResults.totalValue / 12,
@@ -51,15 +59,20 @@
         isViable: true
       },
       baseInputs: {
-        developmentCost: analysisResults.developmentCost,
-        maintenanceCost: analysisResults.maintenanceCost,
-        projectName: analysisResults.projectName
+        teamSize: 1,
+        hourlyRate: analysisResults.developmentCost.hourlyRate,
+        serviceEfficiency: 1,
+        operationalOverhead: 0
       },
       solutionInputs: {
-        type: 'value',
-        value: {
-          totalValue: analysisResults.totalValue,
-          selectedImpacts: analysisResults.selectedImpacts
+        type: 'platform' as const,
+        platform: {
+          platformCost: analysisResults.totalCost,
+          platformMaintenance: analysisResults.maintenanceCost.monthly,
+          timeToBuild: 1,
+          teamReduction: 0,
+          processEfficiency: analysisResults.confidenceScore / 100,
+          baselineCost: analysisResults.totalCost
         }
       }
     });
@@ -92,6 +105,32 @@
       console.error('PNG Export Error:', error);
       alert('There was an error generating the PNG. Please try again.');
     }
+  }
+
+  // Handle loading shared configuration
+  onMount(() => {
+    const searchParams = new URLSearchParams($page.url.search);
+    if (searchParams.size > 0) {
+      const parsedResults = parseShareLink(searchParams);
+      if (parsedResults) {
+        sharedResults = parsedResults;
+        showLoadingModal = true;
+      }
+    }
+  });
+
+  function handleLoadConfig() {
+    if (sharedResults && calculatorComponent) {
+      calculatorComponent.loadSharedConfig(sharedResults);
+      showLoadingModal = false;
+    }
+  }
+
+  function handleCancelLoad() {
+    showLoadingModal = false;
+    sharedResults = null;
+    // Clear URL parameters
+    goto($page.url.pathname, { replaceState: true });
   }
 </script>
 
@@ -179,7 +218,10 @@
       </div>
 
       <!-- Feature Calculator Component -->
-      <FeatureCalculator on:results={handleResults} />
+      <FeatureCalculator 
+        on:results={handleResults} 
+        bind:this={calculatorComponent}
+      />
 
       <!-- Expert Consultation Section -->
       <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg p-8">
@@ -264,10 +306,13 @@
   bind:show={showLLMTemplate}
   results={analysisResults}
 />
-<ShareModal 
+<FeatureValueShareModal 
   bind:show={showShareModal}
-  params={{
-    type: 'feature-value',
-    data: analysisResults
-  }}
+  results={analysisResults}
+/>
+<FeatureValueLoadingModal
+  bind:show={showLoadingModal}
+  results={sharedResults}
+  onConfirm={handleLoadConfig}
+  onCancel={handleCancelLoad}
 /> 

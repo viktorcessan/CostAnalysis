@@ -270,30 +270,78 @@
                       </div>
                     </div>
 
-                    <!-- Hand-drawn decision graph -->
+                    <!-- Risk Matrix -->
                     <div class="border-2 border-dashed border-gray-400 p-4 rounded">
-                      <div class="text-center mb-2 text-xl">Decision Analysis</div>
+                      <div class="text-center mb-2 text-xl">Risk Analysis</div>
+                      <!-- Risk Score Summary -->
+                      <div class="flex justify-between mb-4 text-lg">
+                        <div class="text-secondary">Build Risk: 45</div>
+                        <div class="text-blue-600">Buy Risk: 32</div>
+                      </div>
                       <svg class="w-full h-48" viewBox="0 0 200 150">
-                        <!-- Axes -->
-                        <path d="M 20 130 L 180 130" class="stroke-gray-600" style="fill: none; stroke-width: 2"/>
-                        <path d="M 20 130 L 20 20" class="stroke-gray-600" style="fill: none; stroke-width: 2"/>
-                        <!-- Axis labels -->
-                        <text x="185" y="130" class="text-sm">Time</text>
-                        <text x="15" y="15" class="text-sm">Cost</text>
-                        <!-- Cost line (in-house vs vendor) -->
-                        <path d="M 20 110 C 40 105, 60 85, 100 82 L 180 78" class="stroke-secondary" style="fill: none; stroke-width: 2; stroke-dasharray: 4"/>
-                        <!-- Decision point -->
-                        <circle cx="100" cy="82" r="4" class="fill-blue-500"/>
-                        <text x="70" y="70" class="text-sm font-bold fill-blue-500">Decision Point</text>
-                        <!-- Legend -->
-                        <text x="30" y="40" class="text-xs fill-secondary">In-house</text>
-                        <text x="30" y="55" class="text-xs fill-secondary">Vendor</text>
-                      </svg>
-                    </div>
+                        <!-- Grid Lines -->
+                        <path d="M 40 20 L 40 120 L 180 120" class="stroke-gray-400" style="fill: none; stroke-width: 1"/>
+                        
+                        <!-- Grid Sections - Row 1 (top) -->
+                        <rect x="40" y="20" width="28" height="20" class="fill-green-50"/>
+                        <rect x="68" y="20" width="28" height="20" class="fill-yellow-50"/>
+                        <rect x="96" y="20" width="28" height="20" class="fill-red-100"/>
+                        <rect x="124" y="20" width="28" height="20" class="fill-red-100"/>
+                        <rect x="152" y="20" width="28" height="20" class="fill-red-100"/>
+                        
+                        <!-- Grid Sections - Row 2 -->
+                        <rect x="40" y="40" width="28" height="20" class="fill-green-50"/>
+                        <rect x="68" y="40" width="28" height="20" class="fill-yellow-50"/>
+                        <rect x="96" y="40" width="28" height="20" class="fill-yellow-50"/>
+                        <rect x="124" y="40" width="28" height="20" class="fill-red-100"/>
+                        <rect x="152" y="40" width="28" height="20" class="fill-red-100"/>
+                        
+                        <!-- Grid Sections - Row 3 -->
+                        <rect x="40" y="60" width="28" height="20" class="fill-green-50"/>
+                        <rect x="68" y="60" width="28" height="20" class="fill-green-50"/>
+                        <rect x="96" y="60" width="28" height="20" class="fill-yellow-50"/>
+                        <rect x="124" y="60" width="28" height="20" class="fill-yellow-50"/>
+                        <rect x="152" y="60" width="28" height="20" class="fill-red-100"/>
+                        
+                        <!-- Grid Sections - Row 4 -->
+                        <rect x="40" y="80" width="28" height="20" class="fill-green-50"/>
+                        <rect x="68" y="80" width="28" height="20" class="fill-green-50"/>
+                        <rect x="96" y="80" width="28" height="20" class="fill-green-50"/>
+                        <rect x="124" y="80" width="28" height="20" class="fill-yellow-50"/>
+                        <rect x="152" y="80" width="28" height="20" class="fill-yellow-50"/>
+                        
+                        <!-- Grid Sections - Row 5 (bottom) -->
+                        <rect x="40" y="100" width="28" height="20" class="fill-green-50"/>
+                        <rect x="68" y="100" width="28" height="20" class="fill-green-50"/>
+                        <rect x="96" y="100" width="28" height="20" class="fill-green-50"/>
+                        <rect x="124" y="100" width="28" height="20" class="fill-green-50"/>
+                        <rect x="152" y="100" width="28" height="20" class="fill-green-50"/>
+                        
+                        <!-- Build Risk Points with Labels -->
+                        <circle cx="68" cy="35" r="4" class="fill-secondary"/>
+                        <text x="74" y="32" class="text-[10px] text-secondary">Technical Debt</text>
+                        
+                        <!-- Buy Risk Points with Labels -->
+                        <circle cx="96" cy="80" r="4" class="fill-blue-500"/>
+                        <text x="102" y="77" class="text-[10px] text-blue-500">Limited Customization</text>
+                        
+                        <!-- Additional Risk Point -->
+                        <circle cx="152" cy="100" r="4" class="fill-secondary"/>
+                        <text x="158" y="97" class="text-[10px] text-secondary">Delivery Delays</text>
+                        
+                        <!-- Axis Labels -->
+                        <text x="30" y="70" class="text-xs" transform="rotate(-90 30,70)">Impact</text>
+                        <text x="100" y="135" class="text-xs text-center">Probability</text>
+                        
+                        <!-- Legend - moved further left -->
+                        <g transform="translate(20, 135)">
+                          <circle cx="0" cy="0" r="3" class="fill-secondary"/>
+                          <text x="8" y="3" class="text-xs">Build</text>
+                          <circle cx="35" cy="0" r="3" class="fill-blue-500"/>
+                          <text x="43" y="3" class="text-xs">Buy</text>
+                        </g>
 
-                    <div class="text-lg text-gray-600">
-                      Customization: {currentNapkinData.content.customization ?? '-'}%<br>
-                      Vendor Lock: {currentNapkinData.content.vendorLock ?? '-'}%
+                      </svg>
                     </div>
                   </div>
 
@@ -302,7 +350,7 @@
                   <div class="space-y-4 font-handwriting">
                     <div class="space-y-3">
                       <div class="flex justify-between text-xl">
-                        <span>Generate Revenue:</span>
+                        <span>Increase Revenue:</span>
                         <span>${currentNapkinData.content.generateRevenue ?? '-'}</span>
                       </div>
                       <div class="flex justify-between text-xl">
@@ -329,7 +377,7 @@
                         <path d="M 100 75 L 75 120 A 50 50 0 0 1 60 60 Z" class="fill-red-400/60 stroke-gray-600" style="stroke-width: 1"/>
                         <path d="M 100 75 L 60 60 A 50 50 0 0 1 100 25 Z" class="fill-yellow-400/60 stroke-gray-600" style="stroke-width: 1"/>
                         <!-- Labels -->
-                        <text x="155" y="45" class="text-xs fill-green-600">Generate</text>
+                        <text x="155" y="45" class="text-xs fill-green-600">Increase</text>
                         <text x="155" y="75" class="text-xs fill-blue-600">Protect</text>
                         <text x="155" y="105" class="text-xs fill-red-600">Reduce</text>
                         <text x="155" y="135" class="text-xs fill-yellow-600">Avoid</text>

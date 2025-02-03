@@ -46,6 +46,7 @@
               class="px-3 py-2 rounded-md text-sm font-medium {isTeamAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
               on:click|preventDefault={() => {
                 goto(`${base}/calculator/team_analysis/team_model`);
+                isOpen = false;
               }}
             >
               Team Dependencies
@@ -55,6 +56,7 @@
               class="px-3 py-2 rounded-md text-sm font-medium {isBuildBuyAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
               on:click|preventDefault={() => {
                 goto(`${base}/calculator/build_buy`);
+                isOpen = false;
               }}
             >
               Build vs Buy
@@ -64,6 +66,7 @@
               class="px-3 py-2 rounded-md text-sm font-medium {isFeatureCalculator ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
               on:click|preventDefault={() => {
                 goto(`${base}/calculator/feature_calculator`);
+                isOpen = false;
               }}
             >
               Feature Value
@@ -73,6 +76,7 @@
               class="px-3 py-2 rounded-md text-sm font-medium {isBaseAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
               on:click|preventDefault={() => {
                 goto(`${base}/calculator?goal=breakeven`);
+                isOpen = false;
               }}
             >
               Business Case
@@ -82,6 +86,7 @@
               class="px-3 py-2 rounded-md text-sm font-medium {isTargetAnalysis ? 'bg-white text-secondary shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'} transition-colors"
               on:click|preventDefault={() => {
                 goto(`${base}/calculator?goal=target`);
+                isOpen = false;
               }}
             >
               Platform Budget
@@ -145,6 +150,7 @@
           class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isTeamAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
           on:click|preventDefault={() => {
             goto(`${base}/calculator/team_analysis/team_model`);
+            isOpen = false;
           }}
         >
           Team Dependencies
@@ -154,6 +160,7 @@
           class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isBuildBuyAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
           on:click|preventDefault={() => {
             goto(`${base}/calculator/build_buy`);
+            isOpen = false;
           }}
         >
           Build vs Buy
@@ -163,6 +170,7 @@
           class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isFeatureCalculator ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
           on:click|preventDefault={() => {
             goto(`${base}/calculator/feature_calculator`);
+            isOpen = false;
           }}
         >
           Feature Value
@@ -172,6 +180,7 @@
           class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isBaseAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
           on:click|preventDefault={() => {
             goto(`${base}/calculator?goal=breakeven`);
+            isOpen = false;
           }}
         >
           Business Case
@@ -181,6 +190,7 @@
           class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {isTargetAnalysis ? 'border-secondary text-secondary bg-secondary/10' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300'}"
           on:click|preventDefault={() => {
             goto(`${base}/calculator?goal=target`);
+            isOpen = false;
           }}
         >
           Platform Budget

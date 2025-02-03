@@ -116,30 +116,30 @@
       type: 'radar',
       data: {
         labels: [
-          'Efficiency Score',
-          'Value Density',
-          'Dependency Impact',
-          'Flow Rate',
-          'Resource Utilization',
-          'Autonomy',
-          'Cost Efficiency',
-          'Team Velocity'
+          'Productivity Score ↑',
+          'Value per Effort ↑',
+          'Delivery Autonomy ↓',
+          'Delivery Speed ↑',
+          'Workload Stability ↓',
+          'Team Independence ↑',
+          'Cost-Effectiveness ↑',
+          'Completion Rate ↑'
         ],
         datasets: [{
           label: teamName,
           data: [
             Number(metrics.efficiencyScore.toFixed(1)),
             Number(metrics.valueDensity.toFixed(1)),
-            Number(metrics.dependencyImpact.toFixed(1)),
+            100 - Number(metrics.dependencyImpact.toFixed(1)),
             Number(metrics.flowRate.toFixed(1)),
-            Number(metrics.resourceUtilization.toFixed(1)),
+            100 - Number(metrics.resourceUtilization.toFixed(1)),
             Number(metrics.autonomy.toFixed(1)),
             Number(metrics.costEfficiency.toFixed(1)),
             Number(metrics.teamVelocity.toFixed(1))
           ],
           fill: true,
-          backgroundColor: 'rgba(221, 153, 51, 0.1)', // Using primary color
-          borderColor: 'rgb(221, 153, 51)', // Primary color
+          backgroundColor: 'rgba(221, 153, 51, 0.1)',
+          borderColor: 'rgb(221, 153, 51)',
           borderWidth: 2,
           pointBackgroundColor: 'rgb(221, 153, 51)',
           pointBorderColor: '#fff',
@@ -160,9 +160,10 @@
             beginAtZero: true,
             ticks: {
               stepSize: 20,
+              display: false,
               callback: function(value) {
-                if (typeof value === 'number') {
-                  return value.toFixed(0);
+                if (value === 100 || value === 20) {
+                  return value.toString();
                 }
                 return '';
               },
@@ -182,8 +183,10 @@
                 family: "'Inter', system-ui, sans-serif",
                 weight: 500
               },
-              padding: 8,
-              color: 'rgb(55, 65, 81)'
+              padding: 20,
+              color: 'rgb(55, 65, 81)',
+              centerPointLabels: true,
+              display: true
             }
           }
         },
@@ -212,13 +215,19 @@
             callbacks: {
               title: (items) => {
                 if (items[0]) {
-                  return items[0].label;
+                  const label = items[0].label as string;
+                  return label.split(' ')[0];
                 }
                 return '';
               },
               label: (context) => {
+                const label = context.chart.data.labels?.[context.dataIndex] as string;
                 const value = typeof context.raw === 'number' ? context.raw.toFixed(1) : '0.0';
-                return `Value: ${value}`;
+                const isInverted = label.includes('↓');
+                const displayValue = isInverted ? (100 - Number(value)).toFixed(1) : value;
+                const interpretation = Number(displayValue) > 66 ? 'Good' : 
+                                    Number(displayValue) > 33 ? 'Moderate' : 'Needs Attention';
+                return `Value: ${displayValue} - ${interpretation}`;
               }
             }
           }
@@ -311,36 +320,36 @@
       <div class="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm transition-all duration-300">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Efficiency Score</div>
-            <div class="text-xs text-gray-600">Base efficiency × flow rate / lead time</div>
+            <div class="text-sm font-medium text-gray-700">Productivity Score ↑</div>
+            <div class="text-xs text-gray-600">Overall effectiveness in delivering value efficiently (Base efficiency × flow rate / lead time)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Value Density</div>
-            <div class="text-xs text-gray-600">Throughput × efficiency / team size and dependencies</div>
+            <div class="text-sm font-medium text-gray-700">Value per Effort ↑</div>
+            <div class="text-xs text-gray-600">Measures how much impact is created relative to effort (Throughput × efficiency / team size and dependencies)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Dependency Impact</div>
-            <div class="text-xs text-gray-600">Total dependencies × average strength</div>
+            <div class="text-sm font-medium text-gray-700">Delivery Autonomy ↓</div>
+            <div class="text-xs text-gray-600">The team's ability to execute work without external blockers (Total dependencies × average strength)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Flow Rate</div>
-            <div class="text-xs text-gray-600">Daily throughput / lead time</div>
+            <div class="text-sm font-medium text-gray-700">Delivery Speed ↑</div>
+            <div class="text-xs text-gray-600">How quickly work moves from start to completion (Daily throughput / lead time)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Resource Utilization</div>
-            <div class="text-xs text-gray-600">Used hours / available hours</div>
+            <div class="text-sm font-medium text-gray-700">Workload Stability ↓</div>
+            <div class="text-xs text-gray-600">How effectively team capacity is utilized without overloading (Used hours / available hours)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Autonomy</div>
-            <div class="text-xs text-gray-600">Independence from other teams</div>
+            <div class="text-sm font-medium text-gray-700">Team Independence ↑</div>
+            <div class="text-xs text-gray-600">The team's control over decisions without external approvals (Independence from other teams)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Cost Efficiency</div>
-            <div class="text-xs text-gray-600">Value delivered per cost unit</div>
+            <div class="text-sm font-medium text-gray-700">Cost-Effectiveness ↑</div>
+            <div class="text-xs text-gray-600">Value delivered relative to cost incurred (Value delivered per cost unit)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Team Velocity</div>
-            <div class="text-xs text-gray-600">Completion rate adjusted for dependencies</div>
+            <div class="text-sm font-medium text-gray-700">Completion Rate ↑</div>
+            <div class="text-xs text-gray-600">The team's ability to finish work while managing dependencies (Completion rate adjusted for dependencies)</div>
           </div>
         </div>
       </div>

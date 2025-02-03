@@ -1954,11 +1954,11 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                    <th class="w-12 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                    <th class="w-16 px-2 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
                   {#each dependencyMatrix.teams as team}
-                      <th class="w-12 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div class="relative group w-12">
-                          <div class="truncate w-12">{team}</div>
+                      <th class="w-16 px-2 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div class="relative group w-16">
+                          <div class="truncate w-16">{team}</div>
                           {#if team.length > 8}
                             <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
                               {team}
@@ -1972,9 +1972,9 @@
               <tbody class="divide-y divide-gray-200">
                 {#each dependencyMatrix.teams as fromTeam, fromIndex}
                   <tr class="hover:bg-gray-50">
-                      <th class="w-12 px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div class="relative group w-12">
-                          <div class="truncate w-12">{fromTeam}</div>
+                      <th class="w-16 px-2 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div class="relative group w-16">
+                          <div class="truncate w-16">{fromTeam}</div>
                           {#if fromTeam.length > 8}
                             <div class="hidden group-hover:block absolute z-10 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap left-1/2 -translate-x-1/2">
                       {fromTeam}
@@ -1989,14 +1989,14 @@
                             type="number"
                             min="0"
                             max="5"
-                            class="w-12 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors
+                            class="w-16 h-8 text-center rounded-md border-gray-300 focus:border-secondary focus:ring-secondary text-xs transition-colors
                               {dependencyMatrix.dependencies[fromIndex][toIndex] <= 1 ? 'bg-green-50' : 
                                dependencyMatrix.dependencies[fromIndex][toIndex] <= 3 ? 'bg-yellow-50' : 'bg-red-50'}"
                             value={dependencyMatrix.dependencies[fromIndex][toIndex]}
                             on:input={(e) => updateDependency(fromIndex, toIndex, parseInt(e.currentTarget.value) || 0)}
                           />
                         {:else}
-                          <div class="w-12 h-8 bg-gray-100 rounded-md"></div>
+                          <div class="w-16 h-8 bg-gray-100 rounded-md"></div>
                         {/if}
                       </td>
                     {/each}

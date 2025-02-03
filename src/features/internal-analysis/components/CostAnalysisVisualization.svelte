@@ -37,7 +37,7 @@
 
   // Helper function to format currency
   function formatCurrency(value: number): string {
-    return `${$currencyStore.symbol}${(value * $currencyStore.multiplier).toLocaleString('en-US', {
+    return `${$currencyStore.symbol}${value.toLocaleString('en-US', {
       maximumFractionDigits: 0
     })}`;
   }

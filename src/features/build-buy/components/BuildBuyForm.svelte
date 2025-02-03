@@ -2190,6 +2190,7 @@
             
             {#if activeSection === 6}
               <button
+                id="calculate_build_buy"
                 type="submit"
                 class="min-w-[80px] sm:min-w-[100px] px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-white font-medium bg-secondary hover:bg-secondary/90 shadow-md transition-colors text-sm sm:text-base {canProceed() ? '' : 'opacity-50 cursor-not-allowed'}"
                 disabled={!canProceed()}
@@ -2244,11 +2245,14 @@
         
         <!-- Primary Recommendation -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div class="md:col-span-2 p-6 bg-gradient-to-br from-purple-50 to-transparent rounded-xl border border-purple-200">
+          <div class="md:col-span-2 p-6 bg-gradient-to-br from-purple-50 to-transparent rounded-xl border border-purple-200"
+               data-gtm-build-buy-section="recommendation"
+               data-gtm-recommendation="{recommendation}"
+               data-gtm-confidence="{confidence}">
             <div class="flex items-start justify-between">
               <div>
                 <h4 class="text-lg font-semibold text-gray-900 mb-2">Recommendation</h4>
-                <p class="text-3xl font-bold text-purple-600 mb-4">{recommendation}</p>
+                <p class="text-3xl font-bold text-purple-600 mb-4" data-gtm-recommendation-text>{recommendation}</p>
                 <div class="prose prose-sm text-gray-600">
                   {#if recommendation === 'Build'}
                     <ul class="space-y-2">

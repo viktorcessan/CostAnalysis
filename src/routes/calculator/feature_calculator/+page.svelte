@@ -253,6 +253,7 @@
               <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</h3>
               <p class="text-gray-600 mb-4">Generate a customized prompt to explore your results using AI tools for deeper analysis and actionable recommendations.</p>
               <button
+              id="ai_insight_feature"
                 on:click={() => showLLMTemplate = true}
                 disabled={!hasResults}
                 class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -272,6 +273,7 @@
               <p class="text-gray-600 mb-4">Download your analysis for offline review or sharing.</p>
               <div class="flex flex-col gap-3">
                 <button
+                  id="share_analysis_feature"
                   on:click={() => showShareModal = true}
                   disabled={!hasResults}
                   class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -284,8 +286,10 @@
                   </div>
                 </button>
                 <button
+                  id="export_excel_feature"
                   on:click={handleExportExcel}
                   disabled={!hasResults}
+
                   class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div class="flex items-center justify-center gap-2">
@@ -296,6 +300,7 @@
                   </div>
                 </button>
                 <button
+                  id="export_png_feature"
                   on:click={handleExportPNG}
                   disabled={!hasResults}
                   class="w-full px-4 py-3 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"

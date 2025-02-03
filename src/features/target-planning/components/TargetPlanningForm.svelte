@@ -1654,6 +1654,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</h3>
         <p class="text-gray-600 mb-4">Generate a customized prompt to explore your results using AI tools, such as large language models, for deeper analysis and actionable recommendations.</p>
         <button
+        id="ai_insight_target"
           on:click={() => showLLMTemplate = true}
           class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
         >
@@ -1672,6 +1673,7 @@
         <p class="text-gray-600 mb-4">Share or export your target planning analysis.</p>
         <div class="flex flex-col gap-3">
           <button
+            id="share_analysis_target"
             on:click={handleShare}
             class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 flex items-center justify-center gap-2"
           >
@@ -1681,6 +1683,7 @@
             Share Analysis
           </button>
           <button
+            id="export_excel_target"
             on:click={handleExportExcel}
             class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center justify-center gap-2"
           >
@@ -1690,6 +1693,7 @@
             Export to Excel
           </button>
           <button
+            id="export_png_target"
             on:click={handleExportPNG}
             class="w-full px-4 py-3 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2"
           >

@@ -1774,7 +1774,7 @@
       <div class="space-y-8 animate-fade-in">
         <div class="bg-white rounded-xl p-6 border border-gray-200">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-semibold">Results Summary for {projectName}</h3>
+            <h3 id="results-summary" class="text-xl font-semibold">Results Summary for {projectName}</h3>
             <button
               class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2"
               on:click={() => {
@@ -1800,7 +1800,10 @@
             {#if selectedImpacts.length === 0}
               <p class="text-gray-500">No value impacts selected.</p>
             {:else}
-              <div class="grid grid-cols-1 gap-4">
+              <div class="grid grid-cols-1 gap-4" 
+                   data-gtm-feature-calculator="selected-impacts"
+                   data-gtm-total-impacts="{selectedImpacts.length}"
+                   data-gtm-total-value="{totalValue}">
                 {#each selectedImpacts as impact}
                   <div class="p-4 rounded-lg border border-gray-200 bg-gray-50">
                     <div class="flex items-center justify-between">
@@ -1849,7 +1852,20 @@
           <!-- Value Distribution Chart -->
           <div class="bg-white rounded-xl p-6 border border-gray-200">
             <h4 class="text-lg font-semibold mb-4">Value Distribution</h4>
-            <div class="h-[300px]">
+            <div class="h-[300px]" 
+                 data-gtm-feature-calculator="value-distribution"
+                 data-gtm-increase-revenue-count="{selectedImpacts.filter(i => i.impact.category === 'generate').length}"
+                 data-gtm-protect-revenue-count="{selectedImpacts.filter(i => i.impact.category === 'protect').length}"
+                 data-gtm-reduce-costs-count="{selectedImpacts.filter(i => i.impact.category === 'reduce').length}"
+                 data-gtm-avoid-costs-count="{selectedImpacts.filter(i => i.impact.category === 'avoid').length}"
+                 data-gtm-most-selected-category="{
+                   ['generate', 'protect', 'reduce', 'avoid']
+                     .map(cat => ({
+                       category: cat,
+                       count: selectedImpacts.filter(i => i.impact.category === cat).length
+                     }))
+                     .sort((a, b) => b.count - a.count)[0].category
+                 }">
               <canvas id="valueDistributionChart"></canvas>
             </div>
           </div>

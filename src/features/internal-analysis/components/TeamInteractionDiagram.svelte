@@ -1311,6 +1311,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Even Distribution -->
         <button
+          id="even_distribution"
           class="relative p-4 border-2 rounded-lg transition-all {
             distributionMode === 'even'
               ? 'border-secondary bg-secondary/10'
@@ -1374,11 +1375,13 @@
 
         <!-- Hub and Spoke -->
         <button
+          id="hub_and_spoke"
           class="relative p-4 border-2 rounded-lg transition-all {
             distributionMode === 'hub-spoke'
               ? 'border-secondary bg-secondary/10'
               : 'border-gray-200 hover:border-gray-300'
           }"
+
           on:click={() => {
             distributionMode = 'hub-spoke';
             const currentTeams = [...dependencyMatrix.teams];
@@ -1418,11 +1421,13 @@
 
         <!-- Sequential -->
         <button
+          id="sequential"
           class="relative p-4 border-2 rounded-lg transition-all {
             distributionMode === 'sequential'
               ? 'border-secondary bg-secondary/10'
               : 'border-gray-200 hover:border-gray-300'
           }"
+
           on:click={() => {
             distributionMode = 'sequential';
             const currentTeams = [...dependencyMatrix.teams];
@@ -1466,11 +1471,13 @@
 
         <!-- Mesh -->
         <button
+          id="mesh"
           class="relative p-4 border-2 rounded-lg transition-all {
             distributionMode === 'mesh'
               ? 'border-secondary bg-secondary/10'
               : 'border-gray-200 hover:border-gray-300'
           }"
+
           on:click={() => {
             distributionMode = 'mesh';
             const currentTeams = [...dependencyMatrix.teams];
@@ -1516,6 +1523,7 @@
 
         <!-- Hierarchical -->
         <div
+          id="hierarchical"
           class="relative p-4 border-2 rounded-lg transition-all {
             distributionMode === 'hierarchical'
               ? 'border-secondary bg-secondary/10'
@@ -1573,6 +1581,7 @@
             <div class="flex items-center justify-center gap-4 relative z-10">
               <div class="flex items-center gap-2 w-full sm:w-auto">
                 <button
+
                   type="button"
                   class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
                   on:click|stopPropagation={() => {
@@ -1637,6 +1646,7 @@
 
         <!-- Clustered -->
         <div
+          id="clustered"
           class="relative p-4 border-2 rounded-lg transition-all {
             distributionMode === 'clustered'
               ? 'border-secondary bg-secondary/10'
@@ -1727,7 +1737,14 @@
     </div>
 
     <!-- Team Parameters Section -->
-    <div id="team-params-section" class="border-t pt-8">
+    <div id="team-params-section" class="border-t pt-8"
+         data-gtm-team-interaction="org-metrics"
+         data-gtm-total-team-count="{teamCount}"
+         data-gtm-total-employees="{teamParams.teams.reduce((sum, team) => sum + team.size, 0)}"
+         data-gtm-avg-team-size="{(teamParams.teams.reduce((sum, team) => sum + team.size, 0) / teamCount).toFixed(1)}"
+         data-gtm-total-dependencies="{dependencyMatrix.dependencies.reduce((sum, row) => sum + row.filter(val => val > 0).length, 0)}"
+         data-gtm-avg-dependencies-per-team="{(dependencyMatrix.dependencies.reduce((sum, row) => sum + row.filter(val => val > 0).length, 0) / teamCount).toFixed(1)}"
+         data-gtm-distribution-mode="{distributionMode}">
       <h3 class="text-base font-semibold text-gray-900 mb-6">Team Parameters</h3>
       <div class="space-y-6">
         <!-- Basic Controls -->
@@ -2318,6 +2335,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</h3>
         <p class="text-gray-600 mb-4">Generate a customized prompt to explore your results using AI tools, such as large language models, for deeper analysis and actionable recommendations.</p>
         <button
+        id="ai_insight_dependencies"
           on:click={() => showLLMTemplate = true}
           class="w-full px-4 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow hover:shadow-lg transition-all duration-200"
         >
@@ -2336,6 +2354,7 @@
           <p class="text-gray-600 mb-4">Download your analysis for offline review or sharing.</p>
           <div class="flex flex-col gap-3">
         <button
+          id="share_analysis_dependencies"
           on:click={handleShare}
           class="w-full px-4 py-3 text-base font-medium text-white bg-secondary rounded-lg hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary/60 shadow hover:shadow-lg transition-all duration-200"
         >
@@ -2347,6 +2366,7 @@
           </div>
         </button>
             <button
+            id="export_excel_dependencies"
               on:click={handleExportExcel}
               class="w-full px-4 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow hover:shadow-lg transition-all duration-200"
             >
@@ -2358,6 +2378,7 @@
       </div>
             </button>
             <button
+            id="export_png_dependencies"
               on:click={handleExportPNG}
               class="w-full px-4 py-3 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow hover:shadow-lg transition-all duration-200"
             >

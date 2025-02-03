@@ -325,6 +325,7 @@
       {:else if showModelSelection}
         <!-- Model Selection -->
         <div class="bg-white rounded-xl shadow-lg p-8">
+          <!-- Header with back button -->
           <div class="flex items-center gap-4 mb-8">
             <button
               class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
@@ -334,13 +335,47 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <div>
-              <h2 class="text-3xl font-bold text-gray-900">How do you track operational costs?
-              </h2>
-              <p class="text-lg text-gray-600 mt-2">Choose the model that best represents how your organization measures and allocates operational costs. This impacts how you approach building a business case or identifying your platform budget.</p>
+            <div class="flex-1">
+              <div class="max-w-3xl">
+                <h2 class="text-3xl font-bold text-gray-900">How do you track operational costs?</h2>
+                <p class="text-lg text-gray-600 mt-2">Choose the model that best represents how your organization measures and allocates operational costs.</p>
+              </div>
             </div>
           </div>
-          <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />
+
+          <!-- Selected Analysis Context -->
+          {#if selectedGoalData}
+            <div class="mb-8">
+              <h3 class="text-lg font-semibold text-gray-700 mb-4">You are setting up:</h3>
+              <div class="bg-secondary/5 rounded-xl p-6 border-2 border-secondary/10">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+                    {@html selectedGoalData.icon}
+                  </div>
+                  <h4 class="text-xl font-semibold text-gray-900 ml-4">{selectedGoalData.name}</h4>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">{selectedGoalData.description}</p>
+                <div class="space-y-2">
+                  {#each selectedGoalData.benefits as benefit}
+                    <div class="flex items-start text-sm text-gray-700">
+                      <div class="w-6 h-6 rounded-full bg-secondary/10 flex-shrink-0 flex items-center justify-center mr-3">
+                        <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span class="text-left">{benefit}</span>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            </div>
+          {/if}
+
+          <!-- Model Choices -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Select your cost tracking model:</h3>
+            <ModelSelector {activeModel} on:modelSelect={handleModelSelect} />
+          </div>
         </div>
       {/if}
     </div>

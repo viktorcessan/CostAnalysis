@@ -87,9 +87,9 @@
     // Section 3
     solutionsCount: 4,
     alternativeSolutions: '4-10',
-    marketEvolution: 'moderate', // Set default value
-    landscapeEvolution: 'moderate', // Set default value
-    marketStandardization: 'moderate', // Set default value
+    marketEvolution: '', // Changed from 'moderate' to empty string
+    landscapeEvolution: '', // Changed from 'moderate' to empty string
+    marketStandardization: '', // Changed from 'moderate' to empty string
     alternativeTypes: [],
     
     // Section 4
@@ -929,15 +929,15 @@
       // Section 3: Market Maturity
       solutionsCount: solutionsCount,
       alternativeSolutions: results.formState.alternativeSolutions || getAlternativeSolutionsFromCount(solutionsCount),
-      marketEvolution: results.formState.marketEvolution || 'moderate',
-      landscapeEvolution: results.formState.landscapeEvolution || 'moderate',
-      marketStandardization: results.formState.marketStandardization || 'moderate',
+      marketEvolution: results.formState.marketEvolution || '',
+      landscapeEvolution: results.formState.landscapeEvolution || '',
+      marketStandardization: results.formState.marketStandardization || '',
       alternativeTypes: results.formState.alternativeTypes || [],
       
       // Section 4: Build Capability
-      teamCapability: results.formState.teamCapability || 'partial',
-      controlNeeded: results.formState.controlNeeded || 'partial',
-      inHouseCompetency: results.formState.inHouseCompetency || 'partial',
+      teamCapability: results.formState.teamCapability || '',
+      controlNeeded: results.formState.controlNeeded || '',
+      inHouseCompetency: results.formState.inHouseCompetency || '',
       capabilityBuildMonths: capabilityBuildMonths,
       competencyAcquisitionTime: results.formState.competencyAcquisitionTime || getCompetencyTimeFromMonths(capabilityBuildMonths),
       
@@ -953,9 +953,9 @@
       implementationTime: results.formState.implementationTime || getImplementationTimeFromMonths(buildTimeMonths),
       
       // Section 6: Strategic Assessment
-      strategicValue: results.formState.strategicValue || 'necessary',
-      strategicAlignment: results.formState.strategicAlignment || 'necessary',
-      alternativeFitness: results.formState.alternativeFitness || 'moderate',
+      strategicValue: results.formState.strategicValue || '',
+      strategicAlignment: results.formState.strategicAlignment || '',
+      alternativeFitness: results.formState.alternativeFitness || '',
       buildRisks: results.formState.buildRisks || [],
       buyRisks: results.formState.buyRisks || [],
       hasMaintenanceTeam: results.formState.hasMaintenanceTeam ?? false,

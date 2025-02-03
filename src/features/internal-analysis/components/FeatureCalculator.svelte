@@ -1102,16 +1102,33 @@
           <div class="space-y-8">
             <!-- Header Section -->
             <div class="bg-white rounded-xl border border-gray-200 p-6">
-              <div class="flex items-center gap-3 mb-4">
+              <!-- Title Section -->
+              <div class="flex items-start gap-4 mb-6">
                 <span class="text-4xl leading-none">{TUTORIAL_STEPS[currentTutorialStep].icon}</span>
-                <div>
-                  <h3 class="text-2xl font-bold">{TUTORIAL_STEPS[currentTutorialStep].title}</h3>
+                <div class="flex-1">
+                  <h3 class="text-2xl font-bold mb-1">{TUTORIAL_STEPS[currentTutorialStep].title}</h3>
                   <h4 class="text-lg text-gray-600">{TUTORIAL_STEPS[currentTutorialStep].subtitle}</h4>
                 </div>
               </div>
               
-              <div class="prose prose-gray max-w-none">
-                <p class="text-gray-600 whitespace-pre-line leading-relaxed">{TUTORIAL_STEPS[currentTutorialStep].description}</p>
+              <!-- Description Section -->
+              <div class="space-y-4">
+                {#each TUTORIAL_STEPS[currentTutorialStep].description.split('\n\n') as paragraph}
+                  {#if paragraph.includes('●')}
+                    <div class="space-y-3">
+                      {#each paragraph.split('●').filter(text => text.trim()) as point}
+                        <div class="flex items-start gap-3">
+                          <svg class="w-5 h-5 text-secondary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          <p class="text-gray-600 leading-relaxed">{point.trim()}</p>
+                        </div>
+                      {/each}
+                    </div>
+                  {:else}
+                    <p class="text-gray-600 leading-relaxed">{paragraph}</p>
+                  {/if}
+                {/each}
               </div>
             </div>
 
@@ -1121,40 +1138,51 @@
                 {#each TUTORIAL_STEPS[currentTutorialStep].examples || [] as category}
                   <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <!-- Category Header -->
-                    <div class="p-6 border-b border-gray-100">
-                      <h5 class="text-xl font-semibold mb-2">{(category as TutorialCategory).title}</h5>
+                    <div class="p-4 sm:p-6 border-b border-gray-100">
+                      <h5 class="text-xl font-semibold mb-2 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                        {(category as TutorialCategory).title}
+                      </h5>
                       <p class="text-gray-600">{(category as TutorialCategory).description}</p>
                     </div>
                     
                     <!-- Examples and Metrics -->
                     <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
                       <!-- Examples Column -->
-                      <div class="p-6">
+                      <div class="p-4 sm:p-5">
                         <h6 class="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                          <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
                           Examples
                         </h6>
                         <ul class="space-y-3">
                           {#each (category as TutorialCategory).examples as example}
                             <li class="flex items-start gap-3 text-sm text-gray-700">
-                              <span class="w-1 h-1 rounded-full bg-gray-400 mt-2"></span>
-                              <span class="flex-1">{example}</span>
+                              <svg class="w-4 h-4 text-secondary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                              </svg>
+                              <span>{example}</span>
                             </li>
                           {/each}
                         </ul>
                       </div>
                       
                       <!-- Metrics Column -->
-                      <div class="p-6 bg-gray-50">
+                      <div class="p-4 sm:p-5 bg-gray-50">
                         <h6 class="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                          <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
                           Key Metrics
                         </h6>
                         <ul class="space-y-3">
                           {#each (category as TutorialCategory).metrics as metric}
                             <li class="flex items-start gap-3 text-sm text-gray-700">
-                              <span class="w-1 h-1 rounded-full bg-gray-400 mt-2"></span>
-                              <span class="flex-1">{metric}</span>
+                              <svg class="w-4 h-4 text-secondary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>{metric}</span>
                             </li>
                           {/each}
                         </ul>
@@ -1203,16 +1231,20 @@
 
       <!-- Tutorial Navigation -->
       <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
-        <button
-          class="text-gray-500 hover:text-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          disabled={currentTutorialStep === 0}
-          on:click={handleTutorialPrevious}
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Previous
-        </button>
+        {#if currentTutorialStep > 0}
+          <button
+            class="text-gray-500 hover:text-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            disabled={currentTutorialStep === 0}
+            on:click={handleTutorialPrevious}
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Previous
+          </button>
+        {:else}
+          <div></div>
+        {/if}
 
         {#if currentTutorialStep < TUTORIAL_STEPS.length - 1}
           <button
@@ -1850,16 +1882,20 @@
 
     <!-- Navigation -->
     <div class="flex justify-between items-center mt-8">
-      <button
-        class="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        disabled={currentStep === 0}
-        on:click={handlePrevious}
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Previous
-      </button>
+      {#if currentStep > 0}
+        <button
+          class="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          disabled={currentStep === 0}
+          on:click={handlePrevious}
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Previous
+        </button>
+      {:else}
+        <div></div>
+      {/if}
 
       <div class="flex items-center gap-2">
         {#if errors.length > 0}

@@ -2417,144 +2417,150 @@
             <h4 class="text-lg font-semibold text-gray-900 mb-4">Risk Matrix Analysis</h4>
             
             <!-- Risk Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <!-- Build Risks Summary Card -->
-              <div class="p-4 bg-secondary/5 rounded-xl border border-secondary/20">
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-5 h-5 rounded-full bg-secondary"></div>
+              <div class="p-3 bg-secondary/5 rounded-lg border border-secondary/20">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-4 h-4 rounded-full bg-secondary"></div>
                   <h5 class="font-medium text-gray-900">Build Risks</h5>
                 </div>
                 <div class="flex justify-between items-center">
                   <div class="text-sm text-gray-600">Total Risk Score</div>
-                  <div class="text-2xl font-bold text-secondary">
+                  <div class="text-xl font-bold text-secondary">
                     {riskMatrix.buildRisks.reduce((sum, risk) => sum + (risk.probability * risk.severity), 0)}
                   </div>
                 </div>
-                <div class="mt-2 text-xs text-gray-500">{riskMatrix.buildRisks.length} identified risks</div>
+                <div class="mt-1 text-xs text-gray-500">{riskMatrix.buildRisks.length} identified risks</div>
               </div>
 
               <!-- Buy Risks Summary Card -->
-              <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-5 h-5 rounded-full bg-blue-500"></div>
+              <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-4 h-4 rounded-full bg-blue-500"></div>
                   <h5 class="font-medium text-gray-900">Buy Risks</h5>
                 </div>
                 <div class="flex justify-between items-center">
                   <div class="text-sm text-gray-600">Total Risk Score</div>
-                  <div class="text-2xl font-bold text-blue-600">
+                  <div class="text-xl font-bold text-blue-600">
                     {riskMatrix.buyRisks.reduce((sum, risk) => sum + (risk.probability * risk.severity), 0)}
                   </div>
                 </div>
-                <div class="mt-2 text-xs text-gray-500">{riskMatrix.buyRisks.length} identified risks</div>
+                <div class="mt-1 text-xs text-gray-500">{riskMatrix.buyRisks.length} identified risks</div>
               </div>
             </div>
 
             <!-- Matrix Grid -->
-            <div class="relative w-full py-4">
-              <div class="w-full max-w-6xl mx-auto pl-20">
+            <div class="relative w-full mt-4">
+              <div class="w-full max-w-5xl mx-auto pl-12 sm:pl-16">
                 <!-- Y-axis Label -->
-                <div class="absolute -left-2 top-1/2 -translate-y-1/2 -rotate-90 transform whitespace-nowrap">
-                  <span class="text-base font-medium text-gray-900">Probability</span>
+                <div class="absolute -left-1 sm:left-0 top-1/2 -translate-y-1/2 -rotate-90 transform whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-900">Probability</span>
                 </div>
                 
                 <!-- Matrix -->
-                <div class="grid grid-cols-5 gap-4">
-                  <!-- Headers - Empty spaces for layout -->
-                  {#each Array(5) as _}
-                    <div class="h-40 relative"></div>
-                  {/each}
-                  
-                  <!-- Matrix Cells -->
-                  {#each Object.entries(probabilityLabels).reverse() as [probability]}
-                    {#each Object.entries(severityLabels) as [severity]}
-                      {@const riskLevel = Number(probability) * Number(severity)}
-                      {@const buildRisks = riskMatrix.buildRisks.filter(risk => 
-                        risk.probability === Number(probability) && 
-                        risk.severity === Number(severity)
-                      )}
-                      {@const buyRisks = riskMatrix.buyRisks.filter(risk => 
-                        risk.probability === Number(probability) && 
-                        risk.severity === Number(severity)
-                      )}
-                      
-                      <div class="relative h-40 border border-gray-200 rounded-lg p-4 transition-colors {
-                        riskLevel <= 6 ? 'bg-green-50 hover:bg-green-100' :
-                        riskLevel <= 12 ? 'bg-yellow-50 hover:bg-yellow-100' :
-                        riskLevel <= 18 ? 'bg-orange-50 hover:bg-orange-100' :
-                        'bg-red-50 hover:bg-red-100'
-                      } {(buildRisks.length > 0 || buyRisks.length > 0) ? 'cursor-pointer' : ''}"
-                      on:click={() => {
-                        if (buildRisks.length > 0 || buyRisks.length > 0) {
-                          selectedRisks = {
-                            buildRisks,
-                            buyRisks
-                          };
-                          selectedCell = { 
-                            probability: Number(probability), 
-                            severity: Number(severity), 
-                            riskLevel 
-                          };
-                          showRiskDetails = true;
-                        }
-                      }}>
-                        <!-- Risk Level Indicator -->
-                        <div class="absolute top-2 right-2 text-sm font-medium {
-                          riskLevel <= 6 ? 'text-green-700' :
-                          riskLevel <= 12 ? 'text-yellow-700' :
-                          riskLevel <= 18 ? 'text-orange-700' :
-                          'text-red-700'
-                        }">
-                          {riskLevel}
+                <div class="overflow-x-auto pb-2">
+                  <div class="min-w-[600px]">
+                    <div class="grid grid-cols-5 gap-1 sm:gap-2">
+                      <!-- Headers -->
+                      {#each [1, 2, 3, 4, 5] as severity}
+                        <div class="h-6 text-center">
+                          <span class="text-xs font-medium text-gray-700">{severity}</span>
                         </div>
-                        
-                        <!-- Risk Counts and Preview -->
-                        {#if buildRisks.length > 0 || buyRisks.length > 0}
-                          <div class="absolute inset-0 p-4">
-                            <div class="h-full flex flex-col justify-between">
-                              <!-- Risk Counts -->
-                              <div class="flex gap-3">
-                                {#if buildRisks.length > 0}
-                                  <div class="flex items-center gap-1.5 bg-white/80 rounded-full px-2.5 py-1.5">
-                                    <div class="w-3 h-3 rounded-full bg-secondary"></div>
-                                    <span class="text-sm font-medium text-gray-900">{buildRisks.length}</span>
-                                  </div>
-                                {/if}
-                                {#if buyRisks.length > 0}
-                                  <div class="flex items-center gap-1.5 bg-white/80 rounded-full px-2.5 py-1.5">
-                                    <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                                    <span class="text-sm font-medium text-gray-900">{buyRisks.length}</span>
-                                  </div>
-                                {/if}
-                              </div>
-                              
-                              <!-- Risk Preview -->
-                              <div class="text-sm text-gray-600">
-                                {#if buildRisks.length > 0 || buyRisks.length > 0}
-                                  <div class="bg-white/80 rounded-lg p-2">
+                      {/each}
+                      
+                      <!-- Matrix Cells -->
+                      {#each [5, 4, 3, 2, 1] as probability}
+                        {#each [1, 2, 3, 4, 5] as severity}
+                          {@const riskLevel = probability * severity}
+                          {@const buildRisks = riskMatrix.buildRisks.filter(risk => 
+                            risk.probability === probability && 
+                            risk.severity === severity
+                          )}
+                          {@const buyRisks = riskMatrix.buyRisks.filter(risk => 
+                            risk.probability === probability && 
+                            risk.severity === severity
+                          )}
+                          
+                          <div class="relative h-28 sm:h-32 border border-gray-200 rounded p-2 transition-colors {
+                            riskLevel <= 6 ? 'bg-green-50 hover:bg-green-100' :
+                            riskLevel <= 12 ? 'bg-yellow-50 hover:bg-yellow-100' :
+                            riskLevel <= 18 ? 'bg-orange-50 hover:bg-orange-100' :
+                            'bg-red-50 hover:bg-red-100'
+                          } {(buildRisks.length > 0 || buyRisks.length > 0) ? 'cursor-pointer' : ''}"
+                          on:click={() => {
+                            if (buildRisks.length > 0 || buyRisks.length > 0) {
+                              selectedRisks = {
+                                buildRisks,
+                                buyRisks
+                              };
+                              selectedCell = { 
+                                probability, 
+                                severity, 
+                                riskLevel 
+                              };
+                              showRiskDetails = true;
+                            }
+                          }}>
+                            <!-- Risk Level Indicator -->
+                            <div class="absolute top-1 right-1 text-xs font-medium {
+                              riskLevel <= 6 ? 'text-green-700' :
+                              riskLevel <= 12 ? 'text-yellow-700' :
+                              riskLevel <= 18 ? 'text-orange-700' :
+                              'text-red-700'
+                            }">
+                              {riskLevel}
+                            </div>
+                            
+                            <!-- Risk Counts and Preview -->
+                            {#if buildRisks.length > 0 || buyRisks.length > 0}
+                              <div class="absolute inset-0 p-2">
+                                <div class="h-full flex flex-col justify-between">
+                                  <!-- Risk Counts -->
+                                  <div class="flex gap-1.5">
                                     {#if buildRisks.length > 0}
-                                      <div class="truncate">
-                                        {buildRisks[0].label}{buildRisks.length > 1 ? ` +${buildRisks.length - 1}` : ''}
+                                      <div class="flex items-center gap-1 bg-white/80 rounded-full px-1.5 py-0.5">
+                                        <div class="w-2 h-2 rounded-full bg-secondary"></div>
+                                        <span class="text-xs font-medium text-gray-900">{buildRisks.length}</span>
                                       </div>
                                     {/if}
                                     {#if buyRisks.length > 0}
-                                      <div class="truncate">
-                                        {buyRisks[0].label}{buyRisks.length > 1 ? ` +${buyRisks.length - 1}` : ''}
+                                      <div class="flex items-center gap-1 bg-white/80 rounded-full px-1.5 py-0.5">
+                                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                        <span class="text-xs font-medium text-gray-900">{buyRisks.length}</span>
                                       </div>
                                     {/if}
                                   </div>
-                                {/if}
+                                  
+                                  <!-- Risk Preview -->
+                                  <div class="text-xs text-gray-600">
+                                    {#if buildRisks.length > 0 || buyRisks.length > 0}
+                                      <div class="bg-white/80 rounded p-1.5">
+                                        {#if buildRisks.length > 0}
+                                          <div class="truncate text-[11px] leading-tight">
+                                            {buildRisks[0].label}{buildRisks.length > 1 ? ` +${buildRisks.length - 1}` : ''}
+                                          </div>
+                                        {/if}
+                                        {#if buyRisks.length > 0}
+                                          <div class="truncate text-[11px] leading-tight">
+                                            {buyRisks[0].label}{buyRisks.length > 1 ? ` +${buyRisks.length - 1}` : ''}
+                                          </div>
+                                        {/if}
+                                      </div>
+                                    {/if}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
+                            {/if}
                           </div>
-                        {/if}
-                      </div>
-                    {/each}
-                  {/each}
+                        {/each}
+                      {/each}
+                    </div>
+                  </div>
                 </div>
                 
                 <!-- X-axis Label -->
-                <div class="text-center mt-8">
-                  <span class="text-base font-medium text-gray-900">Impact</span>
+                <div class="text-center mt-4">
+                  <span class="text-sm font-medium text-gray-900">Impact</span>
                 </div>
               </div>
             </div>
@@ -2932,34 +2938,34 @@
             </div>
 
           <!-- Risk Summary -->
-          <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <!-- Build Risks Summary -->
-            <div class="p-4 bg-gray-50 rounded-lg">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="w-5 h-5 rounded-full bg-secondary"></div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-4 h-4 rounded-full bg-secondary"></div>
                 <h5 class="font-medium text-gray-900">Build Risk Summary</h5>
               </div>
-              <div class="space-y-3">
+              <div class="space-y-2">
                 {#each riskMatrix.buildRisks as risk}
                   <div class="flex items-center justify-between text-sm p-2 bg-white rounded border border-gray-200">
-                    <span class="text-gray-900">{risk.label}</span>
-                    <span class="text-gray-600 font-medium">P{risk.probability} × I{risk.severity}</span>
+                    <span class="text-gray-900 text-xs">{risk.label}</span>
+                    <span class="text-gray-600 font-medium text-xs">P{risk.probability} × I{risk.severity}</span>
                   </div>
                 {/each}
               </div>
             </div>
 
             <!-- Buy Risks Summary -->
-            <div class="p-4 bg-gray-50 rounded-lg">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="w-5 h-5 rounded-full bg-blue-500"></div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-4 h-4 rounded-full bg-blue-500"></div>
                 <h5 class="font-medium text-gray-900">Buy Risk Summary</h5>
               </div>
-              <div class="space-y-3">
+              <div class="space-y-2">
                 {#each riskMatrix.buyRisks as risk}
                   <div class="flex items-center justify-between text-sm p-2 bg-white rounded border border-gray-200">
-                    <span class="text-gray-900">{risk.label}</span>
-                    <span class="text-gray-600 font-medium">P{risk.probability} × I{risk.severity}</span>
+                    <span class="text-gray-900 text-xs">{risk.label}</span>
+                    <span class="text-gray-600 font-medium text-xs">P{risk.probability} × I{risk.severity}</span>
                   </div>
                 {/each}
               </div>

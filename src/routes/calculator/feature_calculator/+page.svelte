@@ -156,78 +156,78 @@
   <div class="container mx-auto px-4 py-6">
     <div class="max-w-7xl mx-auto space-y-6">
       <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-          <button
-            class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
-            on:click={handleBack}
-          >
-            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div class="space-y-4 sm:space-y-6 w-full">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
-                </svg>
+        <div class="space-y-6">
+          <div class="space-y-4">
+            <div class="flex flex-wrap gap-4">
+              <div class="flex items-center gap-4 flex-nowrap">
+                <button
+                  class="p-2 rounded-lg hover:bg-gray-100 transition-colors group flex-shrink-0"
+                  on:click={handleBack}
+                >
+                  <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-6 h-6 sm:w-8 sm:h-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v.5a2 2 0 0 1 -2 2h-2a2 2 0 0 0 -2 2v.5a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2M12 3v3m0 12v3" />
+                  </svg>
+                </div>
               </div>
-              <div>
-                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Calculate Feature Value</h2>
-                <p class="text-base sm:text-lg text-gray-600 mt-2">
-                  This tool helps you understand and quantify the business impact of your initiatives whether a
-                  project, epic, or a story. You can use this whether you're building new features, improving
-                  existing ones, or tackling technical improvements. The calculator guides you in
-                  evaluating your ideas' full potential value across four key dimensions: Increase Revenue, Protect Revenue, 
-                  Reduce Costs, and Avoid Costs.                    
-                </p>
-              </div>
+              <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 flex-1">Calculate Feature Value</h2>
             </div>
-            <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">What to use this for</h3>
-              <ul class="space-y-3 sm:space-y-4">
-                <li class="flex items-start sm:items-center text-gray-700">
-                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span class="text-base sm:text-lg">Calculate total value created through revenue gains or cost reductions</span>
-                </li>
-                <li class="flex items-start sm:items-center text-gray-700">
-                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span class="text-base sm:text-lg">Evaluate features that combine multiple forms of value creation</span>
-                </li>
-                <li class="flex items-start sm:items-center text-gray-700">
-                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span class="text-base sm:text-lg">Get detailed breakdown of value by objective (revenue, costs, risks)</span>
-                </li>
-                <li class="flex items-start sm:items-center text-gray-700">
-                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span class="text-base sm:text-lg">Visualize ROI and break-even points through interactive graphs</span>
-                </li>
-                <li class="flex items-start sm:items-center text-gray-700">
-                  <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
-                    <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span class="text-base sm:text-lg">Build strong business cases for feature development decisions</span>
-                </li>
-              </ul>
-            </div>
+            <p class="text-base sm:text-lg text-gray-600">
+              This tool helps you understand and quantify the business impact of your initiatives whether a
+              project, epic, or a story. You can use this whether you're building new features, improving
+              existing ones, or tackling technical improvements. The calculator guides you in
+              evaluating your ideas' full potential value across four key dimensions: Increase Revenue, Protect Revenue, 
+              Reduce Costs, and Avoid Costs.
+            </p>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">What to use this for</h3>
+            <ul class="space-y-3 sm:space-y-4">
+              <li class="flex items-start sm:items-center text-gray-700">
+                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
+                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span class="text-base sm:text-lg">Calculate total value created through revenue gains or cost reductions</span>
+              </li>
+              <li class="flex items-start sm:items-center text-gray-700">
+                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
+                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span class="text-base sm:text-lg">Evaluate features that combine multiple forms of value creation</span>
+              </li>
+              <li class="flex items-start sm:items-center text-gray-700">
+                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
+                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span class="text-base sm:text-lg">Get detailed breakdown of value by objective (revenue, costs, risks)</span>
+              </li>
+              <li class="flex items-start sm:items-center text-gray-700">
+                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
+                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span class="text-base sm:text-lg">Visualize ROI and break-even points through interactive graphs</span>
+              </li>
+              <li class="flex items-start sm:items-center text-gray-700">
+                <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center mr-3 mt-0.5 sm:mt-0">
+                  <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span class="text-base sm:text-lg">Build strong business cases for feature development decisions</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

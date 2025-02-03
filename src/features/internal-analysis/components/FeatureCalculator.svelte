@@ -1140,7 +1140,6 @@
                     <!-- Category Header -->
                     <div class="p-4 sm:p-6 border-b border-gray-100">
                       <h5 class="text-xl font-semibold mb-2 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
                         {(category as TutorialCategory).title}
                       </h5>
                       <p class="text-gray-600">{(category as TutorialCategory).description}</p>

@@ -116,14 +116,14 @@
       type: 'radar',
       data: {
         labels: [
-          'Productivity Score ↑',
-          'Value per Effort ↑',
-          'Delivery Autonomy ↓',
-          'Delivery Speed ↑',
-          'Workload Stability ↓',
-          'Team Independence ↑',
-          'Cost-Effectiveness ↑',
-          'Completion Rate ↑'
+          'Productivity Score',
+          'Value per Effort',
+          'Delivery Autonomy',
+          'Delivery Speed',
+          'Workload Stability',
+          'Team Independence',
+          'Cost-Effectiveness',
+          'Completion Rate'
         ],
         datasets: [{
           label: teamName,
@@ -179,15 +179,38 @@
             },
             pointLabels: {
               font: {
-                size: 11,
+                size: 10,
                 family: "'Inter', system-ui, sans-serif",
                 weight: 500
               },
-              padding: 20,
+              padding: 8,
               color: 'rgb(55, 65, 81)',
-              centerPointLabels: true,
-              display: true
-            }
+              centerPointLabels: false,
+              display: true,
+              callback: function(label: string) {
+                // Split long labels into multiple lines
+                const words = label.split(' ');
+                if (words.length <= 2) return label;
+                
+                const midpoint = Math.ceil(words.length / 2);
+                return [
+                  words.slice(0, midpoint).join(' '),
+                  words.slice(midpoint).join(' ')
+                ];
+              },
+              // Add label alignment based on position
+              textAlign: function(context: any) {
+                const angle = context.chart.options.rotation + context.index * (360 / context.chart.data.labels.length);
+                // Align based on which quadrant the label is in
+                if (angle < 45 || angle >= 315) return 'left';
+                if (angle >= 45 && angle < 135) return 'left';
+                if (angle >= 135 && angle < 225) return 'right';
+                if (angle >= 225 && angle < 315) return 'right';
+                return 'center';
+              }
+            },
+            // Adjust starting rotation to align first label at top
+            startAngle: -22.5
           }
         },
         plugins: {
@@ -284,11 +307,11 @@
   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 p-2 mb-6">
     {#each nodes as node, i}
       <div class="bg-white rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
-        <div class="p-6">
-          <div class="mb-6">
+        <div class="p-4">
+          <div class="mb-4">
             <h4 class="text-base font-semibold text-gray-800">{node.data.label}</h4>
           </div>
-          <div class="relative h-[300px]">
+          <div class="relative h-[320px]">
             <canvas id="radar-{i}" class="transition-opacity duration-300"></canvas>
           </div>
         </div>
@@ -320,35 +343,35 @@
       <div class="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm transition-all duration-300">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Productivity Score ↑</div>
+            <div class="text-sm font-medium text-gray-700">Productivity Score</div>
             <div class="text-xs text-gray-600">Overall effectiveness in delivering value efficiently (Base efficiency × flow rate / lead time)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Value per Effort ↑</div>
+            <div class="text-sm font-medium text-gray-700">Value per Effort</div>
             <div class="text-xs text-gray-600">Measures how much impact is created relative to effort (Throughput × efficiency / team size and dependencies)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Delivery Autonomy ↓</div>
+            <div class="text-sm font-medium text-gray-700">Delivery Autonomy</div>
             <div class="text-xs text-gray-600">The team's ability to execute work without external blockers (Total dependencies × average strength)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Delivery Speed ↑</div>
+            <div class="text-sm font-medium text-gray-700">Delivery Speed</div>
             <div class="text-xs text-gray-600">How quickly work moves from start to completion (Daily throughput / lead time)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Workload Stability ↓</div>
+            <div class="text-sm font-medium text-gray-700">Workload Stability</div>
             <div class="text-xs text-gray-600">How effectively team capacity is utilized without overloading (Used hours / available hours)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Team Independence ↑</div>
+            <div class="text-sm font-medium text-gray-700">Team Independence</div>
             <div class="text-xs text-gray-600">The team's control over decisions without external approvals (Independence from other teams)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Cost-Effectiveness ↑</div>
+            <div class="text-sm font-medium text-gray-700">Cost-Effectiveness</div>
             <div class="text-xs text-gray-600">Value delivered relative to cost incurred (Value delivered per cost unit)</div>
           </div>
           <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div class="text-sm font-medium text-gray-700">Completion Rate ↑</div>
+            <div class="text-sm font-medium text-gray-700">Completion Rate</div>
             <div class="text-xs text-gray-600">The team's ability to finish work while managing dependencies (Completion rate adjusted for dependencies)</div>
           </div>
         </div>

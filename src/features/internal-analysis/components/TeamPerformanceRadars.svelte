@@ -188,20 +188,16 @@
               centerPointLabels: false,
               display: true,
               callback: function(label: string) {
-                // Split long labels into multiple lines
                 const words = label.split(' ');
                 if (words.length <= 2) return label;
-                
                 const midpoint = Math.ceil(words.length / 2);
                 return [
                   words.slice(0, midpoint).join(' '),
                   words.slice(midpoint).join(' ')
                 ];
               },
-              // Add label alignment based on position
               textAlign: function(context: any) {
                 const angle = context.chart.options.rotation + context.index * (360 / context.chart.data.labels.length);
-                // Align based on which quadrant the label is in
                 if (angle < 45 || angle >= 315) return 'left';
                 if (angle >= 45 && angle < 135) return 'left';
                 if (angle >= 135 && angle < 225) return 'right';
@@ -209,7 +205,6 @@
                 return 'center';
               }
             },
-            // Adjust starting rotation to align first label at top
             startAngle: -22.5
           }
         },
@@ -248,11 +243,26 @@
                 const value = typeof context.raw === 'number' ? context.raw.toFixed(1) : '0.0';
                 const isInverted = label.includes('↓');
                 const displayValue = isInverted ? (100 - Number(value)).toFixed(1) : value;
-                const interpretation = Number(displayValue) > 66 ? 'Good' : 
+                const interpretation = Number(displayValue) > 66 ? 'Good' :
                                     Number(displayValue) > 33 ? 'Moderate' : 'Needs Attention';
                 return `Value: ${displayValue} - ${interpretation}`;
               }
             }
+          },
+          datalabels: {
+            display: (context) => {
+              const chart = context.chart;
+              const activeElements = chart.getActiveElements();
+              return activeElements.some((activeElem) => {
+                return activeElem.datasetIndex === context.datasetIndex && activeElem.index === context.dataIndex;
+              });
+            },
+            color: 'rgb(221, 153, 51)',
+            font: {
+              size: 10,
+              weight: 'bold'
+            },
+            formatter: (value: number) => value.toFixed(1)
           }
         }
       }

@@ -1149,10 +1149,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
                       <!-- Examples Column -->
                       <div class="p-4 sm:p-5">
-                        <h6 class="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                          </svg>
+                        <h6 class="font-medium text-gray-900 mb-4">
                           Examples
                         </h6>
                         <ul class="space-y-3">
@@ -1169,10 +1166,7 @@
                       
                       <!-- Metrics Column -->
                       <div class="p-4 sm:p-5 bg-gray-50">
-                        <h6 class="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <svg class="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
+                        <h6 class="font-medium text-gray-900 mb-4">
                           Key Metrics
                         </h6>
                         <ul class="space-y-3">

@@ -7,6 +7,7 @@
   import { currencyStore, type Currency } from '$lib/stores/currencyStore';
   import { calculatorStore } from '$lib/stores/calculatorStore';
   import { calculateRiskMatrix, type RiskFormState, type RiskMatrix, type RiskAssessment, type RiskProbability, type RiskSeverity } from '$lib/utils/riskMatrixCalculator';
+  import RiskTutorialModal from './RiskTutorialModal.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -23,6 +24,9 @@
 
   // Add state for completed steps
   let completedSteps = new Set<number>();
+
+  // Add state for tutorial modal
+  let showRiskTutorial = false;
 
   // Form state
   interface FormState {
@@ -2418,7 +2422,19 @@
         <div class="grid grid-cols-1 gap-4 sm:gap-8">
           <!-- Risk Matrix -->
           <div class="bg-white p-6 rounded-xl border border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-900 mb-4">Risk Matrix Analysis</h4>
+            <div class="flex justify-between items-start mb-4">
+              <h4 class="text-lg font-semibold text-gray-900">Risk Matrix Analysis</h4>
+              <button
+                type="button"
+                class="inline-flex items-center px-3 py-2 text-sm font-medium text-secondary bg-secondary/10 rounded-lg hover:bg-secondary/20 transition-colors"
+                on:click={() => showRiskTutorial = true}
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Learn about Risk Analysis
+              </button>
+            </div>
             
             <!-- Risk Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -2991,4 +3007,9 @@
       </div>
     </div>
   {/if}
+
+  <RiskTutorialModal 
+    showModal={showRiskTutorial}
+    onClose={() => showRiskTutorial = false}
+  />
 {/if}

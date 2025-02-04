@@ -3,6 +3,8 @@
   import { writable, derived } from 'svelte/store';
   import { onMount, onDestroy, tick, createEventDispatcher } from 'svelte';
   import { Chart, type ChartConfiguration } from 'chart.js/auto';
+  import { flip } from 'svelte/animate';
+  import { dndzone } from 'svelte-dnd-action';
   import CurrencySelector from '$lib/components/ui/CurrencySelector.svelte';
   import { currencyStore, type Currency } from '$lib/stores/currencyStore';
   import { calculatorStore } from '$lib/stores/calculatorStore';
@@ -70,10 +72,21 @@
     strategicValue: string;
     strategicAlignment: string;
     alternativeFitness: string;
+    changeDifficulty: string;
     buildRisks: string[];
     buyRisks: string[];
     hasMaintenanceTeam: boolean;
     maintenanceTeamSize: number;
+
+    // Section 7: Category Weights
+    categoryWeights: {
+      businessCriticality: number;
+      timeToImplement: number;
+      cost: number;
+      control: number;
+      competency: number;
+      marketFit: number;
+    };
   }
 
   // Update the initial form state
@@ -118,10 +131,21 @@
     strategicValue: '',
     strategicAlignment: '',
     alternativeFitness: '',
+    changeDifficulty: '',
     buildRisks: [],
     buyRisks: [],
     hasMaintenanceTeam: false,
-    maintenanceTeamSize: 0
+    maintenanceTeamSize: 0,
+
+    // Section 7
+    categoryWeights: {
+      businessCriticality: 3,
+      timeToImplement: 3,
+      cost: 3,
+      control: 3,
+      competency: 3,
+      marketFit: 3
+    }
   };
 
   const formState = writable<FormState>(initialFormState);
@@ -278,7 +302,7 @@
     { value: 'migration', label: 'Migration complexity (Data transitions)' }
   ];
 
-  type SectionNumber = 1 | 2 | 3 | 4 | 5 | 6;
+  type SectionNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
   interface SectionValidationState {
     1: boolean;
@@ -287,6 +311,7 @@
     4: boolean;
     5: boolean;
     6: boolean;
+    7: boolean;
   }
 
   let sectionValidation: SectionValidationState = {
@@ -295,11 +320,12 @@
     3: false, // Market Maturity
     4: false, // Build Capability
     5: false, // Costs Analysis
-    6: false  // Strategic Assessment
+    6: false,  // Strategic Assessment
+    7: false  // Category Weights
   };
 
   let activeSection: SectionNumber = 1;
-  let totalSections: SectionNumber = 6;
+  let totalSections: SectionNumber = 7;
 
   // Update validation state based on form values
   $: {
@@ -327,7 +353,11 @@
 
     // Section 6: Strategic Assessment
     sectionValidation[6] = !!$formState.strategicAlignment && 
-                          !!$formState.alternativeFitness;
+                          !!$formState.alternativeFitness &&
+                          !!$formState.changeDifficulty;
+
+    // Section 7: Category Weights
+    sectionValidation[7] = Object.values($formState.categoryWeights).every(weight => weight >= 1 && weight <= 5);
   }
 
   function canNavigateToSection(section: SectionNumber): boolean {
@@ -351,6 +381,7 @@
       case 4: return 'Build Capability';
       case 5: return 'Costs Analysis';
       case 6: return 'Strategic Assessment';
+      case 7: return 'Category Weights';
     }
   }
 
@@ -362,6 +393,7 @@
       case 4: return 'Assess your team\'s capabilities';
       case 5: return 'Compare costs of building vs buying';
       case 6: return 'Evaluate strategic alignment and risks';
+      case 7: return 'Set category weights for evaluation';
     }
   }
 
@@ -456,12 +488,16 @@
     // Update risk matrix state
     riskMatrix = calculatedMatrix;
 
-    // Calculate business criticality score
-    scores.build.businessCriticality = $formState.businessRole === 'critical' ? 5 : 
-                                     $formState.businessRole === 'enabling' ? 3 : 1;
+    // Calculate weighted scores
+    const weights = $formState.categoryWeights;
+    
+    // Calculate business criticality score with weight
+    const businessCriticalityWeight = weights.businessCriticality;
+    scores.build.businessCriticality = ($formState.businessRole === 'critical' ? 5 : 
+                                     $formState.businessRole === 'enabling' ? 3 : 1) * businessCriticalityWeight;
     scores.buy.businessCriticality = scores.build.businessCriticality;
 
-    // Calculate time to implement score using the timeline mapping
+    // Calculate time to implement score using the timeline mapping with weight
     const timelineScores = {
       '0-3': 5,
       '3-6': 4,
@@ -469,42 +505,58 @@
       '12-24': 1
     };
     
-    scores.build.timeToImplement = timelineScores[$formState.implementationTime as TimelineKey] || 3;
-    scores.buy.timeToImplement = timelineScores[$formState.timelineNeeded as TimelineKey] || 3;
+    const timeWeight = weights.timeToImplement;
+    scores.build.timeToImplement = (timelineScores[$formState.implementationTime as TimelineKey] || 3) * timeWeight;
+    scores.buy.timeToImplement = (timelineScores[$formState.timelineNeeded as TimelineKey] || 3) * timeWeight;
 
-    // Calculate cost scores
+    // Calculate cost scores with weight
     const buildCost = ($formState.buildFTEs * $formState.buildHourlyRate * 2080); // Yearly cost
     const buyCost = $formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost;
     
-    scores.build.cost = buildCost < buyCost ? 5 : buildCost === buyCost ? 3 : 1;
-    scores.buy.cost = buyCost < buildCost ? 5 : buyCost === buildCost ? 3 : 1;
+    const costWeight = weights.cost;
+    scores.build.cost = (buildCost < buyCost ? 5 : buildCost === buyCost ? 3 : 1) * costWeight;
+    scores.buy.cost = (buyCost < buildCost ? 5 : buyCost === buildCost ? 3 : 1) * costWeight;
 
-    // Calculate control score
-    scores.build.control = 5; // Always full control when building
-    scores.buy.control = $formState.controlNeeded === 'full' ? 1 : 
-                        $formState.controlNeeded === 'partial' ? 3 : 5;
+    // Calculate control score with weight
+    const controlWeight = weights.control;
+    scores.build.control = 5 * controlWeight; // Always full control when building
+    scores.buy.control = ($formState.controlNeeded === 'full' ? 1 : 
+                        $formState.controlNeeded === 'partial' ? 3 : 5) * controlWeight;
 
-    // Calculate competency score
-    scores.build.competency = $formState.inHouseCompetency === 'full' ? 5 :
-                            $formState.inHouseCompetency === 'partial' ? 3 : 1;
-    scores.buy.competency = 5; // Assuming vendor has full competency
+    // Calculate competency score with weight
+    const competencyWeight = weights.competency;
+    scores.build.competency = ($formState.inHouseCompetency === 'full' ? 5 :
+                            $formState.inHouseCompetency === 'partial' ? 3 : 1) * competencyWeight;
+    scores.buy.competency = 5 * competencyWeight; // Assuming vendor has full competency
 
-    // Calculate market fit score
-    scores.build.marketFit = 3; // Neutral for build
-    scores.buy.marketFit = $formState.alternativeFitness === 'high' ? 5 :
-                          $formState.alternativeFitness === 'moderate' ? 3 : 1;
+    // Calculate market fit score with weight
+    const marketFitWeight = weights.marketFit;
+    scores.build.marketFit = 3 * marketFitWeight; // Neutral for build
+    scores.buy.marketFit = ($formState.alternativeFitness === 'high' ? 5 :
+                          $formState.alternativeFitness === 'moderate' ? 3 : 1) * marketFitWeight;
 
-    // Calculate confidence based on the spread of scores
+    // Adjust change difficulty impact on scores
+    const changeDifficultyImpact = $formState.changeDifficulty === 'hard' ? 0.8 :
+                                  $formState.changeDifficulty === 'moderate' ? 0.9 : 1;
+    
+    // Apply change difficulty impact to all scores
+    Object.keys(scores.build).forEach(key => {
+      scores.build[key as keyof typeof scores.build] *= changeDifficultyImpact;
+      scores.buy[key as keyof typeof scores.buy] *= changeDifficultyImpact;
+    });
+
+    // Calculate confidence based on the weighted spread of scores
+    const maxPossibleDiff = 30 * Math.max(...Object.values(weights)); // Maximum possible difference with weights
     const buildTotal = Object.values(scores.build).reduce((a, b) => a + b, 0);
     const buyTotal = Object.values(scores.buy).reduce((a, b) => a + b, 0);
     const scoreDiff = Math.abs(buildTotal - buyTotal);
     
-    confidence = Math.min(100, Math.round((scoreDiff / 30) * 100)); // 30 is max possible difference
+    confidence = Math.min(100, Math.round((scoreDiff / maxPossibleDiff) * 100));
 
-    // Generate recommendation
-    if (buildTotal > buyTotal + 3) {
+    // Generate recommendation based on weighted scores
+    if (buildTotal > buyTotal + (3 * Math.max(...Object.values(weights)))) {
       recommendation = 'Build';
-    } else if (buyTotal > buildTotal + 3) {
+    } else if (buyTotal > buildTotal + (3 * Math.max(...Object.values(weights)))) {
       recommendation = 'Buy';
     } else {
       recommendation = 'Tie - Consider Other Factors';
@@ -960,18 +1012,29 @@
       strategicValue: results.formState.strategicValue || '',
       strategicAlignment: results.formState.strategicAlignment || '',
       alternativeFitness: results.formState.alternativeFitness || '',
+      changeDifficulty: results.formState.changeDifficulty || '',
       buildRisks: results.formState.buildRisks || [],
       buyRisks: results.formState.buyRisks || [],
       hasMaintenanceTeam: results.formState.hasMaintenanceTeam ?? false,
-      maintenanceTeamSize: results.formState.maintenanceTeamSize || 0
+      maintenanceTeamSize: results.formState.maintenanceTeamSize || 0,
+
+      // Section 7: Category Weights
+      categoryWeights: results.formState.categoryWeights || {
+        businessCriticality: 3,
+        timeToImplement: 3,
+        cost: 3,
+        control: 3,
+        competency: 3,
+        marketFit: 3
+      }
     });
     
     if (goToResults) {
       // Go directly to results
-      activeSection = 6;
+      activeSection = 7;
       showOnboarding = false;
       showResults = true;
-      completedSteps = new Set([1, 2, 3, 4, 5, 6]);
+      completedSteps = new Set([1, 2, 3, 4, 5, 6, 7]);
       
       // Set scores and results
       scores = results.scores;
@@ -1075,6 +1138,54 @@
       default: return 12;
     }
   }
+
+  // Add category items for drag and drop
+  let categoryItems = [
+    { id: 'businessCriticality', label: 'Business Impact', description: 'How critical the solution is for your business operations', weight: 5 },
+    { id: 'timeToImplement', label: 'Implementation Speed', description: 'How quickly the solution can be implemented', weight: 4 },
+    { id: 'cost', label: 'Cost Efficiency', description: 'Overall cost effectiveness of the solution', weight: 4 },
+    { id: 'control', label: 'Solution Control', description: 'Level of control over the solution', weight: 3 },
+    { id: 'competency', label: 'Team Readiness', description: 'Your team\'s ability to handle the solution', weight: 2 },
+    { id: 'marketFit', label: 'Market Fit', description: 'How well the solution matches market standards', weight: 1 }
+  ];
+
+  // Initialize weights based on initial order
+  $: {
+    if (categoryItems) {
+      const totalItems = categoryItems.length;
+      categoryItems.forEach((item, index) => {
+        const weight = Math.round(5 - (index * 4) / (totalItems - 1));
+        $formState.categoryWeights[item.id as keyof typeof $formState.categoryWeights] = weight;
+      });
+    }
+  }
+
+  // Handle drag end
+  function handleDndConsider(e: CustomEvent<{items: any[]}>): void {
+    categoryItems = e.detail.items;
+  }
+
+  function handleDndFinalize(e: CustomEvent<{items: any[]}>): void {
+    categoryItems = e.detail.items;
+    // Update weights based on new position (top = 5, bottom = 1)
+    const totalItems = categoryItems.length;
+    categoryItems.forEach((item, index) => {
+      const weight = Math.round(5 - (index * 4) / (totalItems - 1));
+      item.weight = weight; // Update the item's weight property
+      $formState.categoryWeights[item.id as keyof typeof $formState.categoryWeights] = weight;
+    });
+  }
+
+  // Add visual feedback for dragging
+  let isDragging = false;
+  
+  function handleDragStart() {
+    isDragging = true;
+  }
+  
+  function handleDragEnd() {
+    isDragging = false;
+  }
 </script>
 
 <style>
@@ -1157,7 +1268,7 @@
           <div class="absolute left-[19px] top-[28px] bottom-4 w-px bg-gradient-to-b from-secondary to-secondary/20"></div>
 
           <div class="space-y-6 sm:space-y-8">
-            {#each Array(6) as _, i}
+            {#each Array(7) as _, i}
               <div class="relative flex items-start">
                 <div class="absolute left-0 top-0 w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-white border-2 border-secondary flex items-center justify-center">
                   <span class="text-xs sm:text-sm font-medium text-secondary">{i + 1}</span>
@@ -1169,7 +1280,8 @@
                      i === 2 ? 'Market Maturity' :
                      i === 3 ? 'Build Capability' :
                      i === 4 ? 'Costs Analysis' :
-                     'Strategic Assessment'}
+                     i === 5 ? 'Strategic Assessment' :
+                     'Category Weights'}
                   </h4>
                   <p class="text-xs sm:text-sm text-gray-600">
                     {i === 0 ? 'Choose the type of solution you want to evaluate' :
@@ -1177,7 +1289,8 @@
                      i === 2 ? 'Understand market alternatives and evolution' :
                      i === 3 ? 'Assess your team\'s capabilities' :
                      i === 4 ? 'Compare costs of building vs buying' :
-                     'Evaluate strategic alignment and risks'}
+                     i === 5 ? 'Evaluate strategic alignment and risks' :
+                     'Set category weights for evaluation'}
                   </p>
                 </div>
               </div>
@@ -2176,6 +2289,114 @@
                       {/each}
                     </div>
                   </div>
+                  
+                  <!-- Change Difficulty -->
+                  <div class="space-y-4">
+                    <div class="mb-4">
+                      <h3 class="text-base font-medium text-gray-900">How difficult would it be to change the solution once implemented?</h3>
+                      <p class="text-sm text-gray-600 mt-1">Consider the effort, cost, and impact of switching to a different solution.</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.changeDifficulty === 'easy' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="changeDifficulty"
+                            value="easy"
+                            bind:group={$formState.changeDifficulty}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Easy to Change</span>
+                            <span class="block text-sm text-gray-500 mt-2">Minimal effort and cost to switch solutions, low impact on operations</span>
+                          </div>
+                        </div>
+                      </label>
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.changeDifficulty === 'moderate' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="changeDifficulty"
+                            value="moderate"
+                            bind:group={$formState.changeDifficulty}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Moderately Difficult</span>
+                            <span class="block text-sm text-gray-500 mt-2">Significant effort required but manageable, moderate operational impact</span>
+                          </div>
+                        </div>
+                      </label>
+                      <label class="block">
+                        <div class="flex items-start p-6 rounded-xl border-2 border-gray-200 hover:border-secondary cursor-pointer transition-all duration-200 {$formState.changeDifficulty === 'hard' ? 'border-secondary bg-secondary/5' : ''}">
+                          <input
+                            type="radio"
+                            name="changeDifficulty"
+                            value="hard"
+                            bind:group={$formState.changeDifficulty}
+                            class="mt-1 text-secondary focus:ring-secondary"
+                          />
+                          <div class="ml-3 flex-1">
+                            <span class="block text-lg font-medium text-gray-900">Very Difficult</span>
+                            <span class="block text-sm text-gray-500 mt-2">Major effort and cost to change, significant operational disruption</span>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 7: Category Weights -->
+          <div class="space-y-6" class:hidden={activeSection !== 7}>
+            <div class="bg-white p-8 rounded-xl border border-gray-200">
+              <div class="w-full">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Category Priority</h2>
+                <p class="text-gray-600 mb-6">Drag and drop categories to order them by importance (top items have highest priority).</p>
+                
+                <div class="space-y-2">
+                  <!-- Draggable List -->
+                  <div
+                    use:dndzone={{items: categoryItems, dragDisabled: false}}
+                    on:consider={handleDndConsider}
+                    on:finalize={handleDndFinalize}
+                  >
+                    {#each categoryItems as item (item.id)}
+                      <div
+                        class="group p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-secondary hover:shadow-sm cursor-grab active:cursor-grabbing transition-all duration-200 mb-2 {isDragging ? 'opacity-75' : ''}"
+                        animate:flip={{duration: 300}}
+                        on:mousedown={handleDragStart}
+                        on:mouseup={handleDragEnd}
+                        on:mouseleave={handleDragEnd}
+                      >
+                        <div class="flex items-center gap-3">
+                          <div class="flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8M8 15h8" />
+                            </svg>
+                          </div>
+                          <div class="flex-grow">
+                            <h3 class="text-base font-medium text-gray-900">{item.label}</h3>
+                            <p class="text-sm text-gray-600">{item.description}</p>
+                          </div>
+                          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                            <span class="text-sm font-medium text-secondary">
+                              {item.weight}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+
+                  <!-- Help Text -->
+                  <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600">
+                      Drag items to reorder by importance. Items at the top have highest priority (5) while items at the bottom have lowest priority (1).
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2192,7 +2413,7 @@
               Previous
             </button>
             
-            {#if activeSection === 6}
+            {#if activeSection === 7}
               <button
                 id="calculate_build_buy"
                 type="submit"

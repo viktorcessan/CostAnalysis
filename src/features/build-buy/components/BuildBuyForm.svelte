@@ -470,90 +470,66 @@
     const riskFormState: RiskFormState = {
       solutionType: $formState.solutionType,
       businessRole: $formState.businessRole,
-      timelineNeeded: $formState.timelineNeeded || '6-12', // Default to medium timeline if not set
-      usageDuration: $formState.usageDuration || '1-3', // Default to medium duration if not set
-      alternativeSolutions: $formState.alternativeSolutions || '4-10', // Default to moderate alternatives if not set
-      marketEvolution: $formState.marketEvolution || 'moderate', // Default to moderate evolution if not set
-      marketStandardization: $formState.marketStandardization || 'moderate', // Default to moderate standardization if not set
-      teamCompetency: $formState.inHouseCompetency || 'partial', // Default to partial competency if not set
-      controlNeeded: $formState.controlNeeded || 'partial', // Default to partial control if not set
-      buildFTEs: $formState.buildFTEs || 3, // Default to medium team size if not set
-      strategicAlignment: $formState.strategicAlignment || 'necessary', // Default to necessary if not set
-      alternativeFitness: $formState.alternativeFitness || 'moderate' // Default to moderate fitness if not set
+      timelineNeeded: $formState.timelineNeeded || '6-12',
+      usageDuration: $formState.usageDuration || '1-3',
+      alternativeSolutions: $formState.alternativeSolutions || '4-10',
+      marketEvolution: $formState.marketEvolution || 'moderate',
+      marketStandardization: $formState.marketStandardization || 'moderate',
+      teamCompetency: $formState.inHouseCompetency || 'partial',
+      controlNeeded: $formState.controlNeeded || 'partial',
+      buildFTEs: $formState.buildFTEs || 3,
+      strategicAlignment: $formState.strategicAlignment || 'necessary',
+      alternativeFitness: $formState.alternativeFitness || 'moderate'
     };
 
     // Calculate risk matrix using the utility function
     const calculatedMatrix = calculateRiskMatrix(riskFormState);
-    
-    // Update risk matrix state
     riskMatrix = calculatedMatrix;
 
-    // Calculate weighted scores
+    // Get category weights
     const weights = $formState.categoryWeights;
-    
-    // Calculate business criticality score with weight
-    const businessCriticalityWeight = weights.businessCriticality;
-    scores.build.businessCriticality = ($formState.businessRole === 'critical' ? 5 : 
-                                     $formState.businessRole === 'enabling' ? 3 : 1) * businessCriticalityWeight;
-    scores.buy.businessCriticality = scores.build.businessCriticality;
 
-    // Calculate time to implement score using the timeline mapping with weight
-    const timelineScores = {
-      '0-3': 5,
-      '3-6': 4,
-      '6-12': 3,
-      '12-24': 1
-    };
-    
-    const timeWeight = weights.timeToImplement;
-    scores.build.timeToImplement = (timelineScores[$formState.implementationTime as TimelineKey] || 3) * timeWeight;
-    scores.buy.timeToImplement = (timelineScores[$formState.timelineNeeded as TimelineKey] || 3) * timeWeight;
+    // 1. Calculate Business Criticality scores
+    const businessCriticalityScores = calculateBusinessCriticalityScores();
+    scores.build.businessCriticality = businessCriticalityScores.build * weights.businessCriticality;
+    scores.buy.businessCriticality = businessCriticalityScores.buy * weights.businessCriticality;
 
-    // Calculate cost scores with weight
-    const buildCost = ($formState.buildFTEs * $formState.buildHourlyRate * 2080); // Yearly cost
-    const buyCost = $formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost;
-    
-    const costWeight = weights.cost;
-    scores.build.cost = (buildCost < buyCost ? 5 : buildCost === buyCost ? 3 : 1) * costWeight;
-    scores.buy.cost = (buyCost < buildCost ? 5 : buyCost === buildCost ? 3 : 1) * costWeight;
+    // 2. Calculate Time to Implement scores
+    const timeScores = calculateTimeToImplementScores();
+    scores.build.timeToImplement = timeScores.build * weights.timeToImplement;
+    scores.buy.timeToImplement = timeScores.buy * weights.timeToImplement;
 
-    // Calculate control score with weight
-    const controlWeight = weights.control;
-    scores.build.control = 5 * controlWeight; // Always full control when building
-    scores.buy.control = ($formState.controlNeeded === 'full' ? 1 : 
-                        $formState.controlNeeded === 'partial' ? 3 : 5) * controlWeight;
+    // 3. Calculate Cost Efficiency scores
+    const costScores = calculateCostEfficiencyScores();
+    scores.build.cost = costScores.build * weights.cost;
+    scores.buy.cost = costScores.buy * weights.cost;
 
-    // Calculate competency score with weight
-    const competencyWeight = weights.competency;
-    scores.build.competency = ($formState.inHouseCompetency === 'full' ? 5 :
-                            $formState.inHouseCompetency === 'partial' ? 3 : 1) * competencyWeight;
-    scores.buy.competency = 5 * competencyWeight; // Assuming vendor has full competency
+    // 4. Calculate Control scores
+    const controlScores = calculateControlScores();
+    scores.build.control = controlScores.build * weights.control;
+    scores.buy.control = controlScores.buy * weights.control;
 
-    // Calculate market fit score with weight
-    const marketFitWeight = weights.marketFit;
-    scores.build.marketFit = 3 * marketFitWeight; // Neutral for build
-    scores.buy.marketFit = ($formState.alternativeFitness === 'high' ? 5 :
-                          $formState.alternativeFitness === 'moderate' ? 3 : 1) * marketFitWeight;
+    // 5. Calculate Team Competency scores
+    const competencyScores = calculateTeamCompetencyScores();
+    scores.build.competency = competencyScores.build * weights.competency;
+    scores.buy.competency = competencyScores.buy * weights.competency;
 
-    // Adjust change difficulty impact on scores
-    const changeDifficultyImpact = $formState.changeDifficulty === 'hard' ? 0.8 :
-                                  $formState.changeDifficulty === 'moderate' ? 0.9 : 1;
-    
-    // Apply change difficulty impact to all scores
-    Object.keys(scores.build).forEach(key => {
-      scores.build[key as keyof typeof scores.build] *= changeDifficultyImpact;
-      scores.buy[key as keyof typeof scores.buy] *= changeDifficultyImpact;
-    });
+    // 6. Calculate Market Fit scores
+    const marketScores = calculateMarketFitScores();
+    scores.build.marketFit = marketScores.build * weights.marketFit;
+    scores.buy.marketFit = marketScores.buy * weights.marketFit;
 
-    // Calculate confidence based on the weighted spread of scores
-    const maxPossibleDiff = 30 * Math.max(...Object.values(weights)); // Maximum possible difference with weights
+    // Calculate confidence
+    confidence = calculateConfidenceScore();
+
+    // Calculate total scores
     const buildTotal = Object.values(scores.build).reduce((a, b) => a + b, 0);
     const buyTotal = Object.values(scores.buy).reduce((a, b) => a + b, 0);
-    const scoreDiff = Math.abs(buildTotal - buyTotal);
-    
-    confidence = Math.min(100, Math.round((scoreDiff / maxPossibleDiff) * 100));
 
     // Generate recommendation based on weighted scores
+    const scoreDiff = Math.abs(buildTotal - buyTotal);
+    const maxPossibleDiff = 30 * Math.max(...Object.values(weights));
+    
     if (buildTotal > buyTotal + (3 * Math.max(...Object.values(weights)))) {
       recommendation = 'Build';
     } else if (buyTotal > buildTotal + (3 * Math.max(...Object.values(weights)))) {
@@ -561,6 +537,437 @@
     } else {
       recommendation = 'Tie - Consider Other Factors';
     }
+  }
+
+  function calculateBusinessCriticalityScores() {
+    const scores = { build: 0, buy: 0 };
+    
+    // Base scores from matrix
+    if ($formState.businessRole === 'critical' && $formState.strategicAlignment === 'core') {
+      if ($formState.timelineNeeded === '0-3') {
+        scores.build = 0.5;
+        scores.buy = 2.0;
+      } else if ($formState.timelineNeeded === '3-6' || $formState.timelineNeeded === '6-12') {
+        scores.build = 1.5;
+        scores.buy = 1.5;
+      } else {
+        scores.build = 2.0;
+        scores.buy = 1.0;
+      }
+    } else if ($formState.businessRole === 'critical' && $formState.strategicAlignment === 'necessary') {
+      if ($formState.timelineNeeded === '0-3') {
+        scores.build = 0.0;
+        scores.buy = 2.0;
+      } else {
+        scores.build = 1.0;
+        scores.buy = 1.5;
+      }
+    } else if ($formState.businessRole === 'critical') {
+      scores.build = 0.5;
+      scores.buy = 1.5;
+    } else if ($formState.businessRole === 'enabling' && $formState.strategicAlignment === 'core') {
+      if ($formState.timelineNeeded === '0-3') {
+        scores.build = 0.0;
+        scores.buy = 2.0;
+      } else {
+        scores.build = 1.5;
+        scores.buy = 1.5;
+      }
+    } else if ($formState.businessRole === 'enabling') {
+      scores.build = 0.5;
+      scores.buy = 1.5;
+    } else {
+      scores.build = 0.0;
+      scores.buy = 2.0;
+    }
+
+    // Apply modifiers
+    if ($formState.solutionType === 'platform') {
+      scores.build *= 1.2;
+      scores.buy *= 0.8;
+    } else if ($formState.solutionType === 'component') {
+      scores.build *= 0.8;
+      scores.buy *= 1.2;
+    }
+
+    return scores;
+  }
+
+  function calculateTimeToImplementScores() {
+    const scores = { build: 0, buy: 0 };
+    
+    // Base scores from matrix
+    if ($formState.timelineNeeded === '0-3') {
+      if ($formState.inHouseCompetency === 'ready' && $formState.alternativeSolutions === 'many') {
+        scores.build = 0.5;
+        scores.buy = 2.0;
+      } else {
+        scores.build = 0.0;
+        scores.buy = 2.0;
+      }
+    } else if ($formState.timelineNeeded === '3-6') {
+      if ($formState.inHouseCompetency === 'ready') {
+        if ($formState.alternativeSolutions === 'many') {
+          scores.build = 1.0;
+          scores.buy = 2.0;
+        } else {
+          scores.build = 1.5;
+          scores.buy = 1.5;
+        }
+      } else {
+        scores.build = 0.5;
+        scores.buy = 2.0;
+      }
+    } else if ($formState.timelineNeeded === '6-12') {
+      if ($formState.inHouseCompetency === 'ready') {
+        if ($formState.alternativeSolutions === 'many') {
+          scores.build = 1.5;
+          scores.buy = 1.5;
+        } else {
+          scores.build = 2.0;
+          scores.buy = 1.0;
+        }
+      } else {
+        scores.build = 1.0;
+        scores.buy = 1.5;
+      }
+    } else {
+      if ($formState.inHouseCompetency === 'ready') {
+        scores.build = 2.0;
+        scores.buy = 1.0;
+      } else {
+        scores.build = 1.0;
+        scores.buy = 1.5;
+      }
+    }
+
+    // Apply modifiers
+    if ($formState.solutionType === 'platform') {
+      scores.build *= 1.3;
+      scores.buy *= 0.9;
+    } else if ($formState.solutionType === 'component') {
+      scores.build *= 0.8;
+      scores.buy *= 1.2;
+    }
+
+    if ($formState.businessRole === 'critical') {
+      scores.build *= 1.2;
+      scores.buy *= 1.1;
+    }
+
+    if ($formState.marketEvolution === 'fast') {
+      scores.build *= 0.9;
+      scores.buy *= 1.2;
+    } else if ($formState.marketEvolution === 'slow') {
+      scores.build *= 1.1;
+      scores.buy *= 0.9;
+    }
+
+    return scores;
+  }
+
+  function calculateCostEfficiencyScores() {
+    const scores = { build: 0, buy: 0 };
+    
+    // Calculate cost ratio
+    const buildCost = $formState.buildFTEs * $formState.buildHourlyRate * 2080; // Yearly cost
+    const buyCost = $formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost;
+    const costRatio = buildCost / buyCost;
+
+    // Base scores from matrix
+    if (costRatio < 0.5) { // Build < 50% Buy
+      if ($formState.usageDuration === '>5') {
+        scores.build = 2.0;
+        scores.buy = 0.5;
+      } else if ($formState.usageDuration === '1-3' || $formState.usageDuration === '3-5') {
+        scores.build = 1.5;
+        scores.buy = 1.0;
+      } else {
+        scores.build = 0.5;
+        scores.buy = 1.5;
+      }
+    } else if (costRatio <= 1.2) { // Build ≈ Buy ±20%
+      if ($formState.usageDuration === '>5') {
+        scores.build = 1.5;
+        scores.buy = 1.5;
+      } else if ($formState.usageDuration === '1-3' || $formState.usageDuration === '3-5') {
+        scores.build = 1.0;
+        scores.buy = 1.5;
+      } else {
+        scores.build = 0.5;
+        scores.buy = 2.0;
+      }
+    } else { // Buy < 50% Build
+      if ($formState.usageDuration === '>5' && $formState.buildFTEs > 5) {
+        scores.build = 0.5;
+        scores.buy = 2.0;
+      } else {
+        scores.build = 0.0;
+        scores.buy = 2.0;
+      }
+    }
+
+    return scores;
+  }
+
+  function calculateControlScores() {
+    const scores = { build: 0, buy: 0 };
+    
+    // Base scores from matrix
+    if ($formState.controlNeeded === 'full') {
+      if ($formState.strategicAlignment === 'core') {
+        if ($formState.changeDifficulty === 'hard') {
+          if ($formState.marketStandardization === 'low') {
+            scores.build = 2.0;
+            scores.buy = 0.5;
+          } else {
+            scores.build = 1.5;
+            scores.buy = 1.5;
+          }
+        } else {
+          if ($formState.marketStandardization === 'high') {
+            scores.build = 1.0;
+            scores.buy = 2.0;
+          } else {
+            scores.build = 1.5;
+            scores.buy = 1.0;
+          }
+        }
+      } else if ($formState.strategicAlignment === 'necessary') {
+        if ($formState.changeDifficulty === 'hard') {
+          scores.build = 1.5;
+          scores.buy = 1.0;
+        } else {
+          scores.build = 0.5;
+          scores.buy = 2.0;
+        }
+      }
+    } else if ($formState.controlNeeded === 'partial') {
+      if ($formState.strategicAlignment === 'core') {
+        scores.build = 1.0;
+        scores.buy = 1.5;
+      } else {
+        scores.build = 0.5;
+        scores.buy = 2.0;
+      }
+    } else {
+      scores.build = 0.0;
+      scores.buy = 2.0;
+    }
+
+    return scores;
+  }
+
+  function calculateTeamCompetencyScores() {
+    const scores = { build: 0, buy: 0 };
+    
+    // Base scores from matrix
+    if ($formState.inHouseCompetency === 'ready') {
+      if ($formState.timelineNeeded === '0-3') {
+        if ($formState.strategicAlignment === 'core') {
+          scores.build = 1.0;
+          scores.buy = 2.0;
+        } else {
+          scores.build = 0.5;
+          scores.buy = 2.0;
+        }
+      } else if ($formState.timelineNeeded === '3-6' || $formState.timelineNeeded === '6-12') {
+        scores.build = 1.5;
+        scores.buy = 1.5;
+      } else {
+        if ($formState.controlNeeded === 'full') {
+          scores.build = 2.0;
+          scores.buy = 1.0;
+        } else {
+          scores.build = 1.5;
+          scores.buy = 1.5;
+        }
+      }
+    } else if ($formState.inHouseCompetency === 'partial') {
+      if ($formState.timelineNeeded === '0-3') {
+        scores.build = 0.0;
+        scores.buy = 2.0;
+      } else if ($formState.timelineNeeded === '3-12') {
+        if ($formState.strategicAlignment === 'core' && $formState.controlNeeded === 'full') {
+          scores.build = 1.0;
+          scores.buy = 1.5;
+        } else {
+          scores.build = 0.5;
+          scores.buy = 2.0;
+        }
+      } else {
+        if ($formState.strategicAlignment === 'core' && $formState.controlNeeded === 'full') {
+          scores.build = 1.5;
+          scores.buy = 1.0;
+        } else {
+          scores.build = 1.0;
+          scores.buy = 1.5;
+        }
+      }
+    } else {
+      if ($formState.timelineNeeded === '0-6') {
+        scores.build = 0.0;
+        scores.buy = 2.0;
+      } else {
+        scores.build = 0.5;
+        scores.buy = 2.0;
+      }
+    }
+
+    return scores;
+  }
+
+  function calculateMarketFitScores() {
+    const scores = { build: 0, buy: 0 };
+    
+    // Base scores from matrix
+    if ($formState.marketStandardization === 'high') {
+      if ($formState.marketEvolution === 'slow') {
+        if ($formState.alternativeSolutions === 'many') {
+          if ($formState.alternativeTypes.length === 2) { // Both commercial and open source
+            scores.build = 0.0;
+            scores.buy = 2.0;
+          } else {
+            scores.build = 0.5;
+            scores.buy = 2.0;
+          }
+        } else {
+          scores.build = 1.0;
+          scores.buy = 1.5;
+        }
+      } else {
+        if ($formState.alternativeSolutions === 'many') {
+          scores.build = 1.0;
+          scores.buy = 2.0;
+        } else {
+          scores.build = 1.0;
+          scores.buy = 1.5;
+        }
+      }
+    } else if ($formState.marketStandardization === 'moderate') {
+      if ($formState.marketEvolution === 'moderate') {
+        if ($formState.alternativeSolutions === 'many') {
+          scores.build = 1.0;
+          scores.buy = 1.5;
+        } else {
+          scores.build = 1.5;
+          scores.buy = 1.5;
+        }
+      } else {
+        scores.build = 1.5;
+        scores.buy = 1.5;
+      }
+    } else {
+      if ($formState.marketEvolution === 'fast') {
+        if ($formState.alternativeSolutions === 'few') {
+          scores.build = 2.0;
+          scores.buy = 0.5;
+        } else {
+          scores.build = 1.5;
+          scores.buy = 1.0;
+        }
+      } else {
+        if ($formState.alternativeSolutions === 'none') {
+          scores.build = 2.0;
+          scores.buy = 0.0;
+        } else if ($formState.alternativeTypes.includes('opensource')) {
+          scores.build = 2.0;
+          scores.buy = 1.0;
+        } else {
+          scores.build = 1.5;
+          scores.buy = 1.0;
+        }
+      }
+    }
+
+    return scores;
+  }
+
+  function calculateConfidenceScore() {
+    let baseConfidence = 0;
+    const weights = {
+      marketClarity: 0.3,
+      requirements: 0.25,
+      costCertainty: 0.2,
+      teamCapability: 0.15,
+      strategicAlignment: 0.1
+    };
+
+    // Market Clarity (30%)
+    if ($formState.marketStandardization === 'high' && $formState.alternativeSolutions === 'many') {
+      baseConfidence += weights.marketClarity * 100;
+    } else if ($formState.marketStandardization === 'moderate') {
+      baseConfidence += weights.marketClarity * 70;
+    } else {
+      baseConfidence += weights.marketClarity * 40;
+    }
+
+    // Requirements Clarity (25%)
+    if ($formState.controlNeeded === 'none') {
+      baseConfidence += weights.requirements * 100;
+    } else if ($formState.controlNeeded === 'partial') {
+      baseConfidence += weights.requirements * 70;
+    } else {
+      baseConfidence += weights.requirements * 40;
+    }
+
+    // Cost Certainty (20%)
+    const hasClearCosts = $formState.buildFTEs > 0 && $formState.buildHourlyRate > 0 && $formState.buyCost > 0;
+    if (hasClearCosts && $formState.usageDuration === '<1') {
+      baseConfidence += weights.costCertainty * 100;
+    } else if (hasClearCosts && ['1-3', '3-5'].includes($formState.usageDuration)) {
+      baseConfidence += weights.costCertainty * 70;
+    } else {
+      baseConfidence += weights.costCertainty * 40;
+    }
+
+    // Team Capability (15%)
+    if ($formState.inHouseCompetency === 'ready') {
+      baseConfidence += weights.teamCapability * 100;
+    } else if ($formState.inHouseCompetency === 'partial') {
+      baseConfidence += weights.teamCapability * 70;
+    } else {
+      baseConfidence += weights.teamCapability * 40;
+    }
+
+    // Strategic Alignment (10%)
+    if ($formState.strategicAlignment === 'core' || $formState.strategicAlignment === 'cost') {
+      baseConfidence += weights.strategicAlignment * 100;
+    } else if ($formState.strategicAlignment === 'necessary') {
+      baseConfidence += weights.strategicAlignment * 70;
+    } else {
+      baseConfidence += weights.strategicAlignment * 40;
+    }
+
+    // Apply modifiers
+    let confidenceModifier = 1;
+
+    // High Standards + Many Solutions
+    if ($formState.marketStandardization === 'high' && $formState.alternativeSolutions === 'many') {
+      confidenceModifier *= 1.15;
+    }
+
+    // No Standards + No Solutions
+    if ($formState.marketStandardization === 'low' && $formState.alternativeSolutions === 'none') {
+      confidenceModifier *= 0.8;
+    }
+
+    // Ready Team + Core Strategic
+    if ($formState.inHouseCompetency === 'ready' && $formState.strategicAlignment === 'core') {
+      confidenceModifier *= 1.1;
+    }
+
+    // Team Gaps + Critical Role
+    if ($formState.inHouseCompetency === 'none' && $formState.businessRole === 'critical') {
+      confidenceModifier *= 0.85;
+    }
+
+    // Clear Costs + Long Duration
+    if (hasClearCosts && $formState.usageDuration === '>5') {
+      confidenceModifier *= 0.9;
+    }
+
+    return Math.min(Math.round(baseConfidence * confidenceModifier), 100);
   }
 
   // Format currency for display
@@ -2563,8 +2970,8 @@
                        'Market Fit'}
                     </h5>
                     <div class="flex gap-4 text-sm">
-                      <span class="text-secondary">Build: {buildScore}</span>
-                      <span class="text-blue-600">Buy: {buyScore}</span>
+                      <span class="text-secondary">Build: {buildScore.toFixed(1)}</span>
+                      <span class="text-blue-600">Buy: {buyScore.toFixed(1)}</span>
                     </div>
                   </div>
                   <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">

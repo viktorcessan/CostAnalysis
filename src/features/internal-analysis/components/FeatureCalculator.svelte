@@ -48,7 +48,7 @@
       subtitle: 'Strategic Growth & Innovation',
       description: 'Every investment we make - whether projects, features, or initiatives - that grows revenue is an example of \'Increase Revenue\'. This could be adding localizations to enter new markets, implementing payment providers to reach more customers, or building premium features that attract larger market segments.\n\nWhen evaluating features that increase revenue, consider three key dimensions:\n● Market reach and expansion that grows total addressable market\n● Product monetization that enhances revenue per customer\n● Business model innovation that creates new revenue streams\n\nThese focus on different ways to grow: expanding who you can reach, getting more value from existing customers, and finding entirely new ways to generate revenue.',
       color: 'green',
-      icon: '/feature_icons/increase_revenue.png',
+      icon: 'feature_icons/increase_revenue.png',
       examples: [
         {
           title: 'Market Expansion',
@@ -131,7 +131,7 @@
       subtitle: 'Sustaining Your Core Business',
       description: 'Defending existing revenue is as crucial as pursuing growth. \'Protect Revenue\' focuses on investments that safeguard your revenue streams and customer base. This could be improving system reliability to prevent outages, enhancing support tools to reduce churn, or adding features and user-friendliness to maintain competitive parity.\n\nWhen evaluating features that protect revenue, consider three key dimensions:\n● System reliability and performance that prevent revenue loss\n● Customer retention and satisfaction that maintain revenue\n● Competitive position that defends market share\n\nThese focus on different ways to protect: ensuring technical stability, keeping customers happy, and staying competitive in your market.',
       color: 'blue',
-      icon: '/feature_icons/protect_revenue.png',
+      icon: 'feature_icons/protect_revenue.png',
       examples: [
         {
           title: 'System Performance',
@@ -212,7 +212,7 @@
       subtitle: 'Operational Excellence',
       description: 'Cost reduction focuses on optimizing operations without compromising value delivery. These investments automate repetitive work, streamline processes, and eliminate waste while maintaining or improving customer experience.\n\nWhen evaluating features that reduce costs, consider three key dimensions:\n● Process automation that eliminates manual work\n● Resource optimization that improves efficiency\n● Infrastructure optimization that reduces operational costs\n\nThese focus on different ways to reduce: automating repetitive tasks, optimizing resource usage, and improving infrastructure efficiency.',
       color: 'amber',
-      icon: '/feature_icons/reduce_costs.png',
+      icon: 'feature_icons/reduce_costs.png',
       examples: [
         {
           title: 'Process Automation',
@@ -294,7 +294,7 @@
       subtitle: 'Strategic Risk Management',
       description: 'Prevent future costs by investing proactively in risk mitigation and long-term sustainability. These investments protect against technical debt, compliance issues, and scalability problems before they materialize into actual costs.\n\nWhen evaluating features that avoid costs, consider three key dimensions:\n● Technical sustainability that prevents future rework\n● Risk management that reduces potential losses\n● Strategic planning that avoids future constraints\n\nThese focus on different ways to avoid costs: addressing technical debt early, managing risks proactively, and planning for sustainable growth.',
       color: 'red',
-      icon: '/feature_icons/avoid_costs.png',
+      icon: 'feature_icons/avoid_costs.png',
       examples: [
         {
           title: 'Technical Sustainability',
@@ -1304,7 +1304,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto mb-8">
           <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
-              <img src="/feature_icons/increase_revenue.png" alt="Increase Revenue" class="w-8 h-8" />
+              <img src="feature_icons/increase_revenue.png" alt="Increase Revenue" class="w-8 h-8" />
               <h4 class="font-semibold text-gray-900">Increase Revenue</h4>
             </div>
             <p class="text-sm text-gray-600">Features that create new revenue streams through market expansion, partnerships, or premium offerings. These drive business growth and new opportunities.</p>
@@ -1312,7 +1312,7 @@
 
           <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
-              <img src="/feature_icons/protect_revenue.png" alt="Protect Revenue" class="w-8 h-8" />
+              <img src="feature_icons/protect_revenue.png" alt="Protect Revenue" class="w-8 h-8" />
               <h4 class="font-semibold text-gray-900">Protect Revenue</h4>
             </div>
             <p class="text-sm text-gray-600">Features that maintain existing revenue by improving reliability, user experience, and competitive position. Essential for business continuity.</p>
@@ -1320,7 +1320,7 @@
 
           <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
-              <img src="/feature_icons/reduce_costs.png" alt="Reduce Costs" class="w-8 h-8" />
+              <img src="feature_icons/reduce_costs.png" alt="Reduce Costs" class="w-8 h-8" />
               <h4 class="font-semibold text-gray-900">Reduce Costs</h4>
             </div>
             <p class="text-sm text-gray-600">Features that optimize operations and lower existing expenses through efficiency gains. Direct impact on bottom-line performance.</p>
@@ -1328,7 +1328,7 @@
 
           <div class="p-6 rounded-lg border border-gray-200">
             <div class="flex items-center gap-3 mb-4">
-              <img src="/feature_icons/avoid_costs.png" alt="Avoid Costs" class="w-8 h-8" />
+              <img src="feature_icons/avoid_costs.png" alt="Avoid Costs" class="w-8 h-8" />
               <h4 class="font-semibold text-gray-900">Avoid Costs</h4>
             </div>
             <p class="text-sm text-gray-600">Features that prevent future expenses and mitigate potential risks. Strategic investments in long-term sustainability.</p>
@@ -1398,7 +1398,7 @@
           <!-- Increase Revenue Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <img src="/feature_icons/increase_revenue.png" alt="Increase Revenue" class="w-8 h-8" />
+          <img src="feature_icons/increase_revenue.png" alt="Increase Revenue" class="w-8 h-8" />
           <div>
             <h3 class="text-xl font-semibold">Increase Revenue</h3>
             <p class="text-sm text-gray-600">Select impacts that will generate new value or revenue</p>
@@ -1475,7 +1475,7 @@
           <!-- Protect Revenue Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <img src="/feature_icons/protect_revenue.png" alt="Protect Revenue" class="w-8 h-8" />
+          <img src="feature_icons/protect_revenue.png" alt="Protect Revenue" class="w-8 h-8" />
           <div>
             <h3 class="text-xl font-semibold">Protect Revenue</h3>
             <p class="text-sm text-gray-600">Select impacts that will protect existing value</p>
@@ -1553,7 +1553,7 @@
       <!-- Reduce Cost Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <img src="/feature_icons/reduce_costs.png" alt="Reduce Costs" class="w-8 h-8" />
+          <img src="feature_icons/reduce_costs.png" alt="Reduce Costs" class="w-8 h-8" />
           <div>
             <h3 class="text-xl font-semibold">Reduce Costs</h3>
             <p class="text-sm text-gray-600">Select impacts that will reduce operational costs</p>
@@ -1631,7 +1631,7 @@
       <!-- Avoid Risk Step -->
       <div class="space-y-6 animate-fade-in">
         <div class="flex items-center gap-3">
-          <img src="/feature_icons/avoid_costs.png" alt="Avoid Costs" class="w-8 h-8" />
+          <img src="feature_icons/avoid_costs.png" alt="Avoid Costs" class="w-8 h-8" />
           <div>
             <h3 class="text-xl font-semibold">Avoid Costs</h3>
             <p class="text-sm text-gray-600">Select impacts that will help avoid risks or losses</p>

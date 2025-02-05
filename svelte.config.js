@@ -8,24 +8,10 @@ const config = {
 			pages: 'build',
 			assets: 'build',
 			fallback: 'index.html',
-			strict: false,
-			precompress: false
+			strict: false
 		}),
 		paths: {
-			base: process.env.NODE_ENV === 'production' ? '/CostAnalysis' : '',
-			assets: process.env.NODE_ENV === 'production' ? 'https://viktorcessan.github.io/CostAnalysis' : ''
-		},
-		appDir: '_app',
-		prerender: {
-			handleHttpError: ({ path, referrer, message }) => {
-				// ignore deliberate link to shiny 404 page
-				if (path === '/404') {
-					return;
-				}
- 
-				// otherwise fail the build
-				throw new Error(message);
-			}
+			base: ''
 		}
 	},
 	preprocess: vitePreprocess()

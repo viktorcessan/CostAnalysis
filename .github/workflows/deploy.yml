@@ -5,17 +5,8 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,23 +21,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
+      - name: Sync SvelteKit files
+        run: npx svelte-kit sync
+        
       - name: Build
         run: npm run build
-        env:
-          PATH_BASE: /${{ github.event.repository.name }}/
         
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./build
+      - name: Copy .htaccess
+        run: cp static/.htaccess build/
+        
+      - name: Set Permissions
+        run: chmod -R 755 build/
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Debug Build Directory
+        run: |
+          echo "Build directory contents:"
+          ls -la build/
+          echo "Content of build/index.html:"
+          cat build/index.html
+
+      - name: SFTP Upload
+        uses: Dylan700/sftp-upload-action@latest
+        with:
+          server: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ secrets.SFTP_PORT }}
+          uploads: |
+            ./build/ => /customers/1/0/6/napkin-ops.com/httpd.www/
+          delete: 'true'

@@ -2766,7 +2766,16 @@
                 <div class="space-y-2">
                   <!-- Draggable List -->
                   <div
-                    use:dndzone={{items: categoryItems, dragDisabled: false}}
+                    use:dndzone={{
+                      items: categoryItems, 
+                      dragDisabled: false,
+                      options: {
+                        passive: true,
+                        dragStartConditionOverride: (event) => {
+                          return event.type === 'touchstart' ? true : undefined;
+                        }
+                      }
+                    }}
                     on:consider={handleDndConsider}
                     on:finalize={handleDndFinalize}
                   >

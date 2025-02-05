@@ -1,5 +1,6 @@
 import { derived } from 'svelte/store';
 import { calculatorStore } from './calculatorStore';
+import { currencyStore } from './currencyStore';
 import type { CalculatorModel, TargetBasedPlanningResults } from '$lib/types/calculator';
 
 interface Target {
@@ -8,7 +9,11 @@ interface Target {
 }
 
 function generateTeamTargetTemplate(inputs: any, targets: Target[]): string {
-  return `I am analyzing a Operations Costs transformation plan with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing a Operations Costs transformation plan with the following configuration:
 
 Model Selection: Team-Based Model
 - This model is used because the service is delivered by dedicated teams with defined sizes and costs
@@ -48,7 +53,11 @@ Based on this analysis, please provide insights on:
 }
 
 function generateTicketTargetTemplate(inputs: any, targets: Target[]): string {
-  return `I am analyzing a Operations Costs transformation plan with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing a Operations Costs transformation plan with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing

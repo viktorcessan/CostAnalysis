@@ -1,5 +1,6 @@
 import { derived } from 'svelte/store';
 import { calculatorStore } from './calculatorStore';
+import { currencyStore } from './currencyStore';
 import type { CalculatorModel, SolutionType, CalculationResults, SolutionInputs } from '$lib/types/calculator';
 
 interface ExtendedCalculationResults extends CalculationResults {
@@ -32,7 +33,11 @@ function generateTeamPlatformTemplate(inputs: any, results: ExtendedCalculationR
   const monthlySavings = results.monthlySavings || 0;
   const breakEvenMonths = results.breakEvenMonths || 0;
 
-  return `I am analyzing an Operations Cost Optimization model with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing an Operations Cost Optimization model with the following configuration:
 
 Model Type: Team-Based Analysis
 This model is used when:
@@ -143,7 +148,11 @@ function generateTeamOutsourceTemplate(inputs: any, results: ExtendedCalculation
   const monthlySavings = results.monthlySavings || 0;
   const breakEvenMonths = results.breakEvenMonths || 0;
 
-  return `I am analyzing an Operations Cost Optimization model with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing an Operations Cost Optimization model with the following configuration:
 
 Model Type: Team-Based Analysis with Outsourcing
 This model is used when:
@@ -262,7 +271,11 @@ function generateTeamHybridTemplate(inputs: any, results: ExtendedCalculationRes
   const monthlySavings = results.monthlySavings || 0;
   const breakEvenMonths = results.breakEvenMonths || 0;
 
-  return `I am analyzing an Operations Cost Optimization model with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing an Operations Cost Optimization model with the following configuration:
 
 Model Type: Team-Based Analysis with Hybrid Solution
 This model is used when:
@@ -397,7 +410,11 @@ function generateTicketPlatformTemplate(inputs: any, results: ExtendedCalculatio
   const monthlySavings = results.monthlySavings || 0;
   const breakEvenMonths = results.breakEvenMonths || 0;
 
-  return `I am analyzing a Operations Costs model with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing
@@ -501,7 +518,11 @@ function generateTicketOutsourceTemplate(inputs: any, results: ExtendedCalculati
   const monthlySavings = results.monthlySavings || 0;
   const breakEvenMonths = results.breakEvenMonths || 0;
 
-  return `I am analyzing a Operations Costs model with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing
@@ -587,7 +608,11 @@ function generateTicketHybridTemplate(inputs: any, results: ExtendedCalculationR
   const monthlySavings = results.monthlySavings || 0;
   const breakEvenMonths = results.breakEvenMonths || 0;
 
-  return `I am analyzing a Operations Costs model with the following configuration:
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing a Operations Costs model with the following configuration:
 
 Model Selection: Ticket-Based Model
 - This model is used because the service is delivered based on individual ticket volume and processing

@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { currencyStore } from './currencyStore';
 import type { Team } from '$lib/types/team';
 
 export interface Node {
@@ -134,7 +135,11 @@ function generateTemplate(
   const totalTeamMembers = safeTeams.slice(0, teamCount).reduce((sum, team) => sum + team.size, 0);
   const costPerTeamMember = totalTeamMembers > 0 ? totalCost / totalTeamMembers : 0;
 
-  const template = `# Team Dependency Analysis Report
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  const template = `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+# Team Dependency Analysis Report
 
 ## Organization Overview
 

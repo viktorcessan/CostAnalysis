@@ -1,5 +1,6 @@
 import { derived } from 'svelte/store';
 import { calculatorStore } from './calculatorStore';
+import { currencyStore } from './currencyStore';
 import type { CalculatorModel, SolutionType, CalculationResults } from '$lib/types/calculator';
 
 export interface FeatureValueResults {
@@ -53,7 +54,11 @@ function generateFeatureValueTemplate(results: FeatureValueResults): string {
     }
   };
 
-  return `I am analyzing a feature's business value across multiple dimensions and would like your expert insights.
+  const currencyConfig = currencyStore.getCurrentConfig();
+
+  return `For this analysis, the currency is ${currencyConfig.code} (${currencyConfig.symbol}).
+
+I am analyzing a feature's business value across multiple dimensions and would like your expert insights.
 
 ==============================================
 FEATURE OVERVIEW

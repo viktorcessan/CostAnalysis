@@ -983,8 +983,13 @@
     return currencyConfig.symbol;
   }
 
-  function startAnalysis() {
+  async function startAnalysis() {
     showOnboarding = false;
+    await tick();
+    const navHeight = getNavHeight();
+    if (formContainer) {
+      scrollToElement(formContainer, navHeight);
+    }
   }
 
   function restartAnalysis() {
@@ -1145,6 +1150,21 @@
     if (showResults) {
       updateRadarChart();
     }
+
+    // Add passive touch event listeners
+    const options = {
+      passive: true
+    };
+    
+    document.addEventListener('touchstart', () => {}, options);
+    document.addEventListener('touchmove', () => {}, options);
+    document.addEventListener('wheel', () => {}, options);
+
+    return () => {
+      document.removeEventListener('touchstart', () => {}, options);
+      document.removeEventListener('touchmove', () => {}, options);
+      document.removeEventListener('wheel', () => {}, options);
+    };
   });
 
   // Helper function to filter out null values and ensure type safety
@@ -2767,14 +2787,8 @@
                   <!-- Draggable List -->
                   <div
                     use:dndzone={{
-                      items: categoryItems, 
-                      dragDisabled: false,
-                      options: {
-                        passive: true,
-                        dragStartConditionOverride: (event) => {
-                          return event.type === 'touchstart' ? true : undefined;
-                        }
-                      }
+                      items: categoryItems,
+                      flipDurationMs: 300
                     }}
                     on:consider={handleDndConsider}
                     on:finalize={handleDndFinalize}
@@ -2783,9 +2797,12 @@
                       <div
                         class="group p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-secondary hover:shadow-sm cursor-grab active:cursor-grabbing transition-all duration-200 mb-2 {isDragging ? 'opacity-75' : ''}"
                         animate:flip={{duration: 300}}
-                        on:mousedown={handleDragStart}
-                        on:mouseup={handleDragEnd}
-                        on:mouseleave={handleDragEnd}
+                        on:mousedown|preventDefault={handleDragStart}
+                        on:mouseup|preventDefault={handleDragEnd}
+                        on:mouseleave|preventDefault={handleDragEnd}
+                        on:touchstart|passive
+                        on:touchend|passive
+                        on:touchcancel|passive
                       >
                         <div class="flex items-center gap-3">
                           <div class="flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">

@@ -210,16 +210,32 @@ export interface TargetBasedPlanningResults {
 
 export interface BuildBuyResults {
   formState: {
+    // Section 1: Define your Need
     solutionType: string;
+    
+    // Section 2: Business Impact & Timeline
     businessRole: string;
+    timelineIndex: number;
     timelineNeeded: string;
+    usageDurationIndex: number;
     usageDuration: string;
+    
+    // Section 3: Market Maturity
+    solutionsCount: number;
     alternativeSolutions: string;
     marketEvolution: string;
+    landscapeEvolution: string;
     marketStandardization: string;
     alternativeTypes: string[];
+    
+    // Section 4: Build Capability
+    teamCapability: string;
     controlNeeded: string;
     inHouseCompetency: string;
+    capabilityBuildMonths: number;
+    competencyAcquisitionTime: string;
+    
+    // Section 5: Costs Analysis
     buildFTEs: number;
     buildHourlyRate: number;
     buildCost: number;
@@ -229,9 +245,26 @@ export interface BuildBuyResults {
     buyCustomizationCost: number;
     buyMaintenanceCost: number;
     implementationTime: string;
+    
+    // Section 6: Strategic Assessment
+    strategicValue: string;
     strategicAlignment: string;
+    alternativeFitness: string;
+    changeDifficulty: string;
     buildRisks: string[];
     buyRisks: string[];
+    hasMaintenanceTeam: boolean;
+    maintenanceTeamSize: number;
+
+    // Section 7: Category Weights
+    categoryWeights: {
+      businessCriticality: number;
+      timeToImplement: number;
+      cost: number;
+      control: number;
+      competency: number;
+      marketFit: number;
+    };
   };
   scores: {
     build: {
@@ -258,7 +291,7 @@ export interface BuildBuyResults {
       probability: number;
       severity: number;
       description: string;
-      details: {
+      details?: {
         reasoning: string[];
         probabilityFactors: string[];
         severityFactors: string[];
@@ -274,7 +307,7 @@ export interface BuildBuyResults {
       probability: number;
       severity: number;
       description: string;
-      details: {
+      details?: {
         reasoning: string[];
         probabilityFactors: string[];
         severityFactors: string[];

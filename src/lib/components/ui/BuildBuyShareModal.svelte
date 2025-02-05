@@ -46,6 +46,20 @@
       maximumFractionDigits: 0
     }).format(value);
   }
+
+  function getTimelineLabel(index: number): string {
+    if (index <= 1) return 'Urgent/Immediate (0-3 months)';
+    if (index <= 2) return 'Short term (3-6 months)';
+    if (index <= 3) return 'Medium term (6-12 months)';
+    return 'Long term (12-24 months)';
+  }
+
+  function getUsageDurationLabel(index: number): string {
+    if (index <= 1) return 'Short term (Less than 1 year)';
+    if (index <= 2) return 'Medium term (1-3 years)';
+    if (index <= 3) return 'Extended use (3-5 years)';
+    return 'Long term investment (More than 5 years)';
+  }
 </script>
 
 {#if show && results}
@@ -102,11 +116,11 @@
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Timeline</span>
-                <span class="text-sm font-medium text-gray-900">{results.formState.timelineNeeded}</span>
+                <span class="text-sm font-medium text-gray-900">{getTimelineLabel(results.formState.timelineIndex)}</span>
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Usage Duration</span>
-                <span class="text-sm font-medium text-gray-900">{results.formState.usageDuration}</span>
+                <span class="text-sm font-medium text-gray-900">{getUsageDurationLabel(results.formState.usageDurationIndex)}</span>
               </div>
             </div>
           </div>
@@ -124,8 +138,16 @@
                 <span class="text-sm font-medium text-gray-900">{results.formState.marketEvolution}</span>
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Landscape Evolution</span>
+                <span class="text-sm font-medium text-gray-900">{results.formState.landscapeEvolution}</span>
+              </div>
+              <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Market Standardization</span>
                 <span class="text-sm font-medium text-gray-900">{results.formState.marketStandardization}</span>
+              </div>
+              <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Solution Fit</span>
+                <span class="text-sm font-medium text-gray-900">{results.formState.alternativeFitness}</span>
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Alternative Types</span>
@@ -147,8 +169,8 @@
                 <span class="text-sm font-medium text-gray-900">{results.formState.inHouseCompetency}</span>
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
-                <span class="text-sm text-gray-600">Build Capability Time</span>
-                <span class="text-sm font-medium text-gray-900">{results.formState.competencyAcquisitionTime} months</span>
+                <span class="text-sm text-gray-600">Capability Build Time</span>
+                <span class="text-sm font-medium text-gray-900">{results.formState.competencyAcquisitionTime}</span>
               </div>
             </div>
           </div>
@@ -206,6 +228,34 @@
                   <span class="text-sm font-medium text-gray-900">{results.formState.maintenanceTeamSize}</span>
                 </div>
               {/if}
+            </div>
+          </div>
+
+          <!-- Strategic Assessment -->
+          <div class="bg-gray-50/50 backdrop-blur-sm rounded-xl p-5 border border-gray-100">
+            <div class="text-sm font-medium text-gray-700 mb-2">Strategic Assessment</div>
+            <div class="grid grid-cols-1 gap-3">
+              <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Strategic Alignment</span>
+                <span class="text-sm font-medium text-gray-900">{results.formState.strategicAlignment}</span>
+              </div>
+              <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                <span class="text-sm text-gray-600">Change Difficulty</span>
+                <span class="text-sm font-medium text-gray-900">{results.formState.changeDifficulty}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Weights -->
+          <div class="bg-gray-50/50 backdrop-blur-sm rounded-xl p-5 border border-gray-100">
+            <div class="text-sm font-medium text-gray-700 mb-2">Category Weights</div>
+            <div class="grid grid-cols-1 gap-3">
+              {#each Object.entries(results.formState.categoryWeights) as [category, weight]}
+                <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
+                  <span class="text-sm text-gray-600">{category}</span>
+                  <span class="text-sm font-medium text-gray-900">{weight}</span>
+                </div>
+              {/each}
             </div>
           </div>
         </div>

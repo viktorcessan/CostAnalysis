@@ -1003,9 +1003,9 @@
 <!-- Quiz Modal Component -->
 {#if showQuizModal}
   <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full h-full sm:h-auto sm:rounded-xl sm:max-w-4xl sm:max-h-[90vh] flex flex-col relative">
+    <div class="bg-white w-full sm:w-auto sm:max-w-4xl sm:max-h-[90vh] flex flex-col relative overflow-hidden rounded-none sm:rounded-xl">
       <!-- Header -->
-      <div class="p-4 sm:p-6 border-b border-gray-200">
+      <div class="p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="text-2xl">🎯</span>
@@ -1026,13 +1026,13 @@
       
       <!-- Quiz Content -->
       <div class="flex-1 overflow-y-auto p-4 sm:p-6">
-        <div class="quiz-container bg-gray-50 rounded-lg p-4">
+        <div class="quiz-container">
           <a data-quiz="Q12UOG7P5" data-type="4" href="https://take.quiz-maker.com/Q12UOG7P5">Loading Quiz...</a>
         </div>
       </div>
       
       <!-- Footer -->
-      <div class="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+      <div class="p-4 sm:p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
         <div class="flex items-center justify-between">
           <p class="hidden sm:block text-sm text-gray-600">You can retake the quiz as many times as you want</p>
           <div class="flex gap-3">
@@ -2064,16 +2064,19 @@
   /* Quiz modal styles */
   .quiz-container {
     width: 100%;
-    min-height: calc(100vh - 250px);
+    height: auto;
+    min-height: 400px;
+    max-height: calc(100vh - 300px);
     background: #fff;
-    border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
+    overflow: hidden;
   }
   
   /* Ensure modal scrolls properly on mobile */
   @media (max-width: 640px) {
     .quiz-container {
-      min-height: calc(100vh - 200px);
+      min-height: 400px;
+      max-height: calc(100vh - 200px);
       border-radius: 0;
     }
   }

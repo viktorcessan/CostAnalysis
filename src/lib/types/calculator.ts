@@ -244,6 +244,9 @@ export interface BuildBuyResults {
     costPerUser: number;
     buyCustomizationCost: number;
     buyMaintenanceCost: number;
+    buyIntegrationTimeMonths: number;
+    buyIntegrationTime: string;
+    allBuyCostsUnknown: boolean;  // Single flag for all buy costs
     implementationTime: string;
     
     // Section 6: Strategic Assessment

@@ -148,7 +148,9 @@
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Buy Cost</span>
-                <span class="text-sm font-medium text-gray-900">{formatCurrency(results.formState.buyCost)}</span>
+                <span class="text-sm font-medium text-gray-900">
+                  {results.formState.allBuyCostsUnknown ? 'Not Applicable' : formatCurrency(results.formState.buyCost)}
+                </span>
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">User Count</span>
@@ -156,15 +158,21 @@
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Cost Per User</span>
-                <span class="text-sm font-medium text-gray-900">{formatCurrency(results.formState.costPerUser)}</span>
+                <span class="text-sm font-medium text-gray-900">
+                  {results.formState.allBuyCostsUnknown ? 'Not Applicable' : formatCurrency(results.formState.costPerUser)}
+                </span>
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Buy Customization Cost</span>
-                <span class="text-sm font-medium text-gray-900">{formatCurrency(results.formState.buyCustomizationCost)}</span>
+                <span class="text-sm font-medium text-gray-900">
+                  {results.formState.allBuyCostsUnknown ? 'Not Applicable' : formatCurrency(results.formState.buyCustomizationCost)}
+                </span>
               </div>
               <div class="flex items-center justify-between py-2 px-3 bg-white/80 rounded-lg border border-gray-100">
                 <span class="text-sm text-gray-600">Buy Maintenance Cost</span>
-                <span class="text-sm font-medium text-gray-900">{formatCurrency(results.formState.buyMaintenanceCost)}</span>
+                <span class="text-sm font-medium text-gray-900">
+                  {results.formState.allBuyCostsUnknown ? 'Not Applicable' : formatCurrency(results.formState.buyMaintenanceCost)}
+                </span>
               </div>
             </div>
           </div>

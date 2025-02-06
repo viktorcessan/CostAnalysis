@@ -67,6 +67,9 @@
     buyCustomizationCost: number;
     buyMaintenanceCost: number;
     implementationTime: string;
+    buyIntegrationTimeMonths: number;
+    buyIntegrationTime: string;
+    allBuyCostsUnknown: boolean;
     
     // Section 6: Strategic Assessment
     strategicValue: string;
@@ -126,6 +129,9 @@
     buyCustomizationCost: 0,
     buyMaintenanceCost: 0,
     implementationTime: '',
+    buyIntegrationTimeMonths: 3,
+    buyIntegrationTime: '3-6',
+    allBuyCostsUnknown: false,
     
     // Section 6
     strategicValue: '',
@@ -347,9 +353,10 @@
                           !!$formState.inHouseCompetency;
 
     // Section 5: Costs Analysis
-    sectionValidation[5] = $formState.buildFTEs > 0 && 
-                          $formState.buildHourlyRate > 0 &&
-                          $formState.buyCost > 0;
+    sectionValidation[5] = ($formState.buildFTEs > 0 && 
+                           $formState.buildHourlyRate > 0 &&
+                           ($formState.allBuyCostsUnknown || $formState.buyCost > 0)) &&
+                           $formState.buyIntegrationTimeMonths >= 0;
 
     // Section 6: Strategic Assessment
     sectionValidation[6] = !!$formState.strategicAlignment && 
@@ -669,45 +676,49 @@
   function calculateCostEfficiencyScores() {
     const scores = { build: 0, buy: 0 };
     
-    // Calculate cost ratio
-    const buildCost = $formState.buildFTEs * $formState.buildHourlyRate * 2080; // Yearly cost
-    const buyCost = $formState.buyCost + $formState.buyCustomizationCost + $formState.buyMaintenanceCost;
-    const costRatio = buildCost / buyCost;
-
-    // Base scores from matrix
-    if (costRatio < 0.5) { // Build < 50% Buy
-      if ($formState.usageDuration === '>5') {
-        scores.build = 2.0;
-        scores.buy = 0.5;
-      } else if ($formState.usageDuration === '1-3' || $formState.usageDuration === '3-5') {
-        scores.build = 1.5;
-        scores.buy = 1.0;
-      } else {
-        scores.build = 0.5;
-        scores.buy = 1.5;
-      }
-    } else if (costRatio <= 1.2) { // Build ≈ Buy ±20%
-      if ($formState.usageDuration === '>5') {
-        scores.build = 1.5;
-        scores.buy = 1.5;
-      } else if ($formState.usageDuration === '1-3' || $formState.usageDuration === '3-5') {
-        scores.build = 1.0;
-        scores.buy = 1.5;
-      } else {
-        scores.build = 0.5;
-        scores.buy = 2.0;
-      }
-    } else { // Buy < 50% Build
-      if ($formState.usageDuration === '>5' && $formState.buildFTEs > 5) {
-        scores.build = 0.5;
-        scores.buy = 2.0;
-      } else {
-        scores.build = 0.0;
-        scores.buy = 2.0;
-      }
+    // If costs are unknown, return neutral scores
+    if ($formState.allBuyCostsUnknown) {
+      scores.build = 1.0;
+      scores.buy = 1.0;
+      return scores;
+    }
+    
+    // Calculate build costs
+    const buildCost = $formState.buildFTEs * $formState.buildHourlyRate * 2080;
+    
+    // Calculate buy costs
+    const buyCost = $formState.buyCost + 
+                   $formState.buyCustomizationCost + 
+                   $formState.buyMaintenanceCost + 
+                   ($formState.userCount * $formState.costPerUser * 12);
+    
+    const costRatio = buildCost / (buyCost || 1);
+    
+    // Normal scoring when costs are known
+    if (costRatio < 0.5) {
+      scores.build = 2.0;
+      scores.buy = 0.5;
+    } else if (costRatio <= 1.2) {
+      scores.build = 1.5;
+      scores.buy = 1.5;
+    } else {
+      scores.build = 0.5;
+      scores.buy = 2.0;
     }
 
+    // Apply integration time penalty to buy score
+    const integrationPenalty = Math.min($formState.buyIntegrationTimeMonths / 24, 0.3);
+    scores.buy *= (1 - integrationPenalty);
+
     return scores;
+  }
+
+  // Update the integration timeline slider handling
+  function getIntegrationTimeRange(months: number): string {
+    if (months <= 3) return '0-3';
+    if (months <= 6) return '3-6';
+    if (months <= 12) return '6-12';
+    return '12-24';
   }
 
   function calculateControlScores() {
@@ -886,14 +897,15 @@
   function calculateConfidenceScore() {
     let baseConfidence = 0;
     const weights = {
-      marketClarity: 0.3,
+      marketClarity: $formState.allBuyCostsUnknown ? 0.30 : 0.25,    // Increased when costs unknown
       requirements: 0.25,
-      costCertainty: 0.2,
-      teamCapability: 0.15,
-      strategicAlignment: 0.1
+      costCertainty: $formState.allBuyCostsUnknown ? 0 : 0.15,      // Zero weight when costs unknown
+      integrationClarity: 0.10,
+      teamCapability: $formState.allBuyCostsUnknown ? 0.20 : 0.15,  // Increased when costs unknown
+      strategicAlignment: $formState.allBuyCostsUnknown ? 0.15 : 0.10 // Increased when costs unknown
     };
 
-    // Market Clarity (30%)
+    // Market Clarity
     if ($formState.marketStandardization === 'high' && $formState.alternativeSolutions === 'many') {
       baseConfidence += weights.marketClarity * 100;
     } else if ($formState.marketStandardization === 'moderate') {
@@ -902,7 +914,7 @@
       baseConfidence += weights.marketClarity * 40;
     }
 
-    // Requirements Clarity (25%)
+    // Requirements Clarity
     if ($formState.controlNeeded === 'none') {
       baseConfidence += weights.requirements * 100;
     } else if ($formState.controlNeeded === 'partial') {
@@ -911,17 +923,23 @@
       baseConfidence += weights.requirements * 40;
     }
 
-    // Cost Certainty (20%)
-    const hasClearCosts = $formState.buildFTEs > 0 && $formState.buildHourlyRate > 0 && $formState.buyCost > 0;
-    if (hasClearCosts && $formState.usageDuration === '<1') {
+    // Cost Certainty - Only if costs are known
+    if (!$formState.allBuyCostsUnknown) {
       baseConfidence += weights.costCertainty * 100;
-    } else if (hasClearCosts && ['1-3', '3-5'].includes($formState.usageDuration)) {
-      baseConfidence += weights.costCertainty * 70;
-    } else {
-      baseConfidence += weights.costCertainty * 40;
     }
 
-    // Team Capability (15%)
+    // Integration Clarity
+    if ($formState.buyIntegrationTimeMonths <= 3) {
+      baseConfidence += weights.integrationClarity * 100;
+    } else if ($formState.buyIntegrationTimeMonths <= 6) {
+      baseConfidence += weights.integrationClarity * 80;
+    } else if ($formState.buyIntegrationTimeMonths <= 12) {
+      baseConfidence += weights.integrationClarity * 60;
+    } else {
+      baseConfidence += weights.integrationClarity * 40;
+    }
+
+    // Team Capability
     if ($formState.inHouseCompetency === 'ready') {
       baseConfidence += weights.teamCapability * 100;
     } else if ($formState.inHouseCompetency === 'partial') {
@@ -930,8 +948,8 @@
       baseConfidence += weights.teamCapability * 40;
     }
 
-    // Strategic Alignment (10%)
-    if ($formState.strategicAlignment === 'core' || $formState.strategicAlignment === 'cost') {
+    // Strategic Alignment
+    if ($formState.strategicAlignment === 'core') {
       baseConfidence += weights.strategicAlignment * 100;
     } else if ($formState.strategicAlignment === 'necessary') {
       baseConfidence += weights.strategicAlignment * 70;
@@ -942,30 +960,9 @@
     // Apply modifiers
     let confidenceModifier = 1;
 
-    // High Standards + Many Solutions
-    if ($formState.marketStandardization === 'high' && $formState.alternativeSolutions === 'many') {
-      confidenceModifier *= 1.15;
-    }
-
-    // No Standards + No Solutions
-    if ($formState.marketStandardization === 'low' && $formState.alternativeSolutions === 'none') {
-      confidenceModifier *= 0.8;
-    }
-
-    // Ready Team + Core Strategic
-    if ($formState.inHouseCompetency === 'ready' && $formState.strategicAlignment === 'core') {
-      confidenceModifier *= 1.1;
-    }
-
-    // Team Gaps + Critical Role
-    if ($formState.inHouseCompetency === 'none' && $formState.businessRole === 'critical') {
-      confidenceModifier *= 0.85;
-    }
-
-    // Clear Costs + Long Duration
-    if (hasClearCosts && $formState.usageDuration === '>5') {
-      confidenceModifier *= 0.9;
-    }
+    // Apply integration time impact
+    const integrationImpact = 1 - ($formState.buyIntegrationTimeMonths / 24) * 0.2;
+    confidenceModifier *= integrationImpact;
 
     return Math.min(Math.round(baseConfidence * confidenceModifier), 100);
   }
@@ -1434,6 +1431,9 @@
       buyCustomizationCost: results.formState.buyCustomizationCost || 0,
       buyMaintenanceCost: results.formState.buyMaintenanceCost || 0,
       implementationTime: results.formState.implementationTime || getImplementationTimeFromMonths(buildTimeMonths),
+      buyIntegrationTimeMonths: results.formState.buyIntegrationTimeMonths || 3,
+      buyIntegrationTime: results.formState.buyIntegrationTime || '3-6',
+      allBuyCostsUnknown: results.formState.allBuyCostsUnknown ?? false,
       
       // Section 6: Strategic Assessment
       strategicValue: results.formState.strategicValue || '',
@@ -2587,7 +2587,68 @@
                       <h3 class="text-base font-medium text-gray-900">Buy Cost Analysis</h3>
                       <p class="text-sm text-gray-600 mt-1">Break down the full cost of acquiring and maintaining a solution.</p>
                     </div>
-                    <div class="grid grid-cols-1 gap-4">
+
+                    <!-- Integration Timeline -->
+                    <div class="p-6 rounded-xl border-2 border-gray-200">
+                      <label class="block text-base font-medium text-gray-900 mb-2">Integration Timeline</label>
+                      <p class="text-sm text-gray-600 mb-4">How long will it take to integrate the solution?</p>
+                      <div class="px-4">
+                        <input
+                          type="range" 
+                          min="0" 
+                          max="3" 
+                          step="1"
+                          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          bind:value={$formState.buyIntegrationTimeMonths}
+                          on:input={() => {
+                            if ($formState.buyIntegrationTimeMonths === 0) {
+                              $formState.buyIntegrationTime = '0-3';
+                            } else if ($formState.buyIntegrationTimeMonths === 1) {
+                              $formState.buyIntegrationTime = '3-6';
+                            } else if ($formState.buyIntegrationTimeMonths === 2) {
+                              $formState.buyIntegrationTime = '6-12';
+                            } else {
+                              $formState.buyIntegrationTime = '12-24';
+                            }
+                          }}
+                        />
+                        <div class="flex justify-between mt-2 text-sm text-gray-600">
+                          <span class="text-center">
+                            {#if $formState.buyIntegrationTimeMonths === 0}
+                              <div class="font-medium text-secondary">Quick Integration</div>
+                              <div class="text-xs">0-3 months</div>
+                            {:else if $formState.buyIntegrationTimeMonths === 1}
+                              <div class="font-medium text-secondary">Standard Integration</div>
+                              <div class="text-xs">3-6 months</div>
+                            {:else if $formState.buyIntegrationTimeMonths === 2}
+                              <div class="font-medium text-secondary">Complex Integration</div>
+                              <div class="text-xs">6-12 months</div>
+                            {:else}
+                              <div class="font-medium text-secondary">Major Integration</div>
+                              <div class="text-xs">12-24 months</div>
+                            {/if}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Unknown Costs Checkbox -->
+                    <div class="p-6 rounded-xl border-2 border-gray-200 bg-gray-50">
+                      <label class="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          bind:checked={$formState.allBuyCostsUnknown}
+                          class="h-5 w-5 text-secondary focus:ring-secondary rounded"
+                        />
+                        <div>
+                          <span class="text-base font-medium text-gray-900">I don't know the costs yet</span>
+                          <p class="text-sm text-gray-600 mt-1">Check this if you don't have cost estimates for the buy option yet</p>
+                        </div>
+                      </label>
+                    </div>
+
+                    <!-- Cost Input Fields -->
+                    <div class="grid grid-cols-1 gap-4 {$formState.allBuyCostsUnknown ? 'opacity-50' : ''}">
                       <div class="p-6 rounded-xl border-2 border-gray-200">
                         <label class="block text-base font-medium text-gray-900 mb-2">License Purchase Cost</label>
                         <p class="text-sm text-gray-600 mb-4">One-time solution acquisition cost</p>
@@ -2599,14 +2660,17 @@
                             type="number"
                             min="0"
                             bind:value={$formState.buyCost}
-                            class="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg"
+                            disabled={$formState.allBuyCostsUnknown}
+                            class="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="0"
                           />
                         </div>
                       </div>
+
+                      <!-- Similar updates for other cost fields -->
                       <div class="p-6 rounded-xl border-2 border-gray-200">
                         <label class="block text-base font-medium text-gray-900 mb-2">Implementation Cost</label>
-                        <p class="text-sm text-gray-600 mb-4">Costs associated with implementation and customization such as installations, integrations, and feature additions for you</p>
+                        <p class="text-sm text-gray-600 mb-4">Costs associated with implementation and customization</p>
                         <div class="relative">
                           <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-500 text-lg">
                             {getCurrencySymbol($currencyStore)}
@@ -2615,11 +2679,14 @@
                             type="number"
                             min="0"
                             bind:value={$formState.buyCustomizationCost}
-                            class="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg"
+                            disabled={$formState.allBuyCostsUnknown}
+                            class="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="0"
                           />
                         </div>
                       </div>
+
+                      <!-- Rest of the cost input fields with similar disabled logic -->
                       <div class="p-6 rounded-xl border-2 border-gray-200">
                         <label class="block text-base font-medium text-gray-900 mb-2">Annual Operating Cost</label>
                         <p class="text-sm text-gray-600 mb-4">Yearly licensing, support, and maintenance fees for the solution</p>
@@ -2631,11 +2698,13 @@
                             type="number"
                             min="0"
                             bind:value={$formState.buyMaintenanceCost}
-                            class="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg"
+                            disabled={$formState.allBuyCostsUnknown}
+                            class="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-secondary focus:ring-secondary text-lg disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="0"
                           />
                         </div>
                       </div>
+
                       <!-- User Subscription Costs -->
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="p-6 rounded-xl border-2 border-gray-200">
@@ -2667,6 +2736,7 @@
                         </div>
                       </div>
                     </div>
+
                     <!-- Total First Year Cost Preview -->
                     <div class="mt-4 p-4 bg-secondary/5 rounded-lg">
                       <div class="flex justify-between items-center">
